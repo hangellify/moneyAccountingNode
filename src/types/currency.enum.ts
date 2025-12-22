@@ -1,0 +1,120 @@
+/**
+ * Currency enum containing major currencies from:
+ * - Europe (EUR, GBP, RON, PLN, etc.)
+ * - Asia (JPY, CNY, INR, KRW, etc.)
+ * - Africa (ZAR, EGP, NGN, etc.)
+ * - Americas (USD, CAD, MXN, BRL, etc.)
+ */
+export enum Currency {
+  // European currencies
+  EUR = 'EUR', // Euro
+  GBP = 'GBP', // British Pound
+  RON = 'RON', // Romanian Leu
+  PLN = 'PLN', // Polish Zloty
+  MDL = 'MDL', // Moldovan Leu
+  CZK = 'CZK', // Czech Koruna
+  HUF = 'HUF', // Hungarian Forint
+  BGN = 'BGN', // Bulgarian Lev
+  HRK = 'HRK', // Croatian Kuna
+  DKK = 'DKK', // Danish Krone
+  SEK = 'SEK', // Swedish Krona
+  NOK = 'NOK', // Norwegian Krone
+  CHF = 'CHF', // Swiss Franc
+  ISK = 'ISK', // Icelandic Krona
+  RSD = 'RSD', // Serbian Dinar
+  BAM = 'BAM', // Bosnia and Herzegovina Convertible Mark
+  ALL = 'ALL', // Albanian Lek
+  MKD = 'MKD', // Macedonian Denar
+  UAH = 'UAH', // Ukrainian Hryvnia
+  BYN = 'BYN', // Belarusian Ruble
+  RUB = 'RUB', // Russian Ruble
+  TRY = 'TRY', // Turkish Lira
+
+  // Asian currencies
+  JPY = 'JPY', // Japanese Yen
+  CNY = 'CNY', // Chinese Yuan
+  INR = 'INR', // Indian Rupee
+  KRW = 'KRW', // South Korean Won
+  THB = 'THB', // Thai Baht
+  SGD = 'SGD', // Singapore Dollar
+  MYR = 'MYR', // Malaysian Ringgit
+  IDR = 'IDR', // Indonesian Rupiah
+  PHP = 'PHP', // Philippine Peso
+  VND = 'VND', // Vietnamese Dong
+  HKD = 'HKD', // Hong Kong Dollar
+  TWD = 'TWD', // New Taiwan Dollar
+  PKR = 'PKR', // Pakistani Rupee
+  BDT = 'BDT', // Bangladeshi Taka
+  LKR = 'LKR', // Sri Lankan Rupee
+  NPR = 'NPR', // Nepalese Rupee
+  MMK = 'MMK', // Myanmar Kyat
+  KHR = 'KHR', // Cambodian Riel
+  LAK = 'LAK', // Lao Kip
+  MNT = 'MNT', // Mongolian Tugrik
+  KZT = 'KZT', // Kazakhstani Tenge
+  UZS = 'UZS', // Uzbekistani Som
+  AZN = 'AZN', // Azerbaijani Manat
+  AMD = 'AMD', // Armenian Dram
+  GEL = 'GEL', // Georgian Lari
+  ILS = 'ILS', // Israeli Shekel
+  JOD = 'JOD', // Jordanian Dinar
+  LBP = 'LBP', // Lebanese Pound
+  SAR = 'SAR', // Saudi Riyal
+  AED = 'AED', // UAE Dirham
+  QAR = 'QAR', // Qatari Riyal
+  KWD = 'KWD', // Kuwaiti Dinar
+  BHD = 'BHD', // Bahraini Dinar
+  OMR = 'OMR', // Omani Rial
+  IRR = 'IRR', // Iranian Rial
+  IQD = 'IQD', // Iraqi Dinar
+
+  // African currencies
+  ZAR = 'ZAR', // South African Rand
+  EGP = 'EGP', // Egyptian Pound
+  NGN = 'NGN', // Nigerian Naira
+  KES = 'KES', // Kenyan Shilling
+  GHS = 'GHS', // Ghanaian Cedi
+  ETB = 'ETB', // Ethiopian Birr
+  UGX = 'UGX', // Ugandan Shilling
+  TZS = 'TZS', // Tanzanian Shilling
+  RWF = 'RWF', // Rwandan Franc
+  XOF = 'XOF', // West African CFA Franc
+  XAF = 'XAF', // Central African CFA Franc
+  MAD = 'MAD', // Moroccan Dirham
+  TND = 'TND', // Tunisian Dinar
+  DZD = 'DZD', // Algerian Dinar
+  LYD = 'LYD', // Libyan Dinar
+  AOA = 'AOA', // Angolan Kwanza
+  MZN = 'MZN', // Mozambican Metical
+  ZMW = 'ZMW', // Zambian Kwacha
+  BWP = 'BWP', // Botswana Pula
+  MUR = 'MUR', // Mauritian Rupee
+
+  // American currencies
+  USD = 'USD', // US Dollar
+  CAD = 'CAD', // Canadian Dollar
+  MXN = 'MXN', // Mexican Peso
+  BRL = 'BRL', // Brazilian Real
+  ARS = 'ARS', // Argentine Peso
+  CLP = 'CLP', // Chilean Peso
+  COP = 'COP', // Colombian Peso
+  PEN = 'PEN', // Peruvian Sol
+  VES = 'VES', // Venezuelan Bolívar
+  UYU = 'UYU', // Uruguayan Peso
+  PYG = 'PYG', // Paraguayan Guaraní
+  BOB = 'BOB', // Bolivian Boliviano
+  GTQ = 'GTQ', // Guatemalan Quetzal
+  HNL = 'HNL', // Honduran Lempira
+  NIO = 'NIO', // Nicaraguan Córdoba
+  CRC = 'CRC', // Costa Rican Colón
+  PAB = 'PAB', // Panamanian Balboa
+  DOP = 'DOP', // Dominican Peso
+  HTG = 'HTG', // Haitian Gourde
+  JMD = 'JMD', // Jamaican Dollar
+  BBD = 'BBD', // Barbadian Dollar
+  BZD = 'BZD', // Belize Dollar
+  TTD = 'TTD', // Trinidad and Tobago Dollar
+  XCD = 'XCD', // East Caribbean Dollar
+  GYD = 'GYD', // Guyanese Dollar
+  SRD = 'SRD', // Surinamese Dollar
+}
