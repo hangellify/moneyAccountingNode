@@ -1,12 +1,10 @@
-import { Entity, PrimaryKey } from '@mikro-orm/core';
+import { PrimaryKey } from '@mikro-orm/core';
 
 /**
- * Base placeholder entity required for MikroORM initialization.
- * This entity can be removed or replaced when you add your actual entities.
+ * Base entity that provides ID for all tables.
  * Uses UUID as primary key type.
  */
-@Entity({ tableName: '_placeholder' })
-export class BaseEntity {
+export abstract class BaseEntity {
   @PrimaryKey({ type: 'uuid', defaultRaw: 'gen_random_uuid()' })
   id!: string;
 }
