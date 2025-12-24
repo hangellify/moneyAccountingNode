@@ -1,10 +1,3 @@
-/**
- * Currency enum containing major currencies from:
- * - Europe (EUR, GBP, RON, PLN, etc.)
- * - Asia (JPY, CNY, INR, KRW, etc.)
- * - Africa (ZAR, EGP, NGN, etc.)
- * - Americas (USD, CAD, MXN, BRL, etc.)
- */
 export enum Currency {
   // European currencies
   EUR = 'EUR', // Euro
