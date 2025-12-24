@@ -1,0 +1,40 @@
+import { Entity, Property, BeforeCreate, BeforeUpdate, ManyToOne, OneToMany, Collection } from '@mikro-orm/core';
+import { BaseEntity } from './base.entity';
+import { Category } from './category.entity';
+import { BillSubCategory } from './bill-sub-category.entity';
+
+@Entity({ tableName: 'sub_categories' })
+export class SubCategory extends BaseEntity {
+  @Property({ type: 'varchar', length: 255, nullable: false })
+  name!: string;
+
+  @Property({ type: 'text', nullable: true })
+  description?: string;
+
+  @Property({ type: 'timestamptz', nullable: false, defaultRaw: 'NOW()' })
+  created_at!: Date;
+
+  @Property({ type: 'timestamptz', nullable: false, defaultRaw: 'NOW()' })
+  updated_at!: Date;
+
+  @Property({ type: 'timestamptz', nullable: true })
+  deleted_at?: Date;
+
+  @ManyToOne(() => Category, { nullable: false })
+  category!: Category;
+
+  @OneToMany(() => BillSubCategory, (billSubCategory) => billSubCategory.sub_category)
+  billSubCategories = new Collection<BillSubCategory>(this);
+
+  @BeforeCreate()
+  beforeCreate() {
+    this.created_at = new Date();
+    this.updated_at = new Date();
+  }
+
+  @BeforeUpdate()
+  beforeUpdate() {
+    this.updated_at = new Date();
+  }
+}
+
