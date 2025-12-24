@@ -1,4 +1,10 @@
-import { Entity, Property, BeforeCreate, OneToMany, Collection } from '@mikro-orm/core';
+import {
+  Entity,
+  Property,
+  BeforeCreate,
+  OneToMany,
+  Collection,
+} from '@mikro-orm/core';
 import { BaseEntity } from './base.entity';
 import { PlaningHorizon } from './planing-horizon.entity';
 
@@ -24,4 +30,3 @@ export class Budget extends BaseEntity {
     this.created_at = new Date();
   }
 }
-

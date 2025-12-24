@@ -1,7 +1,7 @@
 import { Migration } from '@mikro-orm/migrations';
 
 export class Migration20251224125425_AddBudgetForeignKeyToPlaningHorizon extends Migration {
-  override async up(): Promise<void> {
+  override up(): void {
     // Add budget_id column to planing_horizons table
     this.addSql(`
       alter table "planing_horizons" 
@@ -21,11 +21,13 @@ export class Migration20251224125425_AddBudgetForeignKeyToPlaningHorizon extends
     `);
   }
 
-  override async down(): Promise<void> {
+  override down(): void {
     this.addSql(`drop index if exists "planing_horizons_budget_id_index";`);
-    this.addSql(`alter table "planing_horizons" drop constraint if exists "planing_horizons_budget_id_foreign";`);
-    this.addSql(`alter table "planing_horizons" drop column if exists "budget_id";`);
+    this.addSql(
+      `alter table "planing_horizons" drop constraint if exists "planing_horizons_budget_id_foreign";`,
+    );
+    this.addSql(
+      `alter table "planing_horizons" drop column if exists "budget_id";`,
+    );
   }
 }
-
-

@@ -1,7 +1,7 @@
 import { Migration } from '@mikro-orm/migrations';
 
 export class Migration20251224124555_CreatePlaningHorizonTable extends Migration {
-  override async up(): Promise<void> {
+  override up(): void {
     // Create period_type enum type
     this.addSql(`
       create type "period_type_enum" as enum ('DAILY', 'WEEKLY', 'TWO_WEEKS', 'THREE_WEEKS', 'MONTHLY', 'TWO_MONTHS', 'QUARTERLY', 'SEMI_ANNUAL', 'YEARLY');
@@ -24,9 +24,8 @@ export class Migration20251224124555_CreatePlaningHorizonTable extends Migration
     `);
   }
 
-  override async down(): Promise<void> {
+  override down(): void {
     this.addSql(`drop table if exists "planing_horizons";`);
     this.addSql(`drop type if exists "period_type_enum";`);
   }
 }
-

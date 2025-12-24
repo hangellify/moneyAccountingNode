@@ -1,4 +1,13 @@
-import { Entity, Property, BeforeCreate, BeforeUpdate, Enum, ManyToOne, ManyToMany, Collection } from '@mikro-orm/core';
+import {
+  Entity,
+  Property,
+  BeforeCreate,
+  BeforeUpdate,
+  Enum,
+  ManyToOne,
+  ManyToMany,
+  Collection,
+} from '@mikro-orm/core';
 import { BaseEntity } from './base.entity';
 import { Currency } from '../types/currency.enum';
 import { PeriodType } from '../types/period-type.enum';
@@ -63,4 +72,3 @@ export class PlaningHorizon extends BaseEntity {
     this.updated_at = new Date();
   }
 }
-

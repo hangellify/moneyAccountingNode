@@ -1,7 +1,7 @@
 import { Migration } from '@mikro-orm/migrations';
 
 export class Migration20251222153703_CreateUserTable extends Migration {
-  override async up(): Promise<void> {
+  override up(): void {
     // Create language_code enum type
     this.addSql(`
       create type "language_code_enum" as enum ('RU', 'EN', 'RO');
@@ -41,7 +41,7 @@ export class Migration20251222153703_CreateUserTable extends Migration {
     `);
   }
 
-  override async down(): Promise<void> {
+  override down(): void {
     this.addSql(`drop table if exists "users";`);
     this.addSql(`drop type if exists "currency_enum";`);
     this.addSql(`drop type if exists "language_code_enum";`);
