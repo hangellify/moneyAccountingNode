@@ -1,7 +1,7 @@
 import { Migration } from '@mikro-orm/migrations';
 
 export class Migration20251224141355_AddCategoryForeignKeyToSubCategory extends Migration {
-  override async up(): Promise<void> {
+  override up(): void {
     // Add category_id column to sub_categories table
     this.addSql(`
       alter table "sub_categories" 
@@ -21,10 +21,13 @@ export class Migration20251224141355_AddCategoryForeignKeyToSubCategory extends 
     `);
   }
 
-  override async down(): Promise<void> {
+  override down(): void {
     this.addSql(`drop index if exists "sub_categories_category_id_index";`);
-    this.addSql(`alter table "sub_categories" drop constraint if exists "sub_categories_category_id_foreign";`);
-    this.addSql(`alter table "sub_categories" drop column if exists "category_id";`);
+    this.addSql(
+      `alter table "sub_categories" drop constraint if exists "sub_categories_category_id_foreign";`,
+    );
+    this.addSql(
+      `alter table "sub_categories" drop column if exists "category_id";`,
+    );
   }
 }
-

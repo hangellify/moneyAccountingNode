@@ -1,7 +1,7 @@
 import { Migration } from '@mikro-orm/migrations';
 
 export class Migration20251224130033_CreatePlaningHorizonCategoriesJoinTable extends Migration {
-  override async up(): Promise<void> {
+  override up(): void {
     // Create join table for many-to-many relationship
     this.addSql(`
       create table "planing_horizon_categories" (
@@ -36,13 +36,19 @@ export class Migration20251224130033_CreatePlaningHorizonCategoriesJoinTable ext
     `);
   }
 
-  override async down(): Promise<void> {
-    this.addSql(`drop index if exists "planing_horizon_categories_category_id_index";`);
-    this.addSql(`drop index if exists "planing_horizon_categories_planing_horizon_id_index";`);
-    this.addSql(`alter table "planing_horizon_categories" drop constraint if exists "planing_horizon_categories_category_id_foreign";`);
-    this.addSql(`alter table "planing_horizon_categories" drop constraint if exists "planing_horizon_categories_planing_horizon_id_foreign";`);
+  override down(): void {
+    this.addSql(
+      `drop index if exists "planing_horizon_categories_category_id_index";`,
+    );
+    this.addSql(
+      `drop index if exists "planing_horizon_categories_planing_horizon_id_index";`,
+    );
+    this.addSql(
+      `alter table "planing_horizon_categories" drop constraint if exists "planing_horizon_categories_category_id_foreign";`,
+    );
+    this.addSql(
+      `alter table "planing_horizon_categories" drop constraint if exists "planing_horizon_categories_planing_horizon_id_foreign";`,
+    );
     this.addSql(`drop table if exists "planing_horizon_categories";`);
   }
 }
-
-

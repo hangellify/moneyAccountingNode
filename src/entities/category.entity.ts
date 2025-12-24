@@ -1,4 +1,12 @@
-import { Entity, Property, BeforeCreate, BeforeUpdate, ManyToMany, Collection, OneToMany } from '@mikro-orm/core';
+import {
+  Entity,
+  Property,
+  BeforeCreate,
+  BeforeUpdate,
+  ManyToMany,
+  Collection,
+  OneToMany,
+} from '@mikro-orm/core';
 import { BaseEntity } from './base.entity';
 import { PlaningHorizon } from './planing-horizon.entity';
 import { SubCategory } from './sub-category.entity';
@@ -20,7 +28,10 @@ export class Category extends BaseEntity {
   @Property({ type: 'timestamptz', nullable: true })
   deleted_at?: Date;
 
-  @ManyToMany(() => PlaningHorizon, (planingHorizon) => planingHorizon.categories)
+  @ManyToMany(
+    () => PlaningHorizon,
+    (planingHorizon) => planingHorizon.categories,
+  )
   planingHorizons = new Collection<PlaningHorizon>(this);
 
   @OneToMany(() => SubCategory, (subCategory) => subCategory.category)
@@ -37,4 +48,3 @@ export class Category extends BaseEntity {
     this.updated_at = new Date();
   }
 }
-

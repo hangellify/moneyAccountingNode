@@ -1,7 +1,7 @@
 import { Migration } from '@mikro-orm/migrations';
 
 export class Migration20251224141918_CreateBillSubCategoryTable extends Migration {
-  override async up(): Promise<void> {
+  override up(): void {
     // Create bill_sub_categories table
     this.addSql(`
       create table "bill_sub_categories" (
@@ -46,13 +46,20 @@ export class Migration20251224141918_CreateBillSubCategoryTable extends Migratio
     `);
   }
 
-  override async down(): Promise<void> {
-    this.addSql(`drop index if exists "bill_sub_categories_bill_sub_category_unique";`);
-    this.addSql(`drop index if exists "bill_sub_categories_sub_category_id_index";`);
+  override down(): void {
+    this.addSql(
+      `drop index if exists "bill_sub_categories_bill_sub_category_unique";`,
+    );
+    this.addSql(
+      `drop index if exists "bill_sub_categories_sub_category_id_index";`,
+    );
     this.addSql(`drop index if exists "bill_sub_categories_bill_id_index";`);
-    this.addSql(`alter table "bill_sub_categories" drop constraint if exists "bill_sub_categories_sub_category_id_foreign";`);
-    this.addSql(`alter table "bill_sub_categories" drop constraint if exists "bill_sub_categories_bill_id_foreign";`);
+    this.addSql(
+      `alter table "bill_sub_categories" drop constraint if exists "bill_sub_categories_sub_category_id_foreign";`,
+    );
+    this.addSql(
+      `alter table "bill_sub_categories" drop constraint if exists "bill_sub_categories_bill_id_foreign";`,
+    );
     this.addSql(`drop table if exists "bill_sub_categories";`);
   }
 }
-

@@ -1,7 +1,7 @@
 import { Migration } from '@mikro-orm/migrations';
 
 export class Migration20251224141701_CreateBillTable extends Migration {
-  override async up(): Promise<void> {
+  override up(): void {
     // Create bills table
     this.addSql(`
       create table "bills" (
@@ -24,9 +24,8 @@ export class Migration20251224141701_CreateBillTable extends Migration {
     `);
   }
 
-  override async down(): Promise<void> {
+  override down(): void {
     this.addSql(`drop index if exists "bills_bill_date_index";`);
     this.addSql(`drop table if exists "bills";`);
   }
 }
-

@@ -1,4 +1,12 @@
-import { Entity, Property, BeforeCreate, BeforeUpdate, ManyToOne, OneToMany, Collection } from '@mikro-orm/core';
+import {
+  Entity,
+  Property,
+  BeforeCreate,
+  BeforeUpdate,
+  ManyToOne,
+  OneToMany,
+  Collection,
+} from '@mikro-orm/core';
 import { BaseEntity } from './base.entity';
 import { Category } from './category.entity';
 import { BillSubCategory } from './bill-sub-category.entity';
@@ -23,7 +31,10 @@ export class SubCategory extends BaseEntity {
   @ManyToOne(() => Category, { nullable: false })
   category!: Category;
 
-  @OneToMany(() => BillSubCategory, (billSubCategory) => billSubCategory.sub_category)
+  @OneToMany(
+    () => BillSubCategory,
+    (billSubCategory) => billSubCategory.sub_category,
+  )
   billSubCategories = new Collection<BillSubCategory>(this);
 
   @BeforeCreate()
@@ -37,4 +48,3 @@ export class SubCategory extends BaseEntity {
     this.updated_at = new Date();
   }
 }
-
