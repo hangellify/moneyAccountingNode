@@ -21,8 +21,8 @@ import { Log } from '../../entities/log.entity';
       secret: process.env.JWT_SECRET || 'your-secret-key',
       signOptions: {
         expiresIn: Math.floor(
-          parseInt(process.env.JWT_EXPIRES_IN_MS || '900000', 10) / 1000,
-        ), // Convert milliseconds to seconds
+          parseInt(process.env.JWT_EXPIRES_IN_MS!, 10) / 1000,
+        ), // Convert milliseconds to seconds, because JWT requires seconds
       },
     }),
   ],
