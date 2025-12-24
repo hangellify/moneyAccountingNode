@@ -1,4 +1,10 @@
-import { Entity, Property, BeforeCreate, BeforeUpdate, Enum } from '@mikro-orm/core';
+import {
+  Entity,
+  Property,
+  BeforeCreate,
+  BeforeUpdate,
+  Enum,
+} from '@mikro-orm/core';
 import { BaseEntity } from './base.entity';
 import { Currency } from '../types/currency.enum';
 import { LanguageCode } from '../types/language-code.enum';
