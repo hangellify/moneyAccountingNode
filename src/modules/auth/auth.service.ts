@@ -111,6 +111,14 @@ export class AuthService {
       this.logger.warn(
         `Registration failed - user exists: ${registerDto.email}`,
       );
+      // Log failed registration attempt to database for audit trail
+      await this.logAuthAttempt(
+        registerDto.email,
+        false,
+        'Registration failed - user already exists',
+        ipAddress,
+        userAgent,
+      );
       throw new BadRequestException('User already exists');
     }
 
@@ -137,6 +145,8 @@ export class AuthService {
       registerDto.email,
       true,
       'Registration successful',
+      ipAddress,
+      userAgent,
     );
 
     return tokens;
@@ -165,6 +175,32 @@ export class AuthService {
 
       if (!tokenEntity) {
         this.logger.warn('Refresh token not found or revoked');
+        // Log failed refresh token attempt to database for audit trail
+        let userEmail = 'unknown';
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+          const decoded = this.jwtService.decode(refreshToken) as
+            | JwtPayload
+            | null
+            | string;
+          if (
+            decoded &&
+            typeof decoded === 'object' &&
+            'email' in decoded &&
+            typeof decoded.email === 'string'
+          ) {
+            userEmail = decoded.email;
+          }
+        } catch {
+          // Ignore decode errors
+        }
+        await this.logAuthAttempt(
+          userEmail,
+          false,
+          'Token refresh failed - token not found or revoked',
+          ipAddress,
+          userAgent,
+        );
         throw new UnauthorizedException('Invalid refresh token');
       }
 
@@ -172,6 +208,14 @@ export class AuthService {
         this.logger.warn('Refresh token expired');
         tokenEntity.is_active = false;
         await this.em.persistAndFlush(tokenEntity);
+        // Log failed refresh token attempt to database for audit trail
+        await this.logAuthAttempt(
+          tokenEntity.user.email,
+          false,
+          'Token refresh failed - token expired',
+          ipAddress,
+          userAgent,
+        );
         throw new UnauthorizedException('Refresh token expired');
       }
 
@@ -199,12 +243,50 @@ export class AuthService {
         tokenEntity.family_id,
       );
 
+      // Log successful token refresh to database for audit trail
+      await this.logAuthAttempt(
+        user.email,
+        true,
+        'Token refreshed successfully',
+        ipAddress,
+        userAgent,
+      );
+
       this.logger.log(`Token refreshed for user: ${user.email}`);
       return newTokens;
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Token refresh failed: ${errorMessage}`);
+
+      // Log failed refresh token attempt to database for audit trail
+      let userEmail = 'unknown';
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+        const decoded = this.jwtService.decode(refreshToken) as
+          | JwtPayload
+          | null
+          | string;
+        if (
+          decoded &&
+          typeof decoded === 'object' &&
+          'email' in decoded &&
+          typeof decoded.email === 'string'
+        ) {
+          userEmail = decoded.email;
+        }
+      } catch {
+        // Ignore decode errors
+      }
+
+      await this.logAuthAttempt(
+        userEmail,
+        false,
+        `Token refresh failed: ${errorMessage}`,
+        ipAddress,
+        userAgent,
+      );
+
       if (error instanceof UnauthorizedException) {
         throw error;
       }
@@ -212,7 +294,12 @@ export class AuthService {
     }
   }
 
-  async logout(userId: string, refreshToken?: string): Promise<void> {
+  async logout(
+    userId: string,
+    refreshToken?: string,
+    ipAddress?: string,
+    userAgent?: string,
+  ): Promise<void> {
     this.logger.debug(`Logging out user: ${userId}`);
 
     if (refreshToken) {
@@ -232,6 +319,18 @@ export class AuthService {
       { user: { id: userId }, is_active: true },
       { is_active: false },
     );
+
+    // Log logout operation to database for audit trail
+    const user = await this.userRepository.findOne({ id: userId });
+    if (user) {
+      await this.logAuthAttempt(
+        user.email,
+        true,
+        'User logged out successfully',
+        ipAddress,
+        userAgent,
+      );
+    }
 
     this.logger.log(`User logged out: ${userId}`);
   }
