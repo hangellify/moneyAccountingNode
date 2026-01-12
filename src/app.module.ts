@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { BudgetModule } from './modules/budget/budget.module';
+import { PlaningHorizonModule } from './modules/planing-horizon/planing-horizon.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { BudgetModule } from './modules/budget/budget.module';
     }),
     AuthModule,
     BudgetModule,
+    PlaningHorizonModule,
   ],
   controllers: [AppController],
   providers: [AppService],
