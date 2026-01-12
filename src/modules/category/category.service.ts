@@ -11,6 +11,7 @@ import { CreateCategoryDto } from './dto/create-category.dto';
 import { BulkCreateCategoryDto } from './dto/bulk-create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CategoryResponseDto } from './dto/category-response.dto';
+import { CategoryBaseResponseDto } from './dto/category-base-response.dto';
 
 @Injectable()
 export class CategoryService {
@@ -108,6 +109,7 @@ export class CategoryService {
   /**
    * Get a category by ID
    * Only returns category if it belongs to the user through planning horizon -> budget
+   * Includes sub-categories in the response
    */
   async getCategory(id: string, userId: string): Promise<CategoryResponseDto> {
     // First, get the category
@@ -117,7 +119,7 @@ export class CategoryService {
         deleted_at: null,
       },
       {
-        populate: ['planingHorizons'],
+        populate: ['planingHorizons', 'subCategories'],
       },
     );
 
@@ -143,20 +145,42 @@ export class CategoryService {
       throw new NotFoundException(`Category with ID ${id} not found`);
     }
 
+    // Load and map sub-categories
+    const subCategories = [];
+    if (!category.subCategories.isInitialized()) {
+      await category.subCategories.loadItems();
+    }
+    for (const subCategory of category.subCategories) {
+      if (!subCategory.deleted_at) {
+        subCategories.push({
+          id: subCategory.id,
+          name: subCategory.name,
+          description: subCategory.description,
+          category_id: category.id,
+          created_at: subCategory.created_at,
+          updated_at: subCategory.updated_at,
+        });
+      }
+    }
+
     return {
       id: category.id,
       name: category.name,
       description: category.description,
       created_at: category.created_at,
       updated_at: category.updated_at,
+      sub_categories: subCategories,
     };
   }
 
   /**
    * Get all categories for a user
    * Returns categories that belong to planning horizons that belong to budgets that belong to the user
+   * Does not include sub-categories in the response
    */
-  async getAllUserCategories(userId: string): Promise<CategoryResponseDto[]> {
+  async getAllUserCategories(
+    userId: string,
+  ): Promise<CategoryBaseResponseDto[]> {
     // First, get all planning horizons for the user
     const userPlaningHorizons = await this.planingHorizonRepository.find(
       {

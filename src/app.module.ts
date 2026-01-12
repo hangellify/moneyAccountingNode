@@ -7,6 +7,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { BudgetModule } from './modules/budget/budget.module';
 import { PlaningHorizonModule } from './modules/planing-horizon/planing-horizon.module';
 import { CategoryModule } from './modules/category/category.module';
+import { SubCategoryModule } from './modules/sub-category/sub-category.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { CategoryModule } from './modules/category/category.module';
     BudgetModule,
     PlaningHorizonModule,
     CategoryModule,
+    SubCategoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],
