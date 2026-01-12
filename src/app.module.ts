@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
 import { BudgetModule } from './modules/budget/budget.module';
 import { PlaningHorizonModule } from './modules/planing-horizon/planing-horizon.module';
+import { CategoryModule } from './modules/category/category.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { PlaningHorizonModule } from './modules/planing-horizon/planing-horizon.
     AuthModule,
     BudgetModule,
     PlaningHorizonModule,
+    CategoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

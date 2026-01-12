@@ -1,6 +1,7 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
 import { PlaningHorizonResponseDto } from '../dto/planing-horizon-response.dto';
+import { PlaningHorizonBaseResponseDto } from '../dto/planing-horizon-base-response.dto';
 
 /**
  * Common API responses used across planning horizon endpoints
@@ -31,7 +32,7 @@ export const ApiCreatePlaningHorizonResponses = () =>
     ApiResponse({
       status: 201,
       description: 'Planning horizon created successfully',
-      type: PlaningHorizonResponseDto,
+      type: PlaningHorizonBaseResponseDto,
     }),
     ApiBadRequestResponse(
       'Bad request - Planning horizon name already exists for this user, budget not found, or invalid input',
@@ -55,7 +56,7 @@ export const ApiUpdatePlaningHorizonResponses = () =>
     ApiResponse({
       status: 200,
       description: 'Planning horizon updated successfully',
-      type: PlaningHorizonResponseDto,
+      type: PlaningHorizonBaseResponseDto,
     }),
     ApiNotFoundResponse(),
     ApiBadRequestResponse(
