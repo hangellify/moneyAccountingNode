@@ -20,6 +20,7 @@ import { PlaningHorizonService } from './planing-horizon.service';
 import { CreatePlaningHorizonDto } from './dto/create-planing-horizon.dto';
 import { UpdatePlaningHorizonDto } from './dto/update-planing-horizon.dto';
 import { PlaningHorizonResponseDto } from './dto/planing-horizon-response.dto';
+import { PlaningHorizonBaseResponseDto } from './dto/planing-horizon-base-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/types/jwt-payload.interface';
@@ -44,7 +45,7 @@ export class PlaningHorizonController {
   async createPlaningHorizon(
     @CurrentUser() user: AuthenticatedUser,
     @Body() createPlaningHorizonDto: CreatePlaningHorizonDto,
-  ): Promise<PlaningHorizonResponseDto> {
+  ): Promise<PlaningHorizonBaseResponseDto> {
     return this.planingHorizonService.createPlaningHorizon(
       user.id,
       createPlaningHorizonDto,
@@ -79,7 +80,7 @@ export class PlaningHorizonController {
     @CurrentUser() user: AuthenticatedUser,
     @Param('id') id: string,
     @Body() updatePlaningHorizonDto: UpdatePlaningHorizonDto,
-  ): Promise<PlaningHorizonResponseDto> {
+  ): Promise<PlaningHorizonBaseResponseDto> {
     return this.planingHorizonService.updatePlaningHorizon(
       id,
       user.id,

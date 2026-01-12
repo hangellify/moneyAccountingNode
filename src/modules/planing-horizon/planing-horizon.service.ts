@@ -10,6 +10,8 @@ import { Budget } from '../../entities/budget.entity';
 import { CreatePlaningHorizonDto } from './dto/create-planing-horizon.dto';
 import { UpdatePlaningHorizonDto } from './dto/update-planing-horizon.dto';
 import { PlaningHorizonResponseDto } from './dto/planing-horizon-response.dto';
+import { PlaningHorizonBaseResponseDto } from './dto/planing-horizon-base-response.dto';
+import { CategoryResponseDto } from '../category/dto/category-response.dto';
 
 @Injectable()
 export class PlaningHorizonService {
@@ -29,7 +31,7 @@ export class PlaningHorizonService {
   async createPlaningHorizon(
     userId: string,
     createPlaningHorizonDto: CreatePlaningHorizonDto,
-  ): Promise<PlaningHorizonResponseDto> {
+  ): Promise<PlaningHorizonBaseResponseDto> {
     // Verify that the budget exists and belongs to the user
     const budget = await this.budgetRepository.findOne({
       id: createPlaningHorizonDto.budget_id,
@@ -86,6 +88,7 @@ export class PlaningHorizonService {
   /**
    * Get a planning horizon by ID (excluding archived and soft-deleted)
    * Only returns planning horizon if it belongs to the user through budget
+   * Includes categories linked to this planning horizon
    */
   async getPlaningHorizon(
     id: string,
@@ -99,7 +102,7 @@ export class PlaningHorizonService {
         deleted_at: null,
       },
       {
-        populate: ['budget'],
+        populate: ['budget', 'categories'],
         fields: [
           'id',
           'name',
@@ -120,6 +123,22 @@ export class PlaningHorizonService {
       throw new NotFoundException(`Planning horizon with ID ${id} not found`);
     }
 
+    // Map categories to CategoryResponseDto format
+    const categories: CategoryResponseDto[] = [];
+    if (planingHorizon.categories.isInitialized()) {
+      for (const category of planingHorizon.categories) {
+        if (!category.deleted_at) {
+          categories.push({
+            id: category.id,
+            name: category.name,
+            description: category.description,
+            created_at: category.created_at,
+            updated_at: category.updated_at,
+          });
+        }
+      }
+    }
+
     return {
       id: planingHorizon.id,
       name: planingHorizon.name,
@@ -131,6 +150,7 @@ export class PlaningHorizonService {
       updated_at: planingHorizon.updated_at,
       is_archived: planingHorizon.is_archived,
       budget_id: planingHorizon.budget.id,
+      categories,
     };
   }
 
@@ -142,7 +162,7 @@ export class PlaningHorizonService {
     id: string,
     userId: string,
     updatePlaningHorizonDto: UpdatePlaningHorizonDto,
-  ): Promise<PlaningHorizonResponseDto> {
+  ): Promise<PlaningHorizonBaseResponseDto> {
     const planingHorizon = await this.planingHorizonRepository.findOne(
       {
         id,
