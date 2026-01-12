@@ -1,6 +1,6 @@
 import { Migration } from '@mikro-orm/migrations';
 
-export class Migration20250101000000_AddUserIdToBudgets extends Migration {
+export class Migration20251230141421_AddUserIdToBudgets extends Migration {
   override up(): void {
     // Add user_id column to budgets table
     this.addSql(`
