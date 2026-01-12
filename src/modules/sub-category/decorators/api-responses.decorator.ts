@@ -1,10 +1,9 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
-import { CategoryResponseDto } from '../dto/category-response.dto';
-import { CategoryBaseResponseDto } from '../dto/category-base-response.dto';
+import { SubCategoryResponseDto } from '../dto/sub-category-response.dto';
 
 /**
- * Common API responses used across category endpoints
+ * Common API responses used across sub-category endpoints
  */
 export const ApiUnauthorizedResponse = () =>
   ApiResponse({
@@ -15,7 +14,7 @@ export const ApiUnauthorizedResponse = () =>
 export const ApiNotFoundResponse = () =>
   ApiResponse({
     status: 404,
-    description: 'Category not found',
+    description: 'Sub-category not found',
   });
 
 export const ApiBadRequestResponse = (description?: string) =>
@@ -27,70 +26,66 @@ export const ApiBadRequestResponse = (description?: string) =>
 /**
  * Combined decorators for specific endpoints
  */
-export const ApiCreateCategoryResponses = () =>
+export const ApiCreateSubCategoryResponses = () =>
   applyDecorators(
     ApiResponse({
       status: 201,
-      description: 'Category created successfully',
-      type: CategoryResponseDto,
+      description: 'Sub-category created successfully',
+      type: SubCategoryResponseDto,
     }),
-    ApiBadRequestResponse(
-      'Bad request - Invalid input or planning horizon not found',
-    ),
+    ApiBadRequestResponse('Bad request - Invalid input or category not found'),
     ApiUnauthorizedResponse(),
   );
 
-export const ApiBulkCreateCategoryResponses = () =>
+export const ApiBulkCreateSubCategoryResponses = () =>
   applyDecorators(
     ApiResponse({
       status: 201,
-      description: 'Categories created successfully',
-      type: [CategoryResponseDto],
+      description: 'Sub-categories created successfully',
+      type: [SubCategoryResponseDto],
     }),
-    ApiBadRequestResponse(
-      'Bad request - Invalid input or planning horizon not found',
-    ),
+    ApiBadRequestResponse('Bad request - Invalid input or category not found'),
     ApiUnauthorizedResponse(),
   );
 
-export const ApiGetCategoryResponses = () =>
+export const ApiGetSubCategoryResponses = () =>
   applyDecorators(
     ApiResponse({
       status: 200,
-      description: 'Category retrieved successfully',
-      type: CategoryResponseDto,
+      description: 'Sub-category retrieved successfully',
+      type: SubCategoryResponseDto,
     }),
     ApiNotFoundResponse(),
     ApiUnauthorizedResponse(),
   );
 
-export const ApiGetAllCategoriesResponses = () =>
+export const ApiGetAllSubCategoriesResponses = () =>
   applyDecorators(
     ApiResponse({
       status: 200,
-      description: 'Categories retrieved successfully',
-      type: [CategoryBaseResponseDto],
+      description: 'Sub-categories retrieved successfully',
+      type: [SubCategoryResponseDto],
     }),
     ApiUnauthorizedResponse(),
   );
 
-export const ApiUpdateCategoryResponses = () =>
+export const ApiUpdateSubCategoryResponses = () =>
   applyDecorators(
     ApiResponse({
       status: 200,
-      description: 'Category updated successfully',
-      type: CategoryResponseDto,
+      description: 'Sub-category updated successfully',
+      type: SubCategoryResponseDto,
     }),
     ApiNotFoundResponse(),
     ApiBadRequestResponse('Bad request - Invalid input'),
     ApiUnauthorizedResponse(),
   );
 
-export const ApiDeleteCategoryResponses = () =>
+export const ApiDeleteSubCategoryResponses = () =>
   applyDecorators(
     ApiResponse({
       status: 204,
-      description: 'Category deleted successfully',
+      description: 'Sub-category deleted successfully',
     }),
     ApiNotFoundResponse(),
     ApiUnauthorizedResponse(),

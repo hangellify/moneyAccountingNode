@@ -21,6 +21,7 @@ import { CreateCategoryDto } from './dto/create-category.dto';
 import { BulkCreateCategoryDto } from './dto/bulk-create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CategoryResponseDto } from './dto/category-response.dto';
+import { CategoryBaseResponseDto } from './dto/category-base-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/types/jwt-payload.interface';
@@ -70,7 +71,7 @@ export class CategoryController {
   @ApiGetAllCategoriesResponses()
   async getAllUserCategories(
     @CurrentUser() user: AuthenticatedUser,
-  ): Promise<CategoryResponseDto[]> {
+  ): Promise<CategoryBaseResponseDto[]> {
     return this.categoryService.getAllUserCategories(user.id);
   }
 

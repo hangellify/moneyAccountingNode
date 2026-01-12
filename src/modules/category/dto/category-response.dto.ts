@@ -1,35 +1,15 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { SubCategoryResponseDto } from '../../sub-category/dto/sub-category-response.dto';
+import { CategoryBaseResponseDto } from './category-base-response.dto';
 
-export class CategoryResponseDto {
-  @ApiProperty({
-    description: 'Category unique identifier',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
-  id!: string;
-
-  @ApiProperty({
-    description: 'Category name',
-    example: 'Food & Dining',
-  })
-  name!: string;
-
+/**
+ * Extended DTO for category GET response (includes sub-categories)
+ * Extends the base DTO to avoid duplication
+ */
+export class CategoryResponseDto extends CategoryBaseResponseDto {
   @ApiPropertyOptional({
-    description: 'Category description',
-    example: 'Expenses related to food and dining',
+    description: 'Sub-categories belonging to this category',
+    type: [SubCategoryResponseDto],
   })
-  description?: string;
-
-  @ApiProperty({
-    description: 'Category creation date',
-    example: '2025-01-01T00:00:00.000Z',
-    type: Date,
-  })
-  created_at!: Date;
-
-  @ApiProperty({
-    description: 'Category last update date',
-    example: '2025-01-01T00:00:00.000Z',
-    type: Date,
-  })
-  updated_at!: Date;
+  sub_categories?: SubCategoryResponseDto[];
 }
