@@ -10,6 +10,10 @@ config();
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  // Configure trust proxy for correct IP address extraction behind reverse proxies
+  // This enables req.ip to work correctly and allows X-Forwarded-For header processing
+  app.set('trust proxy', true);
+
   // Enable CORS
   app.enableCors({
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',

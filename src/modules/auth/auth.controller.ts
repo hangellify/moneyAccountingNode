@@ -36,6 +36,37 @@ export class AuthController {
     private readonly userService: UserService,
   ) {}
 
+  /**
+   * Extract IP address from request, handling reverse proxies
+   * Checks X-Forwarded-For header first, then falls back to req.ip or socket.remoteAddress
+   */
+  private extractIpAddress(req: Request): string {
+    // Check X-Forwarded-For header (for reverse proxies)
+    const xForwardedFor = req.headers['x-forwarded-for'];
+    if (xForwardedFor) {
+      // X-Forwarded-For can contain multiple IPs, take the first one (original client)
+      const ips =
+        typeof xForwardedFor === 'string'
+          ? xForwardedFor.split(',').map((ip) => ip.trim())
+          : [xForwardedFor[0]];
+      if (ips.length > 0 && ips[0]) {
+        return ips[0];
+      }
+    }
+
+    // Fallback to req.ip (requires trust proxy to be configured)
+    if (req.ip) {
+      return req.ip;
+    }
+
+    // Final fallback to socket remote address
+    if (req.socket?.remoteAddress) {
+      return req.socket.remoteAddress;
+    }
+
+    return 'unknown';
+  }
+
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Register a new user' })
@@ -53,7 +84,7 @@ export class AuthController {
     @Body() registerDto: RegisterDto,
     @Req() req: Request,
   ): Promise<TokenResponseDto> {
-    const ipAddress = req.ip || req.socket.remoteAddress;
+    const ipAddress = this.extractIpAddress(req);
     const userAgent = req.get('user-agent');
     return this.authService.register(registerDto, ipAddress, userAgent);
   }
@@ -73,7 +104,7 @@ export class AuthController {
     @Body() loginDto: LoginDto,
     @Req() req: Request,
   ): Promise<TokenResponseDto> {
-    const ipAddress = req.ip || req.socket.remoteAddress;
+    const ipAddress = this.extractIpAddress(req);
     const userAgent = req.get('user-agent');
     return this.authService.login(loginDto, ipAddress, userAgent);
   }
@@ -92,7 +123,7 @@ export class AuthController {
     @Body() refreshTokenDto: RefreshTokenDto,
     @Req() req: Request,
   ): Promise<TokenResponseDto> {
-    const ipAddress = req.ip || req.socket.remoteAddress;
+    const ipAddress = this.extractIpAddress(req);
     const userAgent = req.get('user-agent');
     return this.authService.refreshToken(
       refreshTokenDto.refresh_token,
@@ -119,9 +150,12 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async logout(
     @CurrentUser() user: AuthenticatedUser,
+    @Req() req: Request,
     @Body('refresh_token') refreshToken?: string,
   ): Promise<{ message: string }> {
-    await this.authService.logout(user.id, refreshToken);
+    const ipAddress = this.extractIpAddress(req);
+    const userAgent = req.get('user-agent');
+    await this.authService.logout(user.id, refreshToken, ipAddress, userAgent);
     return { message: 'Logged out successfully' };
   }
 

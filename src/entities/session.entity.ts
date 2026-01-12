@@ -7,7 +7,7 @@ export class Session extends BaseEntity {
   @ManyToOne(() => User, { nullable: false, deleteRule: 'cascade' })
   user!: User;
 
-  @Property({ type: 'varchar', length: 255, nullable: false, unique: true })
+  @Property({ type: 'varchar', length: 500, nullable: false, unique: true })
   @Index()
   session_token!: string;
 
