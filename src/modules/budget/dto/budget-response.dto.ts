@@ -25,11 +25,4 @@ export class BudgetResponseDto {
     type: Date,
   })
   created_at!: Date;
-
-  @ApiPropertyOptional({
-    description: 'Budget deletion date (soft delete)',
-    example: '2025-01-15T00:00:00.000Z',
-    type: Date,
-  })
-  deleted_at?: Date;
 }

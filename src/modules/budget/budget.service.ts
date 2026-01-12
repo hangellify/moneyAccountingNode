@@ -49,14 +49,13 @@ export class BudgetService {
     budget.description = createBudgetDto.description;
     budget.user = user;
 
-    await this.em.persistAndFlush(budget);
+    await this.em.persist(budget).flush();
 
     return {
       id: budget.id,
       name: budget.name,
       description: budget.description,
       created_at: budget.created_at,
-      deleted_at: budget.deleted_at,
     };
   }
 
@@ -85,7 +84,6 @@ export class BudgetService {
       name: budget.name,
       description: budget.description,
       created_at: budget.created_at,
-      deleted_at: budget.deleted_at,
     };
   }
 
@@ -136,14 +134,13 @@ export class BudgetService {
       budget.description = updateBudgetDto.description;
     }
 
-    await this.em.persistAndFlush(budget);
+    await this.em.persist(budget).flush();
 
     return {
       id: budget.id,
       name: budget.name,
       description: budget.description,
       created_at: budget.created_at,
-      deleted_at: budget.deleted_at,
     };
   }
 
@@ -168,6 +165,6 @@ export class BudgetService {
     }
 
     budget.deleted_at = new Date();
-    await this.em.persistAndFlush(budget);
+    await this.em.persist(budget).flush();
   }
 }

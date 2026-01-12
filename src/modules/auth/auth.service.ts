@@ -130,7 +130,7 @@ export class AuthService {
     user.username = registerDto.username;
     user.currency = Currency.EUR;
 
-    await this.em.persistAndFlush(user);
+    await this.em.persist(user).flush();
     this.logger.log(`User registered successfully: ${user.email}`);
 
     const tokens = await this.generateTokens(user);
@@ -207,7 +207,7 @@ export class AuthService {
       if (new Date() > tokenEntity.expires_at) {
         this.logger.warn('Refresh token expired');
         tokenEntity.is_active = false;
-        await this.em.persistAndFlush(tokenEntity);
+        await this.em.persist(tokenEntity).flush();
         // Log failed refresh token attempt to database for audit trail
         await this.logAuthAttempt(
           tokenEntity.user.email,
@@ -222,7 +222,7 @@ export class AuthService {
       // Revoke old token (token rotation)
       tokenEntity.is_revoked = true;
       tokenEntity.is_active = false;
-      await this.em.persistAndFlush(tokenEntity);
+      await this.em.persist(tokenEntity).flush();
 
       const user = tokenEntity.user;
       const newTokens = await this.generateTokens(user);
@@ -311,7 +311,7 @@ export class AuthService {
       if (tokenEntity) {
         tokenEntity.is_revoked = true;
         tokenEntity.is_active = false;
-        await this.em.persistAndFlush(tokenEntity);
+        await this.em.persist(tokenEntity).flush();
       }
     }
 
@@ -403,7 +403,7 @@ export class AuthService {
       is_active: true,
     });
 
-    await this.em.persistAndFlush(session);
+    await this.em.persist(session).flush();
     return session;
   }
 
@@ -432,7 +432,7 @@ export class AuthService {
       if (userAgent) existingSession.user_agent = userAgent;
       existingSession.is_active = true;
 
-      await this.em.persistAndFlush(existingSession);
+      await this.em.persist(existingSession).flush();
       return existingSession;
     } else {
       // Create new session if none exists
@@ -464,7 +464,7 @@ export class AuthService {
       is_revoked: false,
     });
 
-    await this.em.persistAndFlush(token);
+    await this.em.persist(token).flush();
     return token;
   }
 
@@ -489,6 +489,6 @@ export class AuthService {
       created_at: new Date(),
     });
 
-    await this.em.persistAndFlush(log);
+    await this.em.persist(log).flush();
   }
 }

@@ -73,13 +73,13 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       if (new Date() > session.expires_at) {
         // Mark session as inactive
         session.is_active = false;
-        await this.em.persistAndFlush(session);
+        await this.em.persist(session).flush();
         throw new UnauthorizedException('Session has expired');
       }
 
       // Update last activity timestamp
       session.last_activity_at = new Date();
-      await this.em.persistAndFlush(session);
+      await this.em.persist(session).flush();
     } else {
       // If no token provided, check if user has any active sessions
       // This handles cases where token might not be extractable
