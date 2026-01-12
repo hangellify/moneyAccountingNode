@@ -50,6 +50,9 @@ export class PlaningHorizon extends BaseEntity {
   @Property({ type: 'timestamptz', nullable: true })
   deleted_at?: Date;
 
+  @Property({ type: 'boolean', nullable: false, default: false })
+  is_archived!: boolean;
+
   @ManyToOne(() => Budget, { nullable: false })
   budget!: Budget;
 
