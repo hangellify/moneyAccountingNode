@@ -72,7 +72,7 @@ describe('BillAiOrchestrator', () => {
     expect(runMock).toHaveBeenNthCalledWith(
       2,
       categorizer,
-      { items: parsed.items },
+      { items: parsed.items, userId: 'user-123' },
       { userId: 'user-123' },
     );
   });
@@ -100,6 +100,36 @@ describe('BillAiOrchestrator', () => {
         hint: undefined,
       },
       { userId: 'u' },
+    );
+  });
+
+  it('parseOnly calls only the parser and returns its ParsedBill directly', async () => {
+    const parsed = {
+      market_name: 'Lidl',
+      bill_date: null,
+      currency: null,
+      total_amount: null,
+      items: [],
+      raw_extracted_text: '',
+    };
+    const runMock = jest.fn().mockResolvedValueOnce(parsed);
+    const parser = { name: 'bill.parse' } as unknown as BillParserTask;
+    const categorizer = {
+      name: 'bill.categorize',
+    } as unknown as BillCategorizerTask;
+    const gateway = { run: runMock } as unknown as AiGatewayService;
+
+    const orchestrator = new BillAiOrchestrator(gateway, parser, categorizer);
+    const buf = Buffer.from('img');
+    const res = await orchestrator.parseOnly(buf, 'image/jpeg', 'user-1');
+
+    expect(res).toBe(parsed);
+    expect(runMock).toHaveBeenCalledTimes(1);
+    expect(runMock).toHaveBeenNthCalledWith(
+      1,
+      parser,
+      { image: buf, mediaType: 'image/jpeg', hint: undefined },
+      { userId: 'user-1' },
     );
   });
 });

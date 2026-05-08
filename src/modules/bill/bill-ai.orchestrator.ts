@@ -31,4 +31,17 @@ export class BillAiOrchestrator {
     );
     return { parsed, categorized };
   }
+
+  async parseOnly(
+    image: Buffer,
+    mediaType: 'image/png' | 'image/jpeg' | 'image/webp',
+    userId: string,
+    hint?: string,
+  ): Promise<ParsedBill> {
+    return this.gateway.run(
+      this.parser,
+      { image, mediaType, hint },
+      { userId },
+    );
+  }
 }
