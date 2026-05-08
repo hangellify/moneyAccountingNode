@@ -7,6 +7,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository, EntityManager } from '@mikro-orm/core';
+import { createHash, randomUUID } from 'crypto';
 import { User } from '../../entities/user.entity';
 import { RefreshToken } from '../../entities/refresh-token.entity';
 import { Session } from '../../entities/session.entity';
@@ -16,7 +17,15 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { TokenResponseDto } from './dto/token-response.dto';
 import { JwtPayload } from './types/jwt-payload.interface';
-import { randomBytes } from 'crypto';
+import { requireEnv, requireIntEnv } from './auth.env';
+
+interface IssuedTokens {
+  tokens: TokenResponseDto;
+  session: Session;
+  refreshJti: string;
+  refreshTokenHash: string;
+  refreshExpiresAt: Date;
+}
 
 @Injectable()
 export class AuthService {
@@ -36,8 +45,6 @@ export class AuthService {
   ) {}
 
   async validateUser(email: string, password: string): Promise<User | null> {
-    this.logger.debug(`Validating user: ${email}`);
-
     const user = await this.userRepository.findOne(
       { email },
       {
@@ -55,19 +62,16 @@ export class AuthService {
     );
 
     if (!user) {
-      this.logger.warn(`User not found: ${email}`);
       await this.logAuthAttempt(email, false, 'User not found');
       return null;
     }
 
     const isPasswordValid = await user.validatePassword(password);
     if (!isPasswordValid) {
-      this.logger.warn(`Invalid password for user: ${email}`);
       await this.logAuthAttempt(email, false, 'Invalid password');
       return null;
     }
 
-    this.logger.log(`User validated successfully: ${email}`);
     return user as User;
   }
 
@@ -82,18 +86,17 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const tokens = await this.generateTokens(user);
-    await this.createSession(user, tokens.access_token, ipAddress, userAgent);
-    await this.createRefreshToken(
-      user,
-      tokens.refresh_token,
+    const issued = await this.startSession(user, ipAddress, userAgent);
+    await this.logAuthAttempt(
+      loginDto.email,
+      true,
+      'Login successful',
       ipAddress,
       userAgent,
     );
-    await this.logAuthAttempt(loginDto.email, true, 'Login successful');
 
-    this.logger.log(`User logged in successfully: ${user.email}`);
-    return tokens;
+    this.logger.log(`User logged in: ${user.email}`);
+    return issued.tokens;
   }
 
   async register(
@@ -101,17 +104,11 @@ export class AuthService {
     ipAddress?: string,
     userAgent?: string,
   ): Promise<TokenResponseDto> {
-    this.logger.debug(`Registering new user: ${registerDto.email}`);
-
     const existingUser = await this.userRepository.findOne({
       email: registerDto.email,
     });
 
     if (existingUser) {
-      this.logger.warn(
-        `Registration failed - user exists: ${registerDto.email}`,
-      );
-      // Log failed registration attempt to database for audit trail
       await this.logAuthAttempt(
         registerDto.email,
         false,
@@ -131,16 +128,8 @@ export class AuthService {
     user.currency = Currency.EUR;
 
     await this.em.persist(user).flush();
-    this.logger.log(`User registered successfully: ${user.email}`);
 
-    const tokens = await this.generateTokens(user);
-    await this.createSession(user, tokens.access_token, ipAddress, userAgent);
-    await this.createRefreshToken(
-      user,
-      tokens.refresh_token,
-      ipAddress,
-      userAgent,
-    );
+    const issued = await this.startSession(user, ipAddress, userAgent);
     await this.logAuthAttempt(
       registerDto.email,
       true,
@@ -149,7 +138,7 @@ export class AuthService {
       userAgent,
     );
 
-    return tokens;
+    return issued.tokens;
   }
 
   async refreshToken(
@@ -157,198 +146,197 @@ export class AuthService {
     ipAddress?: string,
     userAgent?: string,
   ): Promise<TokenResponseDto> {
-    this.logger.debug('Refreshing token');
-
+    let payload: JwtPayload;
     try {
-      this.jwtService.verify<JwtPayload>(refreshToken, {
-        secret: process.env.JWT_REFRESH_SECRET!,
+      payload = this.jwtService.verify<JwtPayload>(refreshToken, {
+        secret: requireEnv('JWT_REFRESH_SECRET'),
       });
-
-      const tokenEntity = await this.refreshTokenRepository.findOne(
-        {
-          token: refreshToken,
-          is_active: true,
-          is_revoked: false,
-        },
-        { populate: ['user'] },
-      );
-
-      if (!tokenEntity) {
-        this.logger.warn('Refresh token not found or revoked');
-        // Log failed refresh token attempt to database for audit trail
-        let userEmail = 'unknown';
-        try {
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-          const decoded = this.jwtService.decode(refreshToken) as
-            | JwtPayload
-            | null
-            | string;
-          if (
-            decoded &&
-            typeof decoded === 'object' &&
-            'email' in decoded &&
-            typeof decoded.email === 'string'
-          ) {
-            userEmail = decoded.email;
-          }
-        } catch {
-          // Ignore decode errors
-        }
-        await this.logAuthAttempt(
-          userEmail,
-          false,
-          'Token refresh failed - token not found or revoked',
-          ipAddress,
-          userAgent,
-        );
-        throw new UnauthorizedException('Invalid refresh token');
-      }
-
-      if (new Date() > tokenEntity.expires_at) {
-        this.logger.warn('Refresh token expired');
-        tokenEntity.is_active = false;
-        await this.em.persist(tokenEntity).flush();
-        // Log failed refresh token attempt to database for audit trail
-        await this.logAuthAttempt(
-          tokenEntity.user.email,
-          false,
-          'Token refresh failed - token expired',
-          ipAddress,
-          userAgent,
-        );
-        throw new UnauthorizedException('Refresh token expired');
-      }
-
-      // Revoke old token (token rotation)
-      tokenEntity.is_revoked = true;
-      tokenEntity.is_active = false;
-      await this.em.persist(tokenEntity).flush();
-
-      const user = tokenEntity.user;
-      const newTokens = await this.generateTokens(user);
-
-      // Update or create session with new access token
-      await this.updateOrCreateSession(
-        user,
-        newTokens.access_token,
-        ipAddress,
-        userAgent,
-      );
-
-      await this.createRefreshToken(
-        user,
-        newTokens.refresh_token,
-        ipAddress,
-        userAgent,
-        tokenEntity.family_id,
-      );
-
-      // Log successful token refresh to database for audit trail
+    } catch {
       await this.logAuthAttempt(
-        user.email,
-        true,
-        'Token refreshed successfully',
-        ipAddress,
-        userAgent,
-      );
-
-      this.logger.log(`Token refreshed for user: ${user.email}`);
-      return newTokens;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Unknown error';
-      this.logger.error(`Token refresh failed: ${errorMessage}`);
-
-      // Log failed refresh token attempt to database for audit trail
-      let userEmail = 'unknown';
-      try {
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
-        const decoded = this.jwtService.decode(refreshToken) as
-          | JwtPayload
-          | null
-          | string;
-        if (
-          decoded &&
-          typeof decoded === 'object' &&
-          'email' in decoded &&
-          typeof decoded.email === 'string'
-        ) {
-          userEmail = decoded.email;
-        }
-      } catch {
-        // Ignore decode errors
-      }
-
-      await this.logAuthAttempt(
-        userEmail,
+        'unknown',
         false,
-        `Token refresh failed: ${errorMessage}`,
+        'Token refresh failed - signature invalid or expired',
         ipAddress,
         userAgent,
       );
-
-      if (error instanceof UnauthorizedException) {
-        throw error;
-      }
       throw new UnauthorizedException('Invalid refresh token');
     }
+
+    if (payload.type !== 'refresh') {
+      await this.logAuthAttempt(
+        payload.email ?? 'unknown',
+        false,
+        'Token refresh failed - wrong token type',
+        ipAddress,
+        userAgent,
+      );
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    const tokenHash = this.hashToken(refreshToken);
+
+    const tokenEntity = await this.refreshTokenRepository.findOne(
+      { token_hash: tokenHash },
+      { populate: ['session', 'user'] },
+    );
+
+    if (!tokenEntity) {
+      await this.logAuthAttempt(
+        payload.email ?? 'unknown',
+        false,
+        'Token refresh failed - token not recognized',
+        ipAddress,
+        userAgent,
+      );
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    if (tokenEntity.is_revoked) {
+      this.logger.warn(
+        `Refresh token reuse detected for session ${tokenEntity.session.id}`,
+      );
+      await this.revokeSession(tokenEntity.session.id);
+      await this.logAuthAttempt(
+        tokenEntity.user.email,
+        false,
+        'Token refresh failed - reuse detected, session revoked',
+        ipAddress,
+        userAgent,
+      );
+      throw new UnauthorizedException('Refresh token reuse detected');
+    }
+
+    const session = tokenEntity.session;
+
+    if (!session.is_active) {
+      throw new UnauthorizedException('Session is no longer active');
+    }
+
+    const now = new Date();
+    if (now > session.absolute_expires_at) {
+      await this.revokeSession(session.id);
+      throw new UnauthorizedException('Session has expired');
+    }
+
+    if (now > tokenEntity.expires_at) {
+      throw new UnauthorizedException('Refresh token expired');
+    }
+
+    const rowsRevoked = await this.refreshTokenRepository.nativeUpdate(
+      { id: tokenEntity.id, is_revoked: false },
+      { is_revoked: true },
+    );
+
+    if (rowsRevoked === 0) {
+      throw new UnauthorizedException('Refresh token already used');
+    }
+
+    this.em.clear();
+
+    const user = await this.userRepository.findOneOrFail({
+      id: tokenEntity.user.id,
+    });
+    const freshSession = await this.sessionRepository.findOneOrFail({
+      id: session.id,
+    });
+
+    freshSession.last_activity_at = now;
+    if (ipAddress) freshSession.ip_address = ipAddress;
+    if (userAgent) freshSession.user_agent = userAgent;
+
+    const issued = await this.issueTokensForSession(
+      user,
+      freshSession,
+      ipAddress,
+      userAgent,
+    );
+
+    await this.em.flush();
+
+    await this.logAuthAttempt(
+      user.email,
+      true,
+      'Token refreshed',
+      ipAddress,
+      userAgent,
+    );
+
+    return issued.tokens;
   }
 
   async logout(
     userId: string,
+    sid: string,
     refreshToken?: string,
     ipAddress?: string,
     userAgent?: string,
   ): Promise<void> {
-    this.logger.debug(`Logging out user: ${userId}`);
+    let targetSessionId = sid;
 
     if (refreshToken) {
-      const tokenEntity = await this.refreshTokenRepository.findOne({
-        token: refreshToken,
-        user: { id: userId },
-      });
-
-      if (tokenEntity) {
-        tokenEntity.is_revoked = true;
-        tokenEntity.is_active = false;
-        await this.em.persist(tokenEntity).flush();
+      const hash = this.hashToken(refreshToken);
+      const tokenEntity = await this.refreshTokenRepository.findOne(
+        { token_hash: hash },
+        { populate: ['session'] },
+      );
+      if (tokenEntity && tokenEntity.user.id === userId) {
+        targetSessionId = tokenEntity.session.id;
       }
     }
 
-    await this.sessionRepository.nativeUpdate(
-      { user: { id: userId }, is_active: true },
-      { is_active: false },
-    );
+    await this.revokeSession(targetSessionId);
 
-    // Log logout operation to database for audit trail
     const user = await this.userRepository.findOne({ id: userId });
     if (user) {
       await this.logAuthAttempt(
         user.email,
         true,
-        'User logged out successfully',
+        'User logged out',
         ipAddress,
         userAgent,
       );
     }
-
-    this.logger.log(`User logged out: ${userId}`);
   }
 
-  private async generateTokens(user: User): Promise<TokenResponseDto> {
-    const payload: JwtPayload = {
-      sub: user.id,
-      email: user.email,
-      first_name: user.first_name,
-    };
+  private async startSession(
+    user: User,
+    ipAddress?: string,
+    userAgent?: string,
+  ): Promise<IssuedTokens> {
+    const sessionLifetimeMs = requireIntEnv('JWT_REFRESH_EXPIRES_IN_MS');
+    const now = new Date();
 
-    const accessTokenExpiresInMs = parseInt(process.env.JWT_EXPIRES_IN_MS!, 10);
-    const refreshTokenExpiresInMs = parseInt(
-      process.env.JWT_REFRESH_EXPIRES_IN_MS!,
-      10,
+    const session = this.sessionRepository.create({
+      user,
+      ip_address: ipAddress,
+      user_agent: userAgent,
+      created_at: now,
+      absolute_expires_at: new Date(now.getTime() + sessionLifetimeMs),
+      last_activity_at: now,
+      is_active: true,
+    });
+
+    await this.em.persist(session).flush();
+
+    const issued = await this.issueTokensForSession(
+      user,
+      session,
+      ipAddress,
+      userAgent,
     );
+    await this.em.flush();
+    return issued;
+  }
 
-    // Convert milliseconds to seconds for JWT (JWT requires seconds)
+  private async issueTokensForSession(
+    user: User,
+    session: Session,
+    ipAddress?: string,
+    userAgent?: string,
+  ): Promise<IssuedTokens> {
+    const accessTokenExpiresInMs = requireIntEnv('JWT_EXPIRES_IN_MS');
+    const refreshTokenExpiresInMs = requireIntEnv('JWT_REFRESH_EXPIRES_IN_MS');
+
     const accessTokenExpiresInSeconds = Math.floor(
       accessTokenExpiresInMs / 1000,
     );
@@ -356,116 +344,82 @@ export class AuthService {
       refreshTokenExpiresInMs / 1000,
     );
 
-    const jwtPayload: Record<string, unknown> = {
-      sub: payload.sub,
-      email: payload.email,
-      first_name: payload.first_name,
+    const accessJti = randomUUID();
+    const refreshJti = randomUUID();
+
+    const accessPayload: Omit<JwtPayload, 'iat' | 'exp'> = {
+      sub: user.id,
+      email: user.email,
+      first_name: user.first_name,
+      type: 'access',
+      jti: accessJti,
+      sid: session.id,
     };
 
-    const accessTokenSecret = process.env.JWT_SECRET || 'secret';
-    const refreshTokenSecret = process.env.JWT_REFRESH_SECRET!;
+    const refreshPayload: Omit<JwtPayload, 'iat' | 'exp'> = {
+      sub: user.id,
+      email: user.email,
+      first_name: user.first_name,
+      type: 'refresh',
+      jti: refreshJti,
+      sid: session.id,
+    };
 
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(jwtPayload, {
-        secret: accessTokenSecret,
+      this.jwtService.signAsync(accessPayload, {
+        secret: requireEnv('JWT_SECRET'),
         expiresIn: accessTokenExpiresInSeconds,
       }),
-      this.jwtService.signAsync(jwtPayload, {
-        secret: refreshTokenSecret,
+      this.jwtService.signAsync(refreshPayload, {
+        secret: requireEnv('JWT_REFRESH_SECRET'),
         expiresIn: refreshTokenExpiresInSeconds,
       }),
     ]);
 
-    return {
-      access_token: accessToken,
-      refresh_token: refreshToken,
-      expires_in: accessTokenExpiresInSeconds,
-      token_type: 'Bearer',
-    };
-  }
+    const refreshExpiresAt = new Date(Date.now() + refreshTokenExpiresInMs);
+    const refreshTokenHash = this.hashToken(refreshToken);
 
-  private async createSession(
-    user: User,
-    accessToken: string,
-    ipAddress?: string,
-    userAgent?: string,
-  ): Promise<Session> {
-    const accessTokenExpiresInMs = parseInt(process.env.JWT_EXPIRES_IN_MS!, 10);
-
-    const session = this.sessionRepository.create({
+    const refreshRow = this.refreshTokenRepository.create({
       user,
-      session_token: accessToken,
+      session,
+      token_hash: refreshTokenHash,
+      jti: refreshJti,
       ip_address: ipAddress,
       user_agent: userAgent,
       created_at: new Date(),
-      expires_at: new Date(Date.now() + accessTokenExpiresInMs),
-      last_activity_at: new Date(),
-      is_active: true,
-    });
-
-    await this.em.persist(session).flush();
-    return session;
-  }
-
-  private async updateOrCreateSession(
-    user: User,
-    accessToken: string,
-    ipAddress?: string,
-    userAgent?: string,
-  ): Promise<Session> {
-    const accessTokenExpiresInMs = parseInt(process.env.JWT_EXPIRES_IN_MS!, 10);
-
-    // Find existing active session for this user
-    const existingSession = await this.sessionRepository.findOne({
-      user: { id: user.id },
-      is_active: true,
-    });
-
-    if (existingSession) {
-      // Update existing session with new token
-      existingSession.session_token = accessToken;
-      existingSession.expires_at = new Date(
-        Date.now() + accessTokenExpiresInMs,
-      );
-      existingSession.last_activity_at = new Date();
-      if (ipAddress) existingSession.ip_address = ipAddress;
-      if (userAgent) existingSession.user_agent = userAgent;
-      existingSession.is_active = true;
-
-      await this.em.persist(existingSession).flush();
-      return existingSession;
-    } else {
-      // Create new session if none exists
-      return this.createSession(user, accessToken, ipAddress, userAgent);
-    }
-  }
-
-  private async createRefreshToken(
-    user: User,
-    refreshToken: string,
-    ipAddress?: string,
-    userAgent?: string,
-    familyId?: string,
-  ): Promise<RefreshToken> {
-    const refreshTokenExpiresInMs = parseInt(
-      process.env.JWT_REFRESH_EXPIRES_IN_MS!,
-      10,
-    );
-
-    const token = this.refreshTokenRepository.create({
-      user,
-      token: refreshToken,
-      family_id: familyId || randomBytes(16).toString('hex'),
-      ip_address: ipAddress,
-      user_agent: userAgent,
-      created_at: new Date(),
-      expires_at: new Date(Date.now() + refreshTokenExpiresInMs),
-      is_active: true,
+      expires_at: refreshExpiresAt,
       is_revoked: false,
     });
 
-    await this.em.persist(token).flush();
-    return token;
+    this.em.persist(refreshRow);
+
+    return {
+      tokens: {
+        access_token: accessToken,
+        refresh_token: refreshToken,
+        expires_in: accessTokenExpiresInSeconds,
+        token_type: 'Bearer',
+      },
+      session,
+      refreshJti,
+      refreshTokenHash,
+      refreshExpiresAt,
+    };
+  }
+
+  private async revokeSession(sessionId: string): Promise<void> {
+    await this.sessionRepository.nativeUpdate(
+      { id: sessionId },
+      { is_active: false },
+    );
+    await this.refreshTokenRepository.nativeUpdate(
+      { session: { id: sessionId }, is_revoked: false },
+      { is_revoked: true },
+    );
+  }
+
+  private hashToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
   }
 
   private async logAuthAttempt(
@@ -480,10 +434,7 @@ export class AuthService {
       source: LogSource.AUTH,
       context: 'Authentication',
       message: `Auth attempt: ${message} - ${email}`,
-      metadata: {
-        email,
-        success,
-      },
+      metadata: { email, success },
       ip_address: ipAddress,
       user_agent: userAgent,
       created_at: new Date(),

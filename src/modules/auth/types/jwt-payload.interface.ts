@@ -1,11 +1,16 @@
 import { User } from '../../../entities/user.entity';
 
+export type TokenType = 'access' | 'refresh';
+
 export interface JwtPayload {
-  sub: string; // User ID
+  sub: string;
   email: string;
   first_name: string;
-  iat?: number; // Issued at (added by JWT)
-  exp?: number; // Expiration (added by JWT)
+  type: TokenType;
+  jti: string;
+  sid?: string;
+  iat?: number;
+  exp?: number;
 }
 
 export type AuthenticatedUser = Pick<
@@ -17,4 +22,4 @@ export type AuthenticatedUser = Pick<
   | 'username'
   | 'currency'
   | 'language_code'
->;
+> & { sid: string };
