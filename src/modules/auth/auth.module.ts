@@ -11,6 +11,7 @@ import { User } from '../../entities/user.entity';
 import { RefreshToken } from '../../entities/refresh-token.entity';
 import { Session } from '../../entities/session.entity';
 import { Log } from '../../entities/log.entity';
+import { requireEnv, requireIntEnv } from './auth.env';
 
 @Module({
   imports: [
@@ -18,11 +19,9 @@ import { Log } from '../../entities/log.entity';
     PassportModule,
     UserModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'your-secret-key',
+      secret: requireEnv('JWT_SECRET'),
       signOptions: {
-        expiresIn: Math.floor(
-          parseInt(process.env.JWT_EXPIRES_IN_MS!, 10) / 1000,
-        ), // Convert milliseconds to seconds, because JWT requires seconds
+        expiresIn: Math.floor(requireIntEnv('JWT_EXPIRES_IN_MS') / 1000),
       },
     }),
   ],

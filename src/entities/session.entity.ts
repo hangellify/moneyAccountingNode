@@ -1,4 +1,4 @@
-import { Entity, Property, ManyToOne, Index } from '@mikro-orm/core';
+import { Entity, Property, ManyToOne } from '@mikro-orm/core';
 import { BaseEntity } from './base.entity';
 import { User } from './user.entity';
 
@@ -6,10 +6,6 @@ import { User } from './user.entity';
 export class Session extends BaseEntity {
   @ManyToOne(() => User, { nullable: false, deleteRule: 'cascade' })
   user!: User;
-
-  @Property({ type: 'varchar', length: 500, nullable: false, unique: true })
-  @Index()
-  session_token!: string;
 
   @Property({ type: 'varchar', length: 45, nullable: true })
   ip_address?: string;
@@ -21,7 +17,7 @@ export class Session extends BaseEntity {
   created_at!: Date;
 
   @Property({ type: 'timestamptz', nullable: false })
-  expires_at!: Date;
+  absolute_expires_at!: Date;
 
   @Property({ type: 'timestamptz', nullable: true })
   last_activity_at?: Date;

@@ -21,6 +21,7 @@ import { UserService } from '../user/user.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { LogoutDto } from './dto/logout.dto';
 import { TokenResponseDto } from './dto/token-response.dto';
 import { UserProfileDto } from '../user/dto/user-profile.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
@@ -36,35 +37,8 @@ export class AuthController {
     private readonly userService: UserService,
   ) {}
 
-  /**
-   * Extract IP address from request, handling reverse proxies
-   * Checks X-Forwarded-For header first, then falls back to req.ip or socket.remoteAddress
-   */
   private extractIpAddress(req: Request): string {
-    // Check X-Forwarded-For header (for reverse proxies)
-    const xForwardedFor = req.headers['x-forwarded-for'];
-    if (xForwardedFor) {
-      // X-Forwarded-For can contain multiple IPs, take the first one (original client)
-      const ips =
-        typeof xForwardedFor === 'string'
-          ? xForwardedFor.split(',').map((ip) => ip.trim())
-          : [xForwardedFor[0]];
-      if (ips.length > 0 && ips[0]) {
-        return ips[0];
-      }
-    }
-
-    // Fallback to req.ip (requires trust proxy to be configured)
-    if (req.ip) {
-      return req.ip;
-    }
-
-    // Final fallback to socket remote address
-    if (req.socket?.remoteAddress) {
-      return req.socket.remoteAddress;
-    }
-
-    return 'unknown';
+    return req.ip ?? req.socket?.remoteAddress ?? 'unknown';
   }
 
   @Post('register')
@@ -148,14 +122,21 @@ export class AuthController {
     },
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiBody({ type: LogoutDto, required: false })
   async logout(
     @CurrentUser() user: AuthenticatedUser,
     @Req() req: Request,
-    @Body('refresh_token') refreshToken?: string,
+    @Body() logoutDto: LogoutDto = {},
   ): Promise<{ message: string }> {
     const ipAddress = this.extractIpAddress(req);
     const userAgent = req.get('user-agent');
-    await this.authService.logout(user.id, refreshToken, ipAddress, userAgent);
+    await this.authService.logout(
+      user.id,
+      user.sid,
+      logoutDto.refresh_token,
+      ipAddress,
+      userAgent,
+    );
     return { message: 'Logged out successfully' };
   }
 
