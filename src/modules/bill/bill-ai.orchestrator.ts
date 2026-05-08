@@ -26,7 +26,7 @@ export class BillAiOrchestrator {
     );
     const categorized = await this.gateway.run(
       this.categorizer,
-      { items: parsed.items },
+      { items: parsed.items, userId },
       { userId },
     );
     return { parsed, categorized };

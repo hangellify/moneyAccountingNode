@@ -14,6 +14,7 @@ import { BILL_CATEGORIZER_SYSTEM_PROMPT } from './prompts';
 
 const InputSchema = z.object({
   items: z.array(ParsedBillItemSchema),
+  userId: z.string().uuid(),
 });
 type Input = z.infer<typeof InputSchema>;
 
@@ -34,7 +35,7 @@ export class BillCategorizerTask extends AiTask<Input, CategorizedBill> {
 
   async buildRequest(input: Input): Promise<TaskRequest> {
     const subs = await this.subCategoryRepo.find(
-      { deleted_at: null },
+      { deleted_at: null, category: { user: { id: input.userId } } },
       { populate: ['category'] },
     );
     const tree = this.renderTree(subs);
