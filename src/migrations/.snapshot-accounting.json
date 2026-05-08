@@ -11,1207 +11,368 @@
           "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
-          "primary": false,
+          "primary": true,
           "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
           "default": "gen_random_uuid()",
+          "comment": null,
+          "enumItems": [],
           "mappedType": "uuid"
         },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "text"
-        },
-        "marked_name": {
-          "name": "marked_name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "amount": {
-          "name": "amount",
-          "type": "numeric(19,2)",
+        "ai_request_id": {
+          "name": "ai_request_id",
+          "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "precision": 19,
-          "scale": 2,
-          "mappedType": "decimal"
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
         },
-        "product_count": {
-          "name": "product_count",
-          "type": "int",
+        "attempt_number": {
+          "name": "attempt_number",
+          "type": "int4",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "default": "1",
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
           "mappedType": "integer"
         },
-        "bill_date": {
-          "name": "bill_date",
-          "type": "date",
+        "provider_name": {
+          "name": "provider_name",
+          "type": "varchar(32)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 0,
-          "mappedType": "date"
+          "unique": false,
+          "length": 32,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
         },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamptz",
+        "model": {
+          "name": "model",
+          "type": "varchar(128)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
+          "unique": false,
+          "length": 128,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
         },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamptz",
+        "status": {
+          "name": "status",
+          "type": "ai_attempt_status_enum",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [
+            "SUCCESS",
+            "FAILED"
+          ],
+          "mappedType": "unknown",
+          "nativeEnumName": "ai_attempt_status_enum"
         },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "timestamptz",
+        "error_code": {
+          "name": "error_code",
+          "type": "ai_attempt_error_code_enum",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
-          "length": 6,
-          "mappedType": "datetime"
-        }
-      },
-      "name": "bills",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "bills_pkey",
-          "columnNames": [
-            "id"
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [
+            "TIMEOUT",
+            "RATE_LIMIT",
+            "SERVER_ERROR",
+            "SCHEMA_INVALID",
+            "INVALID_RESPONSE",
+            "PROVIDER_ERROR",
+            "UNKNOWN"
           ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {},
-      "nativeEnums": {
-        "currency_enum": {
-          "name": "currency_enum",
-          "schema": "public",
-          "items": [
-            "EUR",
-            "GBP",
-            "RON",
-            "PLN",
-            "MDL",
-            "CZK",
-            "HUF",
-            "BGN",
-            "HRK",
-            "DKK",
-            "SEK",
-            "NOK",
-            "CHF",
-            "ISK",
-            "RSD",
-            "BAM",
-            "ALL",
-            "MKD",
-            "UAH",
-            "BYN",
-            "RUB",
-            "TRY",
-            "JPY",
-            "CNY",
-            "INR",
-            "KRW",
-            "THB",
-            "SGD",
-            "MYR",
-            "IDR",
-            "PHP",
-            "VND",
-            "HKD",
-            "TWD",
-            "PKR",
-            "BDT",
-            "LKR",
-            "NPR",
-            "MMK",
-            "KHR",
-            "LAK",
-            "MNT",
-            "KZT",
-            "UZS",
-            "AZN",
-            "AMD",
-            "GEL",
-            "ILS",
-            "JOD",
-            "LBP",
-            "SAR",
-            "AED",
-            "QAR",
-            "KWD",
-            "BHD",
-            "OMR",
-            "IRR",
-            "IQD",
-            "ZAR",
-            "EGP",
-            "NGN",
-            "KES",
-            "GHS",
-            "ETB",
-            "UGX",
-            "TZS",
-            "RWF",
-            "XOF",
-            "XAF",
-            "MAD",
-            "TND",
-            "DZD",
-            "LYD",
-            "AOA",
-            "MZN",
-            "ZMW",
-            "BWP",
-            "MUR",
-            "USD",
-            "CAD",
-            "MXN",
-            "BRL",
-            "ARS",
-            "CLP",
-            "COP",
-            "PEN",
-            "VES",
-            "UYU",
-            "PYG",
-            "BOB",
-            "GTQ",
-            "HNL",
-            "NIO",
-            "CRC",
-            "PAB",
-            "DOP",
-            "HTG",
-            "JMD",
-            "BBD",
-            "BZD",
-            "TTD",
-            "XCD",
-            "GYD",
-            "SRD"
-          ]
+          "mappedType": "unknown",
+          "nativeEnumName": "ai_attempt_error_code_enum"
         },
-        "period_type_enum": {
-          "name": "period_type_enum",
-          "schema": "public",
-          "items": [
-            "DAILY",
-            "WEEKLY",
-            "TWO_WEEKS",
-            "THREE_WEEKS",
-            "MONTHLY",
-            "TWO_MONTHS",
-            "QUARTERLY",
-            "SEMI_ANNUAL",
-            "YEARLY"
-          ]
-        },
-        "language_code_enum": {
-          "name": "language_code_enum",
-          "schema": "public",
-          "items": [
-            "RU",
-            "EN",
-            "RO"
-          ]
-        },
-        "log_level_enum": {
-          "name": "log_level_enum",
-          "schema": "public",
-          "items": [
-            "DEBUG",
-            "INFO",
-            "WARN",
-            "ERROR"
-          ]
-        },
-        "log_source_enum": {
-          "name": "log_source_enum",
-          "schema": "public",
-          "items": [
-            "BACKEND",
-            "FRONTEND",
-            "API",
-            "AUTH",
-            "DATABASE"
-          ]
-        }
-      }
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "gen_random_uuid()",
-          "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "description": {
-          "name": "description",
+        "error_message": {
+          "name": "error_message",
           "type": "text",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
           "mappedType": "text"
         },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 6,
-          "mappedType": "datetime"
-        }
-      },
-      "name": "budgets",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "budgets_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {},
-      "nativeEnums": {
-        "currency_enum": {
-          "name": "currency_enum",
-          "schema": "public",
-          "items": [
-            "EUR",
-            "GBP",
-            "RON",
-            "PLN",
-            "MDL",
-            "CZK",
-            "HUF",
-            "BGN",
-            "HRK",
-            "DKK",
-            "SEK",
-            "NOK",
-            "CHF",
-            "ISK",
-            "RSD",
-            "BAM",
-            "ALL",
-            "MKD",
-            "UAH",
-            "BYN",
-            "RUB",
-            "TRY",
-            "JPY",
-            "CNY",
-            "INR",
-            "KRW",
-            "THB",
-            "SGD",
-            "MYR",
-            "IDR",
-            "PHP",
-            "VND",
-            "HKD",
-            "TWD",
-            "PKR",
-            "BDT",
-            "LKR",
-            "NPR",
-            "MMK",
-            "KHR",
-            "LAK",
-            "MNT",
-            "KZT",
-            "UZS",
-            "AZN",
-            "AMD",
-            "GEL",
-            "ILS",
-            "JOD",
-            "LBP",
-            "SAR",
-            "AED",
-            "QAR",
-            "KWD",
-            "BHD",
-            "OMR",
-            "IRR",
-            "IQD",
-            "ZAR",
-            "EGP",
-            "NGN",
-            "KES",
-            "GHS",
-            "ETB",
-            "UGX",
-            "TZS",
-            "RWF",
-            "XOF",
-            "XAF",
-            "MAD",
-            "TND",
-            "DZD",
-            "LYD",
-            "AOA",
-            "MZN",
-            "ZMW",
-            "BWP",
-            "MUR",
-            "USD",
-            "CAD",
-            "MXN",
-            "BRL",
-            "ARS",
-            "CLP",
-            "COP",
-            "PEN",
-            "VES",
-            "UYU",
-            "PYG",
-            "BOB",
-            "GTQ",
-            "HNL",
-            "NIO",
-            "CRC",
-            "PAB",
-            "DOP",
-            "HTG",
-            "JMD",
-            "BBD",
-            "BZD",
-            "TTD",
-            "XCD",
-            "GYD",
-            "SRD"
-          ]
-        },
-        "period_type_enum": {
-          "name": "period_type_enum",
-          "schema": "public",
-          "items": [
-            "DAILY",
-            "WEEKLY",
-            "TWO_WEEKS",
-            "THREE_WEEKS",
-            "MONTHLY",
-            "TWO_MONTHS",
-            "QUARTERLY",
-            "SEMI_ANNUAL",
-            "YEARLY"
-          ]
-        },
-        "language_code_enum": {
-          "name": "language_code_enum",
-          "schema": "public",
-          "items": [
-            "RU",
-            "EN",
-            "RO"
-          ]
-        },
-        "log_level_enum": {
-          "name": "log_level_enum",
-          "schema": "public",
-          "items": [
-            "DEBUG",
-            "INFO",
-            "WARN",
-            "ERROR"
-          ]
-        },
-        "log_source_enum": {
-          "name": "log_source_enum",
-          "schema": "public",
-          "items": [
-            "BACKEND",
-            "FRONTEND",
-            "API",
-            "AUTH",
-            "DATABASE"
-          ]
-        }
-      }
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "gen_random_uuid()",
-          "mappedType": "uuid"
-        },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "description": {
-          "name": "description",
+        "raw_response_text": {
+          "name": "raw_response_text",
           "type": "text",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
           "mappedType": "text"
         },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "timestamptz",
+        "parsed_json": {
+          "name": "parsed_json",
+          "type": "jsonb",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
-          "length": 6,
-          "mappedType": "datetime"
-        }
-      },
-      "name": "categories",
-      "schema": "public",
-      "indexes": [
-        {
-          "keyName": "categories_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {},
-      "nativeEnums": {
-        "currency_enum": {
-          "name": "currency_enum",
-          "schema": "public",
-          "items": [
-            "EUR",
-            "GBP",
-            "RON",
-            "PLN",
-            "MDL",
-            "CZK",
-            "HUF",
-            "BGN",
-            "HRK",
-            "DKK",
-            "SEK",
-            "NOK",
-            "CHF",
-            "ISK",
-            "RSD",
-            "BAM",
-            "ALL",
-            "MKD",
-            "UAH",
-            "BYN",
-            "RUB",
-            "TRY",
-            "JPY",
-            "CNY",
-            "INR",
-            "KRW",
-            "THB",
-            "SGD",
-            "MYR",
-            "IDR",
-            "PHP",
-            "VND",
-            "HKD",
-            "TWD",
-            "PKR",
-            "BDT",
-            "LKR",
-            "NPR",
-            "MMK",
-            "KHR",
-            "LAK",
-            "MNT",
-            "KZT",
-            "UZS",
-            "AZN",
-            "AMD",
-            "GEL",
-            "ILS",
-            "JOD",
-            "LBP",
-            "SAR",
-            "AED",
-            "QAR",
-            "KWD",
-            "BHD",
-            "OMR",
-            "IRR",
-            "IQD",
-            "ZAR",
-            "EGP",
-            "NGN",
-            "KES",
-            "GHS",
-            "ETB",
-            "UGX",
-            "TZS",
-            "RWF",
-            "XOF",
-            "XAF",
-            "MAD",
-            "TND",
-            "DZD",
-            "LYD",
-            "AOA",
-            "MZN",
-            "ZMW",
-            "BWP",
-            "MUR",
-            "USD",
-            "CAD",
-            "MXN",
-            "BRL",
-            "ARS",
-            "CLP",
-            "COP",
-            "PEN",
-            "VES",
-            "UYU",
-            "PYG",
-            "BOB",
-            "GTQ",
-            "HNL",
-            "NIO",
-            "CRC",
-            "PAB",
-            "DOP",
-            "HTG",
-            "JMD",
-            "BBD",
-            "BZD",
-            "TTD",
-            "XCD",
-            "GYD",
-            "SRD"
-          ]
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
         },
-        "period_type_enum": {
-          "name": "period_type_enum",
-          "schema": "public",
-          "items": [
-            "DAILY",
-            "WEEKLY",
-            "TWO_WEEKS",
-            "THREE_WEEKS",
-            "MONTHLY",
-            "TWO_MONTHS",
-            "QUARTERLY",
-            "SEMI_ANNUAL",
-            "YEARLY"
-          ]
-        },
-        "language_code_enum": {
-          "name": "language_code_enum",
-          "schema": "public",
-          "items": [
-            "RU",
-            "EN",
-            "RO"
-          ]
-        },
-        "log_level_enum": {
-          "name": "log_level_enum",
-          "schema": "public",
-          "items": [
-            "DEBUG",
-            "INFO",
-            "WARN",
-            "ERROR"
-          ]
-        },
-        "log_source_enum": {
-          "name": "log_source_enum",
-          "schema": "public",
-          "items": [
-            "BACKEND",
-            "FRONTEND",
-            "API",
-            "AUTH",
-            "DATABASE"
-          ]
-        }
-      }
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
+        "latency_ms": {
+          "name": "latency_ms",
+          "type": "int4",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "default": "gen_random_uuid()",
-          "mappedType": "uuid"
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
         },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
+        "input_tokens": {
+          "name": "input_tokens",
+          "type": "int4",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
-          "mappedType": "text"
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
         },
-        "amount": {
-          "name": "amount",
-          "type": "numeric(19,2)",
+        "output_tokens": {
+          "name": "output_tokens",
+          "type": "int4",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
-          "precision": 19,
-          "scale": 2,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "input_cost_usd": {
+          "name": "input_cost_usd",
+          "type": "numeric(12,6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 12,
+          "scale": 6,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
           "mappedType": "decimal"
         },
-        "currency": {
-          "name": "currency",
-          "type": "currency_enum",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "nativeEnumName": "currency_enum",
-          "enumItems": [
-            "EUR",
-            "GBP",
-            "RON",
-            "PLN",
-            "MDL",
-            "CZK",
-            "HUF",
-            "BGN",
-            "HRK",
-            "DKK",
-            "SEK",
-            "NOK",
-            "CHF",
-            "ISK",
-            "RSD",
-            "BAM",
-            "ALL",
-            "MKD",
-            "UAH",
-            "BYN",
-            "RUB",
-            "TRY",
-            "JPY",
-            "CNY",
-            "INR",
-            "KRW",
-            "THB",
-            "SGD",
-            "MYR",
-            "IDR",
-            "PHP",
-            "VND",
-            "HKD",
-            "TWD",
-            "PKR",
-            "BDT",
-            "LKR",
-            "NPR",
-            "MMK",
-            "KHR",
-            "LAK",
-            "MNT",
-            "KZT",
-            "UZS",
-            "AZN",
-            "AMD",
-            "GEL",
-            "ILS",
-            "JOD",
-            "LBP",
-            "SAR",
-            "AED",
-            "QAR",
-            "KWD",
-            "BHD",
-            "OMR",
-            "IRR",
-            "IQD",
-            "ZAR",
-            "EGP",
-            "NGN",
-            "KES",
-            "GHS",
-            "ETB",
-            "UGX",
-            "TZS",
-            "RWF",
-            "XOF",
-            "XAF",
-            "MAD",
-            "TND",
-            "DZD",
-            "LYD",
-            "AOA",
-            "MZN",
-            "ZMW",
-            "BWP",
-            "MUR",
-            "USD",
-            "CAD",
-            "MXN",
-            "BRL",
-            "ARS",
-            "CLP",
-            "COP",
-            "PEN",
-            "VES",
-            "UYU",
-            "PYG",
-            "BOB",
-            "GTQ",
-            "HNL",
-            "NIO",
-            "CRC",
-            "PAB",
-            "DOP",
-            "HTG",
-            "JMD",
-            "BBD",
-            "BZD",
-            "TTD",
-            "XCD",
-            "GYD",
-            "SRD"
-          ],
-          "mappedType": "enum"
-        },
-        "period_type": {
-          "name": "period_type",
-          "type": "period_type_enum",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "nativeEnumName": "period_type_enum",
-          "enumItems": [
-            "DAILY",
-            "WEEKLY",
-            "TWO_WEEKS",
-            "THREE_WEEKS",
-            "MONTHLY",
-            "TWO_MONTHS",
-            "QUARTERLY",
-            "SEMI_ANNUAL",
-            "YEARLY"
-          ],
-          "mappedType": "enum"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "timestamptz",
+        "output_cost_usd": {
+          "name": "output_cost_usd",
+          "type": "numeric(12,6)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
-          "length": 6,
-          "mappedType": "datetime"
+          "unique": false,
+          "length": null,
+          "precision": 12,
+          "scale": 6,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "decimal"
         },
-        "budget_id": {
-          "name": "budget_id",
-          "type": "uuid",
+        "total_cost_usd": {
+          "name": "total_cost_usd",
+          "type": "numeric(12,6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 12,
+          "scale": 6,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "decimal"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "mappedType": "uuid"
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
         }
       },
-      "name": "planing_horizons",
+      "name": "ai_request_attempts",
       "schema": "public",
       "indexes": [
         {
-          "keyName": "planing_horizons_pkey",
+          "columnNames": [
+            "ai_request_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "ai_request_attempts_ai_request_id_index",
+          "unique": false,
+          "primary": false
+        },
+        {
           "columnNames": [
             "id"
           ],
           "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "planing_horizons_budget_id_foreign": {
-          "constraintName": "planing_horizons_budget_id_foreign",
-          "columnNames": [
-            "budget_id"
-          ],
-          "localTableName": "public.planing_horizons",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.budgets",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {
-        "currency_enum": {
-          "name": "currency_enum",
-          "schema": "public",
-          "items": [
-            "EUR",
-            "GBP",
-            "RON",
-            "PLN",
-            "MDL",
-            "CZK",
-            "HUF",
-            "BGN",
-            "HRK",
-            "DKK",
-            "SEK",
-            "NOK",
-            "CHF",
-            "ISK",
-            "RSD",
-            "BAM",
-            "ALL",
-            "MKD",
-            "UAH",
-            "BYN",
-            "RUB",
-            "TRY",
-            "JPY",
-            "CNY",
-            "INR",
-            "KRW",
-            "THB",
-            "SGD",
-            "MYR",
-            "IDR",
-            "PHP",
-            "VND",
-            "HKD",
-            "TWD",
-            "PKR",
-            "BDT",
-            "LKR",
-            "NPR",
-            "MMK",
-            "KHR",
-            "LAK",
-            "MNT",
-            "KZT",
-            "UZS",
-            "AZN",
-            "AMD",
-            "GEL",
-            "ILS",
-            "JOD",
-            "LBP",
-            "SAR",
-            "AED",
-            "QAR",
-            "KWD",
-            "BHD",
-            "OMR",
-            "IRR",
-            "IQD",
-            "ZAR",
-            "EGP",
-            "NGN",
-            "KES",
-            "GHS",
-            "ETB",
-            "UGX",
-            "TZS",
-            "RWF",
-            "XOF",
-            "XAF",
-            "MAD",
-            "TND",
-            "DZD",
-            "LYD",
-            "AOA",
-            "MZN",
-            "ZMW",
-            "BWP",
-            "MUR",
-            "USD",
-            "CAD",
-            "MXN",
-            "BRL",
-            "ARS",
-            "CLP",
-            "COP",
-            "PEN",
-            "VES",
-            "UYU",
-            "PYG",
-            "BOB",
-            "GTQ",
-            "HNL",
-            "NIO",
-            "CRC",
-            "PAB",
-            "DOP",
-            "HTG",
-            "JMD",
-            "BBD",
-            "BZD",
-            "TTD",
-            "XCD",
-            "GYD",
-            "SRD"
-          ]
+          "constraint": false,
+          "keyName": "ai_request_attempts_pkey",
+          "unique": true,
+          "primary": true
         },
-        "period_type_enum": {
-          "name": "period_type_enum",
-          "schema": "public",
-          "items": [
-            "DAILY",
-            "WEEKLY",
-            "TWO_WEEKS",
-            "THREE_WEEKS",
-            "MONTHLY",
-            "TWO_MONTHS",
-            "QUARTERLY",
-            "SEMI_ANNUAL",
-            "YEARLY"
-          ]
-        },
-        "language_code_enum": {
-          "name": "language_code_enum",
-          "schema": "public",
-          "items": [
-            "RU",
-            "EN",
-            "RO"
-          ]
-        },
-        "log_level_enum": {
-          "name": "log_level_enum",
-          "schema": "public",
-          "items": [
-            "DEBUG",
-            "INFO",
-            "WARN",
-            "ERROR"
-          ]
-        },
-        "log_source_enum": {
-          "name": "log_source_enum",
-          "schema": "public",
-          "items": [
-            "BACKEND",
-            "FRONTEND",
-            "API",
-            "AUTH",
-            "DATABASE"
-          ]
-        }
-      }
-    },
-    {
-      "columns": {
-        "planing_horizon_id": {
-          "name": "planing_horizon_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "category_id": {
-          "name": "category_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        }
-      },
-      "name": "planing_horizon_categories",
-      "schema": "public",
-      "indexes": [
         {
-          "keyName": "planing_horizon_categories_pkey",
           "columnNames": [
-            "planing_horizon_id",
-            "category_id"
+            "provider_name"
           ],
-          "composite": true,
-          "constraint": true,
-          "primary": true,
-          "unique": true
+          "composite": false,
+          "constraint": false,
+          "keyName": "ai_request_attempts_provider_name_index",
+          "unique": false,
+          "primary": false
         }
       ],
       "checks": [],
       "foreignKeys": {
-        "planing_horizon_categories_planing_horizon_id_foreign": {
-          "constraintName": "planing_horizon_categories_planing_horizon_id_foreign",
+        "ai_request_attempts_ai_request_id_foreign": {
           "columnNames": [
-            "planing_horizon_id"
+            "ai_request_id"
           ],
-          "localTableName": "public.planing_horizon_categories",
+          "constraintName": "ai_request_attempts_ai_request_id_foreign",
+          "localTableName": "public.ai_request_attempts",
+          "referencedTableName": "public.ai_requests",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.planing_horizons",
-          "deleteRule": "cascade",
-          "updateRule": "cascade"
-        },
-        "planing_horizon_categories_category_id_foreign": {
-          "constraintName": "planing_horizon_categories_category_id_foreign",
-          "columnNames": [
-            "category_id"
-          ],
-          "localTableName": "public.planing_horizon_categories",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.categories",
-          "deleteRule": "cascade",
-          "updateRule": "cascade"
+          "updateRule": "cascade",
+          "deleteRule": "cascade"
         }
       },
       "nativeEnums": {
+        "ai_attempt_error_code_enum": {
+          "name": "ai_attempt_error_code_enum",
+          "schema": "public",
+          "items": [
+            "TIMEOUT",
+            "RATE_LIMIT",
+            "SERVER_ERROR",
+            "SCHEMA_INVALID",
+            "INVALID_RESPONSE",
+            "PROVIDER_ERROR",
+            "UNKNOWN"
+          ]
+        },
+        "ai_attempt_status_enum": {
+          "name": "ai_attempt_status_enum",
+          "schema": "public",
+          "items": [
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
+        "ai_request_status_enum": {
+          "name": "ai_request_status_enum",
+          "schema": "public",
+          "items": [
+            "PENDING",
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
         "currency_enum": {
           "name": "currency_enum",
           "schema": "public",
@@ -1322,21 +483,6 @@
             "SRD"
           ]
         },
-        "period_type_enum": {
-          "name": "period_type_enum",
-          "schema": "public",
-          "items": [
-            "DAILY",
-            "WEEKLY",
-            "TWO_WEEKS",
-            "THREE_WEEKS",
-            "MONTHLY",
-            "TWO_MONTHS",
-            "QUARTERLY",
-            "SEMI_ANNUAL",
-            "YEARLY"
-          ]
-        },
         "language_code_enum": {
           "name": "language_code_enum",
           "schema": "public",
@@ -1366,8 +512,24 @@
             "AUTH",
             "DATABASE"
           ]
+        },
+        "period_type_enum": {
+          "name": "period_type_enum",
+          "schema": "public",
+          "items": [
+            "DAILY",
+            "WEEKLY",
+            "TWO_WEEKS",
+            "THREE_WEEKS",
+            "MONTHLY",
+            "TWO_MONTHS",
+            "QUARTERLY",
+            "SEMI_ANNUAL",
+            "YEARLY"
+          ]
         }
-      }
+      },
+      "comment": null
     },
     {
       "columns": {
@@ -1376,102 +538,322 @@
           "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
-          "primary": false,
+          "primary": true,
           "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
           "default": "gen_random_uuid()",
+          "comment": null,
+          "enumItems": [],
           "mappedType": "uuid"
         },
-        "name": {
-          "name": "name",
-          "type": "varchar(255)",
+        "task_name": {
+          "name": "task_name",
+          "type": "varchar(128)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
+          "unique": false,
+          "length": 128,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
           "mappedType": "string"
         },
-        "description": {
-          "name": "description",
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "status": {
+          "name": "status",
+          "type": "ai_request_status_enum",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [
+            "PENDING",
+            "SUCCESS",
+            "FAILED"
+          ],
+          "mappedType": "unknown",
+          "nativeEnumName": "ai_request_status_enum"
+        },
+        "required_capabilities": {
+          "name": "required_capabilities",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "image_s3_keys": {
+          "name": "image_s3_keys",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "prompt": {
+          "name": "prompt",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "final_output": {
+          "name": "final_output",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "error_message": {
+          "name": "error_message",
           "type": "text",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
           "mappedType": "text"
         },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 6,
-          "mappedType": "datetime"
-        },
-        "category_id": {
-          "name": "category_id",
+        "chosen_attempt_id": {
+          "name": "chosen_attempt_id",
           "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
           "mappedType": "uuid"
+        },
+        "total_latency_ms": {
+          "name": "total_latency_ms",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "total_cost_usd": {
+          "name": "total_cost_usd",
+          "type": "numeric(12,6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 12,
+          "scale": 6,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "decimal"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
         }
       },
-      "name": "sub_categories",
+      "name": "ai_requests",
       "schema": "public",
       "indexes": [
         {
-          "keyName": "sub_categories_pkey",
+          "columnNames": [
+            "created_at"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "ai_requests_created_at_index",
+          "unique": false,
+          "primary": false
+        },
+        {
           "columnNames": [
             "id"
           ],
           "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
+          "constraint": false,
+          "keyName": "ai_requests_pkey",
+          "unique": true,
+          "primary": true
+        },
+        {
+          "columnNames": [
+            "status"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "ai_requests_status_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "task_name"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "ai_requests_task_name_index",
+          "unique": false,
+          "primary": false
         }
       ],
       "checks": [],
       "foreignKeys": {
-        "sub_categories_category_id_foreign": {
-          "constraintName": "sub_categories_category_id_foreign",
+        "ai_requests_user_id_foreign": {
           "columnNames": [
-            "category_id"
+            "user_id"
           ],
-          "localTableName": "public.sub_categories",
+          "constraintName": "ai_requests_user_id_foreign",
+          "localTableName": "public.ai_requests",
+          "referencedTableName": "public.users",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.categories",
-          "updateRule": "cascade"
+          "updateRule": "cascade",
+          "deleteRule": "set null"
         }
       },
       "nativeEnums": {
+        "ai_attempt_error_code_enum": {
+          "name": "ai_attempt_error_code_enum",
+          "schema": "public",
+          "items": [
+            "TIMEOUT",
+            "RATE_LIMIT",
+            "SERVER_ERROR",
+            "SCHEMA_INVALID",
+            "INVALID_RESPONSE",
+            "PROVIDER_ERROR",
+            "UNKNOWN"
+          ]
+        },
+        "ai_attempt_status_enum": {
+          "name": "ai_attempt_status_enum",
+          "schema": "public",
+          "items": [
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
+        "ai_request_status_enum": {
+          "name": "ai_request_status_enum",
+          "schema": "public",
+          "items": [
+            "PENDING",
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
         "currency_enum": {
           "name": "currency_enum",
           "schema": "public",
@@ -1582,21 +964,6 @@
             "SRD"
           ]
         },
-        "period_type_enum": {
-          "name": "period_type_enum",
-          "schema": "public",
-          "items": [
-            "DAILY",
-            "WEEKLY",
-            "TWO_WEEKS",
-            "THREE_WEEKS",
-            "MONTHLY",
-            "TWO_MONTHS",
-            "QUARTERLY",
-            "SEMI_ANNUAL",
-            "YEARLY"
-          ]
-        },
         "language_code_enum": {
           "name": "language_code_enum",
           "schema": "public",
@@ -1626,8 +993,24 @@
             "AUTH",
             "DATABASE"
           ]
+        },
+        "period_type_enum": {
+          "name": "period_type_enum",
+          "schema": "public",
+          "items": [
+            "DAILY",
+            "WEEKLY",
+            "TWO_WEEKS",
+            "THREE_WEEKS",
+            "MONTHLY",
+            "TWO_MONTHS",
+            "QUARTERLY",
+            "SEMI_ANNUAL",
+            "YEARLY"
+          ]
         }
-      }
+      },
+      "comment": null
     },
     {
       "columns": {
@@ -1636,9 +1019,15 @@
           "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
-          "primary": false,
+          "primary": true,
           "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
           "default": "gen_random_uuid()",
+          "comment": null,
+          "enumItems": [],
           "mappedType": "uuid"
         },
         "bill_id": {
@@ -1648,6 +1037,13 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
           "mappedType": "uuid"
         },
         "sub_category_id": {
@@ -1657,16 +1053,29 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
           "mappedType": "uuid"
         },
         "product_count": {
           "name": "product_count",
-          "type": "int",
+          "type": "int4",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
           "default": "1",
+          "comment": null,
+          "enumItems": [],
           "mappedType": "integer"
         },
         "amount": {
@@ -1676,8 +1085,13 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "unique": false,
+          "length": null,
           "precision": 19,
           "scale": 2,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
           "mappedType": "decimal"
         },
         "product_weight": {
@@ -1687,8 +1101,13 @@
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "unique": false,
+          "length": null,
           "precision": 10,
           "scale": 3,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
           "mappedType": "decimal"
         }
       },
@@ -1696,44 +1115,107 @@
       "schema": "public",
       "indexes": [
         {
-          "keyName": "bill_sub_categories_pkey",
+          "columnNames": [
+            "bill_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "bill_sub_categories_bill_id_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "bill_id",
+            "sub_category_id"
+          ],
+          "composite": true,
+          "constraint": false,
+          "keyName": "bill_sub_categories_bill_sub_category_unique",
+          "unique": true,
+          "primary": false
+        },
+        {
           "columnNames": [
             "id"
           ],
           "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
+          "constraint": false,
+          "keyName": "bill_sub_categories_pkey",
+          "unique": true,
+          "primary": true
+        },
+        {
+          "columnNames": [
+            "sub_category_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "bill_sub_categories_sub_category_id_index",
+          "unique": false,
+          "primary": false
         }
       ],
       "checks": [],
       "foreignKeys": {
         "bill_sub_categories_bill_id_foreign": {
-          "constraintName": "bill_sub_categories_bill_id_foreign",
           "columnNames": [
             "bill_id"
           ],
+          "constraintName": "bill_sub_categories_bill_id_foreign",
           "localTableName": "public.bill_sub_categories",
+          "referencedTableName": "public.bills",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.bills",
-          "updateRule": "cascade"
+          "updateRule": "cascade",
+          "deleteRule": "cascade"
         },
         "bill_sub_categories_sub_category_id_foreign": {
-          "constraintName": "bill_sub_categories_sub_category_id_foreign",
           "columnNames": [
             "sub_category_id"
           ],
+          "constraintName": "bill_sub_categories_sub_category_id_foreign",
           "localTableName": "public.bill_sub_categories",
+          "referencedTableName": "public.sub_categories",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.sub_categories",
-          "updateRule": "cascade"
+          "updateRule": "cascade",
+          "deleteRule": "restrict"
         }
       },
       "nativeEnums": {
+        "ai_attempt_error_code_enum": {
+          "name": "ai_attempt_error_code_enum",
+          "schema": "public",
+          "items": [
+            "TIMEOUT",
+            "RATE_LIMIT",
+            "SERVER_ERROR",
+            "SCHEMA_INVALID",
+            "INVALID_RESPONSE",
+            "PROVIDER_ERROR",
+            "UNKNOWN"
+          ]
+        },
+        "ai_attempt_status_enum": {
+          "name": "ai_attempt_status_enum",
+          "schema": "public",
+          "items": [
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
+        "ai_request_status_enum": {
+          "name": "ai_request_status_enum",
+          "schema": "public",
+          "items": [
+            "PENDING",
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
         "currency_enum": {
           "name": "currency_enum",
           "schema": "public",
@@ -1844,6 +1326,36 @@
             "SRD"
           ]
         },
+        "language_code_enum": {
+          "name": "language_code_enum",
+          "schema": "public",
+          "items": [
+            "RU",
+            "EN",
+            "RO"
+          ]
+        },
+        "log_level_enum": {
+          "name": "log_level_enum",
+          "schema": "public",
+          "items": [
+            "DEBUG",
+            "INFO",
+            "WARN",
+            "ERROR"
+          ]
+        },
+        "log_source_enum": {
+          "name": "log_source_enum",
+          "schema": "public",
+          "items": [
+            "BACKEND",
+            "FRONTEND",
+            "API",
+            "AUTH",
+            "DATABASE"
+          ]
+        },
         "period_type_enum": {
           "name": "period_type_enum",
           "schema": "public",
@@ -1857,6 +1369,323 @@
             "QUARTERLY",
             "SEMI_ANNUAL",
             "YEARLY"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "marked_name": {
+          "name": "marked_name",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "amount": {
+          "name": "amount",
+          "type": "numeric(19,2)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 19,
+          "scale": 2,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "decimal"
+        },
+        "product_count": {
+          "name": "product_count",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": "1",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "bill_date": {
+          "name": "bill_date",
+          "type": "date",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 0,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "date"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "name": "bills",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "bill_date"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "bills_bill_date_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "bills_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {
+        "ai_attempt_error_code_enum": {
+          "name": "ai_attempt_error_code_enum",
+          "schema": "public",
+          "items": [
+            "TIMEOUT",
+            "RATE_LIMIT",
+            "SERVER_ERROR",
+            "SCHEMA_INVALID",
+            "INVALID_RESPONSE",
+            "PROVIDER_ERROR",
+            "UNKNOWN"
+          ]
+        },
+        "ai_attempt_status_enum": {
+          "name": "ai_attempt_status_enum",
+          "schema": "public",
+          "items": [
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
+        "ai_request_status_enum": {
+          "name": "ai_request_status_enum",
+          "schema": "public",
+          "items": [
+            "PENDING",
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
+        "currency_enum": {
+          "name": "currency_enum",
+          "schema": "public",
+          "items": [
+            "EUR",
+            "GBP",
+            "RON",
+            "PLN",
+            "MDL",
+            "CZK",
+            "HUF",
+            "BGN",
+            "HRK",
+            "DKK",
+            "SEK",
+            "NOK",
+            "CHF",
+            "ISK",
+            "RSD",
+            "BAM",
+            "ALL",
+            "MKD",
+            "UAH",
+            "BYN",
+            "RUB",
+            "TRY",
+            "JPY",
+            "CNY",
+            "INR",
+            "KRW",
+            "THB",
+            "SGD",
+            "MYR",
+            "IDR",
+            "PHP",
+            "VND",
+            "HKD",
+            "TWD",
+            "PKR",
+            "BDT",
+            "LKR",
+            "NPR",
+            "MMK",
+            "KHR",
+            "LAK",
+            "MNT",
+            "KZT",
+            "UZS",
+            "AZN",
+            "AMD",
+            "GEL",
+            "ILS",
+            "JOD",
+            "LBP",
+            "SAR",
+            "AED",
+            "QAR",
+            "KWD",
+            "BHD",
+            "OMR",
+            "IRR",
+            "IQD",
+            "ZAR",
+            "EGP",
+            "NGN",
+            "KES",
+            "GHS",
+            "ETB",
+            "UGX",
+            "TZS",
+            "RWF",
+            "XOF",
+            "XAF",
+            "MAD",
+            "TND",
+            "DZD",
+            "LYD",
+            "AOA",
+            "MZN",
+            "ZMW",
+            "BWP",
+            "MUR",
+            "USD",
+            "CAD",
+            "MXN",
+            "BRL",
+            "ARS",
+            "CLP",
+            "COP",
+            "PEN",
+            "VES",
+            "UYU",
+            "PYG",
+            "BOB",
+            "GTQ",
+            "HNL",
+            "NIO",
+            "CRC",
+            "PAB",
+            "DOP",
+            "HTG",
+            "JMD",
+            "BBD",
+            "BZD",
+            "TTD",
+            "XCD",
+            "GYD",
+            "SRD"
           ]
         },
         "language_code_enum": {
@@ -1888,8 +1717,24 @@
             "AUTH",
             "DATABASE"
           ]
+        },
+        "period_type_enum": {
+          "name": "period_type_enum",
+          "schema": "public",
+          "items": [
+            "DAILY",
+            "WEEKLY",
+            "TWO_WEEKS",
+            "THREE_WEEKS",
+            "MONTHLY",
+            "TWO_MONTHS",
+            "QUARTERLY",
+            "SEMI_ANNUAL",
+            "YEARLY"
+          ]
         }
-      }
+      },
+      "comment": null
     },
     {
       "columns": {
@@ -1898,75 +1743,1489 @@
           "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
-          "primary": false,
+          "primary": true,
           "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
           "default": "gen_random_uuid()",
+          "comment": null,
+          "enumItems": [],
           "mappedType": "uuid"
         },
-        "first_name": {
-          "name": "first_name",
+        "name": {
+          "name": "name",
           "type": "varchar(255)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "unique": false,
           "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
           "mappedType": "string"
         },
-        "last_name": {
-          "name": "last_name",
-          "type": "varchar(255)",
+        "description": {
+          "name": "description",
+          "type": "text",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
-          "length": 255,
-          "mappedType": "string"
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
         },
-        "email": {
-          "name": "email",
-          "type": "varchar(255)",
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
-          "mappedType": "string"
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
         },
-        "username": {
-          "name": "username",
-          "type": "varchar(255)",
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamptz(6)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
-          "length": 255,
-          "mappedType": "string"
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
         },
-        "password": {
-          "name": "password",
-          "type": "varchar(255)",
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "length": 255,
-          "mappedType": "string"
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        }
+      },
+      "name": "budgets",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "budgets_pkey",
+          "unique": true,
+          "primary": true
         },
-        "language_code": {
-          "name": "language_code",
-          "type": "language_code_enum",
-          "unsigned": false,
-          "autoincrement": false,
+        {
+          "columnNames": [
+            "user_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "budgets_user_id_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "user_id",
+            "name"
+          ],
+          "composite": true,
+          "constraint": false,
+          "keyName": "budgets_user_id_name_unique",
+          "unique": true,
           "primary": false,
-          "nullable": true,
-          "nativeEnumName": "language_code_enum",
-          "enumItems": [
+          "expression": "CREATE UNIQUE INDEX budgets_user_id_name_unique ON public.budgets USING btree (user_id, name) WHERE (deleted_at IS NULL)"
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "budgets_user_id_foreign": {
+          "columnNames": [
+            "user_id"
+          ],
+          "constraintName": "budgets_user_id_foreign",
+          "localTableName": "public.budgets",
+          "referencedTableName": "public.users",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "restrict"
+        }
+      },
+      "nativeEnums": {
+        "ai_attempt_error_code_enum": {
+          "name": "ai_attempt_error_code_enum",
+          "schema": "public",
+          "items": [
+            "TIMEOUT",
+            "RATE_LIMIT",
+            "SERVER_ERROR",
+            "SCHEMA_INVALID",
+            "INVALID_RESPONSE",
+            "PROVIDER_ERROR",
+            "UNKNOWN"
+          ]
+        },
+        "ai_attempt_status_enum": {
+          "name": "ai_attempt_status_enum",
+          "schema": "public",
+          "items": [
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
+        "ai_request_status_enum": {
+          "name": "ai_request_status_enum",
+          "schema": "public",
+          "items": [
+            "PENDING",
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
+        "currency_enum": {
+          "name": "currency_enum",
+          "schema": "public",
+          "items": [
+            "EUR",
+            "GBP",
+            "RON",
+            "PLN",
+            "MDL",
+            "CZK",
+            "HUF",
+            "BGN",
+            "HRK",
+            "DKK",
+            "SEK",
+            "NOK",
+            "CHF",
+            "ISK",
+            "RSD",
+            "BAM",
+            "ALL",
+            "MKD",
+            "UAH",
+            "BYN",
+            "RUB",
+            "TRY",
+            "JPY",
+            "CNY",
+            "INR",
+            "KRW",
+            "THB",
+            "SGD",
+            "MYR",
+            "IDR",
+            "PHP",
+            "VND",
+            "HKD",
+            "TWD",
+            "PKR",
+            "BDT",
+            "LKR",
+            "NPR",
+            "MMK",
+            "KHR",
+            "LAK",
+            "MNT",
+            "KZT",
+            "UZS",
+            "AZN",
+            "AMD",
+            "GEL",
+            "ILS",
+            "JOD",
+            "LBP",
+            "SAR",
+            "AED",
+            "QAR",
+            "KWD",
+            "BHD",
+            "OMR",
+            "IRR",
+            "IQD",
+            "ZAR",
+            "EGP",
+            "NGN",
+            "KES",
+            "GHS",
+            "ETB",
+            "UGX",
+            "TZS",
+            "RWF",
+            "XOF",
+            "XAF",
+            "MAD",
+            "TND",
+            "DZD",
+            "LYD",
+            "AOA",
+            "MZN",
+            "ZMW",
+            "BWP",
+            "MUR",
+            "USD",
+            "CAD",
+            "MXN",
+            "BRL",
+            "ARS",
+            "CLP",
+            "COP",
+            "PEN",
+            "VES",
+            "UYU",
+            "PYG",
+            "BOB",
+            "GTQ",
+            "HNL",
+            "NIO",
+            "CRC",
+            "PAB",
+            "DOP",
+            "HTG",
+            "JMD",
+            "BBD",
+            "BZD",
+            "TTD",
+            "XCD",
+            "GYD",
+            "SRD"
+          ]
+        },
+        "language_code_enum": {
+          "name": "language_code_enum",
+          "schema": "public",
+          "items": [
             "RU",
             "EN",
             "RO"
+          ]
+        },
+        "log_level_enum": {
+          "name": "log_level_enum",
+          "schema": "public",
+          "items": [
+            "DEBUG",
+            "INFO",
+            "WARN",
+            "ERROR"
+          ]
+        },
+        "log_source_enum": {
+          "name": "log_source_enum",
+          "schema": "public",
+          "items": [
+            "BACKEND",
+            "FRONTEND",
+            "API",
+            "AUTH",
+            "DATABASE"
+          ]
+        },
+        "period_type_enum": {
+          "name": "period_type_enum",
+          "schema": "public",
+          "items": [
+            "DAILY",
+            "WEEKLY",
+            "TWO_WEEKS",
+            "THREE_WEEKS",
+            "MONTHLY",
+            "TWO_MONTHS",
+            "QUARTERLY",
+            "SEMI_ANNUAL",
+            "YEARLY"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "name": "categories",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
           ],
-          "mappedType": "enum"
+          "composite": false,
+          "constraint": false,
+          "keyName": "categories_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {
+        "ai_attempt_error_code_enum": {
+          "name": "ai_attempt_error_code_enum",
+          "schema": "public",
+          "items": [
+            "TIMEOUT",
+            "RATE_LIMIT",
+            "SERVER_ERROR",
+            "SCHEMA_INVALID",
+            "INVALID_RESPONSE",
+            "PROVIDER_ERROR",
+            "UNKNOWN"
+          ]
+        },
+        "ai_attempt_status_enum": {
+          "name": "ai_attempt_status_enum",
+          "schema": "public",
+          "items": [
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
+        "ai_request_status_enum": {
+          "name": "ai_request_status_enum",
+          "schema": "public",
+          "items": [
+            "PENDING",
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
+        "currency_enum": {
+          "name": "currency_enum",
+          "schema": "public",
+          "items": [
+            "EUR",
+            "GBP",
+            "RON",
+            "PLN",
+            "MDL",
+            "CZK",
+            "HUF",
+            "BGN",
+            "HRK",
+            "DKK",
+            "SEK",
+            "NOK",
+            "CHF",
+            "ISK",
+            "RSD",
+            "BAM",
+            "ALL",
+            "MKD",
+            "UAH",
+            "BYN",
+            "RUB",
+            "TRY",
+            "JPY",
+            "CNY",
+            "INR",
+            "KRW",
+            "THB",
+            "SGD",
+            "MYR",
+            "IDR",
+            "PHP",
+            "VND",
+            "HKD",
+            "TWD",
+            "PKR",
+            "BDT",
+            "LKR",
+            "NPR",
+            "MMK",
+            "KHR",
+            "LAK",
+            "MNT",
+            "KZT",
+            "UZS",
+            "AZN",
+            "AMD",
+            "GEL",
+            "ILS",
+            "JOD",
+            "LBP",
+            "SAR",
+            "AED",
+            "QAR",
+            "KWD",
+            "BHD",
+            "OMR",
+            "IRR",
+            "IQD",
+            "ZAR",
+            "EGP",
+            "NGN",
+            "KES",
+            "GHS",
+            "ETB",
+            "UGX",
+            "TZS",
+            "RWF",
+            "XOF",
+            "XAF",
+            "MAD",
+            "TND",
+            "DZD",
+            "LYD",
+            "AOA",
+            "MZN",
+            "ZMW",
+            "BWP",
+            "MUR",
+            "USD",
+            "CAD",
+            "MXN",
+            "BRL",
+            "ARS",
+            "CLP",
+            "COP",
+            "PEN",
+            "VES",
+            "UYU",
+            "PYG",
+            "BOB",
+            "GTQ",
+            "HNL",
+            "NIO",
+            "CRC",
+            "PAB",
+            "DOP",
+            "HTG",
+            "JMD",
+            "BBD",
+            "BZD",
+            "TTD",
+            "XCD",
+            "GYD",
+            "SRD"
+          ]
+        },
+        "language_code_enum": {
+          "name": "language_code_enum",
+          "schema": "public",
+          "items": [
+            "RU",
+            "EN",
+            "RO"
+          ]
+        },
+        "log_level_enum": {
+          "name": "log_level_enum",
+          "schema": "public",
+          "items": [
+            "DEBUG",
+            "INFO",
+            "WARN",
+            "ERROR"
+          ]
+        },
+        "log_source_enum": {
+          "name": "log_source_enum",
+          "schema": "public",
+          "items": [
+            "BACKEND",
+            "FRONTEND",
+            "API",
+            "AUTH",
+            "DATABASE"
+          ]
+        },
+        "period_type_enum": {
+          "name": "period_type_enum",
+          "schema": "public",
+          "items": [
+            "DAILY",
+            "WEEKLY",
+            "TWO_WEEKS",
+            "THREE_WEEKS",
+            "MONTHLY",
+            "TWO_MONTHS",
+            "QUARTERLY",
+            "SEMI_ANNUAL",
+            "YEARLY"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "level": {
+          "name": "level",
+          "type": "log_level_enum",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [
+            "DEBUG",
+            "INFO",
+            "WARN",
+            "ERROR"
+          ],
+          "mappedType": "unknown",
+          "nativeEnumName": "log_level_enum"
+        },
+        "source": {
+          "name": "source",
+          "type": "log_source_enum",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [
+            "BACKEND",
+            "FRONTEND",
+            "API",
+            "AUTH",
+            "DATABASE"
+          ],
+          "mappedType": "unknown",
+          "nativeEnumName": "log_source_enum"
+        },
+        "context": {
+          "name": "context",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "jsonb",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "json"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "ip_address": {
+          "name": "ip_address",
+          "type": "varchar(45)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 45,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "user_agent": {
+          "name": "user_agent",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "endpoint": {
+          "name": "endpoint",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "http_method": {
+          "name": "http_method",
+          "type": "varchar(10)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 10,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "status_code": {
+          "name": "status_code",
+          "type": "int4",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": 32,
+          "scale": 0,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "integer"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "name": "logs",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "context"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "logs_context_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "created_at"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "logs_created_at_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "level"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "logs_level_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "logs_pkey",
+          "unique": true,
+          "primary": true
+        },
+        {
+          "columnNames": [
+            "source"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "logs_source_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "user_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "logs_user_id_index",
+          "unique": false,
+          "primary": false
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "logs_user_id_foreign": {
+          "columnNames": [
+            "user_id"
+          ],
+          "constraintName": "logs_user_id_foreign",
+          "localTableName": "public.logs",
+          "referencedTableName": "public.users",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "set null"
+        }
+      },
+      "nativeEnums": {
+        "ai_attempt_error_code_enum": {
+          "name": "ai_attempt_error_code_enum",
+          "schema": "public",
+          "items": [
+            "TIMEOUT",
+            "RATE_LIMIT",
+            "SERVER_ERROR",
+            "SCHEMA_INVALID",
+            "INVALID_RESPONSE",
+            "PROVIDER_ERROR",
+            "UNKNOWN"
+          ]
+        },
+        "ai_attempt_status_enum": {
+          "name": "ai_attempt_status_enum",
+          "schema": "public",
+          "items": [
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
+        "ai_request_status_enum": {
+          "name": "ai_request_status_enum",
+          "schema": "public",
+          "items": [
+            "PENDING",
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
+        "currency_enum": {
+          "name": "currency_enum",
+          "schema": "public",
+          "items": [
+            "EUR",
+            "GBP",
+            "RON",
+            "PLN",
+            "MDL",
+            "CZK",
+            "HUF",
+            "BGN",
+            "HRK",
+            "DKK",
+            "SEK",
+            "NOK",
+            "CHF",
+            "ISK",
+            "RSD",
+            "BAM",
+            "ALL",
+            "MKD",
+            "UAH",
+            "BYN",
+            "RUB",
+            "TRY",
+            "JPY",
+            "CNY",
+            "INR",
+            "KRW",
+            "THB",
+            "SGD",
+            "MYR",
+            "IDR",
+            "PHP",
+            "VND",
+            "HKD",
+            "TWD",
+            "PKR",
+            "BDT",
+            "LKR",
+            "NPR",
+            "MMK",
+            "KHR",
+            "LAK",
+            "MNT",
+            "KZT",
+            "UZS",
+            "AZN",
+            "AMD",
+            "GEL",
+            "ILS",
+            "JOD",
+            "LBP",
+            "SAR",
+            "AED",
+            "QAR",
+            "KWD",
+            "BHD",
+            "OMR",
+            "IRR",
+            "IQD",
+            "ZAR",
+            "EGP",
+            "NGN",
+            "KES",
+            "GHS",
+            "ETB",
+            "UGX",
+            "TZS",
+            "RWF",
+            "XOF",
+            "XAF",
+            "MAD",
+            "TND",
+            "DZD",
+            "LYD",
+            "AOA",
+            "MZN",
+            "ZMW",
+            "BWP",
+            "MUR",
+            "USD",
+            "CAD",
+            "MXN",
+            "BRL",
+            "ARS",
+            "CLP",
+            "COP",
+            "PEN",
+            "VES",
+            "UYU",
+            "PYG",
+            "BOB",
+            "GTQ",
+            "HNL",
+            "NIO",
+            "CRC",
+            "PAB",
+            "DOP",
+            "HTG",
+            "JMD",
+            "BBD",
+            "BZD",
+            "TTD",
+            "XCD",
+            "GYD",
+            "SRD"
+          ]
+        },
+        "language_code_enum": {
+          "name": "language_code_enum",
+          "schema": "public",
+          "items": [
+            "RU",
+            "EN",
+            "RO"
+          ]
+        },
+        "log_level_enum": {
+          "name": "log_level_enum",
+          "schema": "public",
+          "items": [
+            "DEBUG",
+            "INFO",
+            "WARN",
+            "ERROR"
+          ]
+        },
+        "log_source_enum": {
+          "name": "log_source_enum",
+          "schema": "public",
+          "items": [
+            "BACKEND",
+            "FRONTEND",
+            "API",
+            "AUTH",
+            "DATABASE"
+          ]
+        },
+        "period_type_enum": {
+          "name": "period_type_enum",
+          "schema": "public",
+          "items": [
+            "DAILY",
+            "WEEKLY",
+            "TWO_WEEKS",
+            "THREE_WEEKS",
+            "MONTHLY",
+            "TWO_MONTHS",
+            "QUARTERLY",
+            "SEMI_ANNUAL",
+            "YEARLY"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "columns": {
+        "planing_horizon_id": {
+          "name": "planing_horizon_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "category_id": {
+          "name": "category_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        }
+      },
+      "name": "planing_horizon_categories",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "category_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "planing_horizon_categories_category_id_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "planing_horizon_id",
+            "category_id"
+          ],
+          "composite": true,
+          "constraint": false,
+          "keyName": "planing_horizon_categories_pkey",
+          "unique": true,
+          "primary": true
+        },
+        {
+          "columnNames": [
+            "planing_horizon_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "planing_horizon_categories_planing_horizon_id_index",
+          "unique": false,
+          "primary": false
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "planing_horizon_categories_category_id_foreign": {
+          "columnNames": [
+            "category_id"
+          ],
+          "constraintName": "planing_horizon_categories_category_id_foreign",
+          "localTableName": "public.planing_horizon_categories",
+          "referencedTableName": "public.categories",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "cascade"
+        },
+        "planing_horizon_categories_planing_horizon_id_foreign": {
+          "columnNames": [
+            "planing_horizon_id"
+          ],
+          "constraintName": "planing_horizon_categories_planing_horizon_id_foreign",
+          "localTableName": "public.planing_horizon_categories",
+          "referencedTableName": "public.planing_horizons",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "ai_attempt_error_code_enum": {
+          "name": "ai_attempt_error_code_enum",
+          "schema": "public",
+          "items": [
+            "TIMEOUT",
+            "RATE_LIMIT",
+            "SERVER_ERROR",
+            "SCHEMA_INVALID",
+            "INVALID_RESPONSE",
+            "PROVIDER_ERROR",
+            "UNKNOWN"
+          ]
+        },
+        "ai_attempt_status_enum": {
+          "name": "ai_attempt_status_enum",
+          "schema": "public",
+          "items": [
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
+        "ai_request_status_enum": {
+          "name": "ai_request_status_enum",
+          "schema": "public",
+          "items": [
+            "PENDING",
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
+        "currency_enum": {
+          "name": "currency_enum",
+          "schema": "public",
+          "items": [
+            "EUR",
+            "GBP",
+            "RON",
+            "PLN",
+            "MDL",
+            "CZK",
+            "HUF",
+            "BGN",
+            "HRK",
+            "DKK",
+            "SEK",
+            "NOK",
+            "CHF",
+            "ISK",
+            "RSD",
+            "BAM",
+            "ALL",
+            "MKD",
+            "UAH",
+            "BYN",
+            "RUB",
+            "TRY",
+            "JPY",
+            "CNY",
+            "INR",
+            "KRW",
+            "THB",
+            "SGD",
+            "MYR",
+            "IDR",
+            "PHP",
+            "VND",
+            "HKD",
+            "TWD",
+            "PKR",
+            "BDT",
+            "LKR",
+            "NPR",
+            "MMK",
+            "KHR",
+            "LAK",
+            "MNT",
+            "KZT",
+            "UZS",
+            "AZN",
+            "AMD",
+            "GEL",
+            "ILS",
+            "JOD",
+            "LBP",
+            "SAR",
+            "AED",
+            "QAR",
+            "KWD",
+            "BHD",
+            "OMR",
+            "IRR",
+            "IQD",
+            "ZAR",
+            "EGP",
+            "NGN",
+            "KES",
+            "GHS",
+            "ETB",
+            "UGX",
+            "TZS",
+            "RWF",
+            "XOF",
+            "XAF",
+            "MAD",
+            "TND",
+            "DZD",
+            "LYD",
+            "AOA",
+            "MZN",
+            "ZMW",
+            "BWP",
+            "MUR",
+            "USD",
+            "CAD",
+            "MXN",
+            "BRL",
+            "ARS",
+            "CLP",
+            "COP",
+            "PEN",
+            "VES",
+            "UYU",
+            "PYG",
+            "BOB",
+            "GTQ",
+            "HNL",
+            "NIO",
+            "CRC",
+            "PAB",
+            "DOP",
+            "HTG",
+            "JMD",
+            "BBD",
+            "BZD",
+            "TTD",
+            "XCD",
+            "GYD",
+            "SRD"
+          ]
+        },
+        "language_code_enum": {
+          "name": "language_code_enum",
+          "schema": "public",
+          "items": [
+            "RU",
+            "EN",
+            "RO"
+          ]
+        },
+        "log_level_enum": {
+          "name": "log_level_enum",
+          "schema": "public",
+          "items": [
+            "DEBUG",
+            "INFO",
+            "WARN",
+            "ERROR"
+          ]
+        },
+        "log_source_enum": {
+          "name": "log_source_enum",
+          "schema": "public",
+          "items": [
+            "BACKEND",
+            "FRONTEND",
+            "API",
+            "AUTH",
+            "DATABASE"
+          ]
+        },
+        "period_type_enum": {
+          "name": "period_type_enum",
+          "schema": "public",
+          "items": [
+            "DAILY",
+            "WEEKLY",
+            "TWO_WEEKS",
+            "THREE_WEEKS",
+            "MONTHLY",
+            "TWO_MONTHS",
+            "QUARTERLY",
+            "SEMI_ANNUAL",
+            "YEARLY"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "amount": {
+          "name": "amount",
+          "type": "numeric(19,2)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": 19,
+          "scale": 2,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "decimal"
         },
         "currency": {
           "name": "currency",
@@ -1975,8 +3234,12 @@
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "nativeEnumName": "currency_enum",
-          "default": "'EUR'",
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
           "enumItems": [
             "EUR",
             "GBP",
@@ -2083,39 +3346,1813 @@
             "GYD",
             "SRD"
           ],
-          "mappedType": "enum"
+          "mappedType": "unknown",
+          "nativeEnumName": "currency_enum"
         },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamptz",
+        "period_type": {
+          "name": "period_type",
+          "type": "period_type_enum",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [
+            "DAILY",
+            "WEEKLY",
+            "TWO_WEEKS",
+            "THREE_WEEKS",
+            "MONTHLY",
+            "TWO_MONTHS",
+            "QUARTERLY",
+            "SEMI_ANNUAL",
+            "YEARLY"
+          ],
+          "mappedType": "unknown",
+          "nativeEnumName": "period_type_enum"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
           "length": 6,
+          "precision": null,
+          "scale": null,
           "default": "now()",
+          "comment": null,
+          "enumItems": [],
           "mappedType": "datetime"
         },
         "updated_at": {
           "name": "updated_at",
-          "type": "timestamptz",
+          "type": "timestamptz(6)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
+          "unique": false,
           "length": 6,
+          "precision": null,
+          "scale": null,
           "default": "now()",
+          "comment": null,
+          "enumItems": [],
           "mappedType": "datetime"
         },
         "deleted_at": {
           "name": "deleted_at",
-          "type": "timestamptz",
+          "type": "timestamptz(6)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": true,
+          "unique": false,
           "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
           "mappedType": "datetime"
+        },
+        "budget_id": {
+          "name": "budget_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "is_archived": {
+          "name": "is_archived",
+          "type": "bool",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "false",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        }
+      },
+      "name": "planing_horizons",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "budget_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "planing_horizons_budget_id_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "planing_horizons_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "planing_horizons_budget_id_foreign": {
+          "columnNames": [
+            "budget_id"
+          ],
+          "constraintName": "planing_horizons_budget_id_foreign",
+          "localTableName": "public.planing_horizons",
+          "referencedTableName": "public.budgets",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "restrict"
+        }
+      },
+      "nativeEnums": {
+        "ai_attempt_error_code_enum": {
+          "name": "ai_attempt_error_code_enum",
+          "schema": "public",
+          "items": [
+            "TIMEOUT",
+            "RATE_LIMIT",
+            "SERVER_ERROR",
+            "SCHEMA_INVALID",
+            "INVALID_RESPONSE",
+            "PROVIDER_ERROR",
+            "UNKNOWN"
+          ]
+        },
+        "ai_attempt_status_enum": {
+          "name": "ai_attempt_status_enum",
+          "schema": "public",
+          "items": [
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
+        "ai_request_status_enum": {
+          "name": "ai_request_status_enum",
+          "schema": "public",
+          "items": [
+            "PENDING",
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
+        "currency_enum": {
+          "name": "currency_enum",
+          "schema": "public",
+          "items": [
+            "EUR",
+            "GBP",
+            "RON",
+            "PLN",
+            "MDL",
+            "CZK",
+            "HUF",
+            "BGN",
+            "HRK",
+            "DKK",
+            "SEK",
+            "NOK",
+            "CHF",
+            "ISK",
+            "RSD",
+            "BAM",
+            "ALL",
+            "MKD",
+            "UAH",
+            "BYN",
+            "RUB",
+            "TRY",
+            "JPY",
+            "CNY",
+            "INR",
+            "KRW",
+            "THB",
+            "SGD",
+            "MYR",
+            "IDR",
+            "PHP",
+            "VND",
+            "HKD",
+            "TWD",
+            "PKR",
+            "BDT",
+            "LKR",
+            "NPR",
+            "MMK",
+            "KHR",
+            "LAK",
+            "MNT",
+            "KZT",
+            "UZS",
+            "AZN",
+            "AMD",
+            "GEL",
+            "ILS",
+            "JOD",
+            "LBP",
+            "SAR",
+            "AED",
+            "QAR",
+            "KWD",
+            "BHD",
+            "OMR",
+            "IRR",
+            "IQD",
+            "ZAR",
+            "EGP",
+            "NGN",
+            "KES",
+            "GHS",
+            "ETB",
+            "UGX",
+            "TZS",
+            "RWF",
+            "XOF",
+            "XAF",
+            "MAD",
+            "TND",
+            "DZD",
+            "LYD",
+            "AOA",
+            "MZN",
+            "ZMW",
+            "BWP",
+            "MUR",
+            "USD",
+            "CAD",
+            "MXN",
+            "BRL",
+            "ARS",
+            "CLP",
+            "COP",
+            "PEN",
+            "VES",
+            "UYU",
+            "PYG",
+            "BOB",
+            "GTQ",
+            "HNL",
+            "NIO",
+            "CRC",
+            "PAB",
+            "DOP",
+            "HTG",
+            "JMD",
+            "BBD",
+            "BZD",
+            "TTD",
+            "XCD",
+            "GYD",
+            "SRD"
+          ]
+        },
+        "language_code_enum": {
+          "name": "language_code_enum",
+          "schema": "public",
+          "items": [
+            "RU",
+            "EN",
+            "RO"
+          ]
+        },
+        "log_level_enum": {
+          "name": "log_level_enum",
+          "schema": "public",
+          "items": [
+            "DEBUG",
+            "INFO",
+            "WARN",
+            "ERROR"
+          ]
+        },
+        "log_source_enum": {
+          "name": "log_source_enum",
+          "schema": "public",
+          "items": [
+            "BACKEND",
+            "FRONTEND",
+            "API",
+            "AUTH",
+            "DATABASE"
+          ]
+        },
+        "period_type_enum": {
+          "name": "period_type_enum",
+          "schema": "public",
+          "items": [
+            "DAILY",
+            "WEEKLY",
+            "TWO_WEEKS",
+            "THREE_WEEKS",
+            "MONTHLY",
+            "TWO_MONTHS",
+            "QUARTERLY",
+            "SEMI_ANNUAL",
+            "YEARLY"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "ip_address": {
+          "name": "ip_address",
+          "type": "varchar(45)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 45,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "user_agent": {
+          "name": "user_agent",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "is_revoked": {
+          "name": "is_revoked",
+          "type": "bool",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "false",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        },
+        "token_hash": {
+          "name": "token_hash",
+          "type": "varchar(64)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": 64,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "jti": {
+          "name": "jti",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "session_id": {
+          "name": "session_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        }
+      },
+      "name": "refresh_tokens",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "expires_at"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "refresh_tokens_expires_at_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "is_revoked"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "refresh_tokens_is_revoked_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "jti"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "refresh_tokens_jti_unique",
+          "unique": true,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "refresh_tokens_pkey",
+          "unique": true,
+          "primary": true
+        },
+        {
+          "columnNames": [
+            "session_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "refresh_tokens_session_id_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "token_hash"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "refresh_tokens_token_hash_unique",
+          "unique": true,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "user_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "refresh_tokens_user_id_index",
+          "unique": false,
+          "primary": false
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "refresh_tokens_session_id_foreign": {
+          "columnNames": [
+            "session_id"
+          ],
+          "constraintName": "refresh_tokens_session_id_foreign",
+          "localTableName": "public.refresh_tokens",
+          "referencedTableName": "public.sessions",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "cascade"
+        },
+        "refresh_tokens_user_id_foreign": {
+          "columnNames": [
+            "user_id"
+          ],
+          "constraintName": "refresh_tokens_user_id_foreign",
+          "localTableName": "public.refresh_tokens",
+          "referencedTableName": "public.users",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "ai_attempt_error_code_enum": {
+          "name": "ai_attempt_error_code_enum",
+          "schema": "public",
+          "items": [
+            "TIMEOUT",
+            "RATE_LIMIT",
+            "SERVER_ERROR",
+            "SCHEMA_INVALID",
+            "INVALID_RESPONSE",
+            "PROVIDER_ERROR",
+            "UNKNOWN"
+          ]
+        },
+        "ai_attempt_status_enum": {
+          "name": "ai_attempt_status_enum",
+          "schema": "public",
+          "items": [
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
+        "ai_request_status_enum": {
+          "name": "ai_request_status_enum",
+          "schema": "public",
+          "items": [
+            "PENDING",
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
+        "currency_enum": {
+          "name": "currency_enum",
+          "schema": "public",
+          "items": [
+            "EUR",
+            "GBP",
+            "RON",
+            "PLN",
+            "MDL",
+            "CZK",
+            "HUF",
+            "BGN",
+            "HRK",
+            "DKK",
+            "SEK",
+            "NOK",
+            "CHF",
+            "ISK",
+            "RSD",
+            "BAM",
+            "ALL",
+            "MKD",
+            "UAH",
+            "BYN",
+            "RUB",
+            "TRY",
+            "JPY",
+            "CNY",
+            "INR",
+            "KRW",
+            "THB",
+            "SGD",
+            "MYR",
+            "IDR",
+            "PHP",
+            "VND",
+            "HKD",
+            "TWD",
+            "PKR",
+            "BDT",
+            "LKR",
+            "NPR",
+            "MMK",
+            "KHR",
+            "LAK",
+            "MNT",
+            "KZT",
+            "UZS",
+            "AZN",
+            "AMD",
+            "GEL",
+            "ILS",
+            "JOD",
+            "LBP",
+            "SAR",
+            "AED",
+            "QAR",
+            "KWD",
+            "BHD",
+            "OMR",
+            "IRR",
+            "IQD",
+            "ZAR",
+            "EGP",
+            "NGN",
+            "KES",
+            "GHS",
+            "ETB",
+            "UGX",
+            "TZS",
+            "RWF",
+            "XOF",
+            "XAF",
+            "MAD",
+            "TND",
+            "DZD",
+            "LYD",
+            "AOA",
+            "MZN",
+            "ZMW",
+            "BWP",
+            "MUR",
+            "USD",
+            "CAD",
+            "MXN",
+            "BRL",
+            "ARS",
+            "CLP",
+            "COP",
+            "PEN",
+            "VES",
+            "UYU",
+            "PYG",
+            "BOB",
+            "GTQ",
+            "HNL",
+            "NIO",
+            "CRC",
+            "PAB",
+            "DOP",
+            "HTG",
+            "JMD",
+            "BBD",
+            "BZD",
+            "TTD",
+            "XCD",
+            "GYD",
+            "SRD"
+          ]
+        },
+        "language_code_enum": {
+          "name": "language_code_enum",
+          "schema": "public",
+          "items": [
+            "RU",
+            "EN",
+            "RO"
+          ]
+        },
+        "log_level_enum": {
+          "name": "log_level_enum",
+          "schema": "public",
+          "items": [
+            "DEBUG",
+            "INFO",
+            "WARN",
+            "ERROR"
+          ]
+        },
+        "log_source_enum": {
+          "name": "log_source_enum",
+          "schema": "public",
+          "items": [
+            "BACKEND",
+            "FRONTEND",
+            "API",
+            "AUTH",
+            "DATABASE"
+          ]
+        },
+        "period_type_enum": {
+          "name": "period_type_enum",
+          "schema": "public",
+          "items": [
+            "DAILY",
+            "WEEKLY",
+            "TWO_WEEKS",
+            "THREE_WEEKS",
+            "MONTHLY",
+            "TWO_MONTHS",
+            "QUARTERLY",
+            "SEMI_ANNUAL",
+            "YEARLY"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "ip_address": {
+          "name": "ip_address",
+          "type": "varchar(45)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 45,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "user_agent": {
+          "name": "user_agent",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "absolute_expires_at": {
+          "name": "absolute_expires_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "last_activity_at": {
+          "name": "last_activity_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "bool",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "true",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "boolean"
+        }
+      },
+      "name": "sessions",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "absolute_expires_at"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "sessions_absolute_expires_at_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "is_active"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "sessions_is_active_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "sessions_pkey",
+          "unique": true,
+          "primary": true
+        },
+        {
+          "columnNames": [
+            "user_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "sessions_user_id_index",
+          "unique": false,
+          "primary": false
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "sessions_user_id_foreign": {
+          "columnNames": [
+            "user_id"
+          ],
+          "constraintName": "sessions_user_id_foreign",
+          "localTableName": "public.sessions",
+          "referencedTableName": "public.users",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "ai_attempt_error_code_enum": {
+          "name": "ai_attempt_error_code_enum",
+          "schema": "public",
+          "items": [
+            "TIMEOUT",
+            "RATE_LIMIT",
+            "SERVER_ERROR",
+            "SCHEMA_INVALID",
+            "INVALID_RESPONSE",
+            "PROVIDER_ERROR",
+            "UNKNOWN"
+          ]
+        },
+        "ai_attempt_status_enum": {
+          "name": "ai_attempt_status_enum",
+          "schema": "public",
+          "items": [
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
+        "ai_request_status_enum": {
+          "name": "ai_request_status_enum",
+          "schema": "public",
+          "items": [
+            "PENDING",
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
+        "currency_enum": {
+          "name": "currency_enum",
+          "schema": "public",
+          "items": [
+            "EUR",
+            "GBP",
+            "RON",
+            "PLN",
+            "MDL",
+            "CZK",
+            "HUF",
+            "BGN",
+            "HRK",
+            "DKK",
+            "SEK",
+            "NOK",
+            "CHF",
+            "ISK",
+            "RSD",
+            "BAM",
+            "ALL",
+            "MKD",
+            "UAH",
+            "BYN",
+            "RUB",
+            "TRY",
+            "JPY",
+            "CNY",
+            "INR",
+            "KRW",
+            "THB",
+            "SGD",
+            "MYR",
+            "IDR",
+            "PHP",
+            "VND",
+            "HKD",
+            "TWD",
+            "PKR",
+            "BDT",
+            "LKR",
+            "NPR",
+            "MMK",
+            "KHR",
+            "LAK",
+            "MNT",
+            "KZT",
+            "UZS",
+            "AZN",
+            "AMD",
+            "GEL",
+            "ILS",
+            "JOD",
+            "LBP",
+            "SAR",
+            "AED",
+            "QAR",
+            "KWD",
+            "BHD",
+            "OMR",
+            "IRR",
+            "IQD",
+            "ZAR",
+            "EGP",
+            "NGN",
+            "KES",
+            "GHS",
+            "ETB",
+            "UGX",
+            "TZS",
+            "RWF",
+            "XOF",
+            "XAF",
+            "MAD",
+            "TND",
+            "DZD",
+            "LYD",
+            "AOA",
+            "MZN",
+            "ZMW",
+            "BWP",
+            "MUR",
+            "USD",
+            "CAD",
+            "MXN",
+            "BRL",
+            "ARS",
+            "CLP",
+            "COP",
+            "PEN",
+            "VES",
+            "UYU",
+            "PYG",
+            "BOB",
+            "GTQ",
+            "HNL",
+            "NIO",
+            "CRC",
+            "PAB",
+            "DOP",
+            "HTG",
+            "JMD",
+            "BBD",
+            "BZD",
+            "TTD",
+            "XCD",
+            "GYD",
+            "SRD"
+          ]
+        },
+        "language_code_enum": {
+          "name": "language_code_enum",
+          "schema": "public",
+          "items": [
+            "RU",
+            "EN",
+            "RO"
+          ]
+        },
+        "log_level_enum": {
+          "name": "log_level_enum",
+          "schema": "public",
+          "items": [
+            "DEBUG",
+            "INFO",
+            "WARN",
+            "ERROR"
+          ]
+        },
+        "log_source_enum": {
+          "name": "log_source_enum",
+          "schema": "public",
+          "items": [
+            "BACKEND",
+            "FRONTEND",
+            "API",
+            "AUTH",
+            "DATABASE"
+          ]
+        },
+        "period_type_enum": {
+          "name": "period_type_enum",
+          "schema": "public",
+          "items": [
+            "DAILY",
+            "WEEKLY",
+            "TWO_WEEKS",
+            "THREE_WEEKS",
+            "MONTHLY",
+            "TWO_MONTHS",
+            "QUARTERLY",
+            "SEMI_ANNUAL",
+            "YEARLY"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "category_id": {
+          "name": "category_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        }
+      },
+      "name": "sub_categories",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "category_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "sub_categories_category_id_index",
+          "unique": false,
+          "primary": false
+        },
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "sub_categories_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "sub_categories_category_id_foreign": {
+          "columnNames": [
+            "category_id"
+          ],
+          "constraintName": "sub_categories_category_id_foreign",
+          "localTableName": "public.sub_categories",
+          "referencedTableName": "public.categories",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "restrict"
+        }
+      },
+      "nativeEnums": {
+        "ai_attempt_error_code_enum": {
+          "name": "ai_attempt_error_code_enum",
+          "schema": "public",
+          "items": [
+            "TIMEOUT",
+            "RATE_LIMIT",
+            "SERVER_ERROR",
+            "SCHEMA_INVALID",
+            "INVALID_RESPONSE",
+            "PROVIDER_ERROR",
+            "UNKNOWN"
+          ]
+        },
+        "ai_attempt_status_enum": {
+          "name": "ai_attempt_status_enum",
+          "schema": "public",
+          "items": [
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
+        "ai_request_status_enum": {
+          "name": "ai_request_status_enum",
+          "schema": "public",
+          "items": [
+            "PENDING",
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
+        "currency_enum": {
+          "name": "currency_enum",
+          "schema": "public",
+          "items": [
+            "EUR",
+            "GBP",
+            "RON",
+            "PLN",
+            "MDL",
+            "CZK",
+            "HUF",
+            "BGN",
+            "HRK",
+            "DKK",
+            "SEK",
+            "NOK",
+            "CHF",
+            "ISK",
+            "RSD",
+            "BAM",
+            "ALL",
+            "MKD",
+            "UAH",
+            "BYN",
+            "RUB",
+            "TRY",
+            "JPY",
+            "CNY",
+            "INR",
+            "KRW",
+            "THB",
+            "SGD",
+            "MYR",
+            "IDR",
+            "PHP",
+            "VND",
+            "HKD",
+            "TWD",
+            "PKR",
+            "BDT",
+            "LKR",
+            "NPR",
+            "MMK",
+            "KHR",
+            "LAK",
+            "MNT",
+            "KZT",
+            "UZS",
+            "AZN",
+            "AMD",
+            "GEL",
+            "ILS",
+            "JOD",
+            "LBP",
+            "SAR",
+            "AED",
+            "QAR",
+            "KWD",
+            "BHD",
+            "OMR",
+            "IRR",
+            "IQD",
+            "ZAR",
+            "EGP",
+            "NGN",
+            "KES",
+            "GHS",
+            "ETB",
+            "UGX",
+            "TZS",
+            "RWF",
+            "XOF",
+            "XAF",
+            "MAD",
+            "TND",
+            "DZD",
+            "LYD",
+            "AOA",
+            "MZN",
+            "ZMW",
+            "BWP",
+            "MUR",
+            "USD",
+            "CAD",
+            "MXN",
+            "BRL",
+            "ARS",
+            "CLP",
+            "COP",
+            "PEN",
+            "VES",
+            "UYU",
+            "PYG",
+            "BOB",
+            "GTQ",
+            "HNL",
+            "NIO",
+            "CRC",
+            "PAB",
+            "DOP",
+            "HTG",
+            "JMD",
+            "BBD",
+            "BZD",
+            "TTD",
+            "XCD",
+            "GYD",
+            "SRD"
+          ]
+        },
+        "language_code_enum": {
+          "name": "language_code_enum",
+          "schema": "public",
+          "items": [
+            "RU",
+            "EN",
+            "RO"
+          ]
+        },
+        "log_level_enum": {
+          "name": "log_level_enum",
+          "schema": "public",
+          "items": [
+            "DEBUG",
+            "INFO",
+            "WARN",
+            "ERROR"
+          ]
+        },
+        "log_source_enum": {
+          "name": "log_source_enum",
+          "schema": "public",
+          "items": [
+            "BACKEND",
+            "FRONTEND",
+            "API",
+            "AUTH",
+            "DATABASE"
+          ]
+        },
+        "period_type_enum": {
+          "name": "period_type_enum",
+          "schema": "public",
+          "items": [
+            "DAILY",
+            "WEEKLY",
+            "TWO_WEEKS",
+            "THREE_WEEKS",
+            "MONTHLY",
+            "TWO_MONTHS",
+            "QUARTERLY",
+            "SEMI_ANNUAL",
+            "YEARLY"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "first_name": {
+          "name": "first_name",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "last_name": {
+          "name": "last_name",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "username": {
+          "name": "username",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "language_code": {
+          "name": "language_code",
+          "type": "language_code_enum",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [
+            "RU",
+            "EN",
+            "RO"
+          ],
+          "mappedType": "unknown",
+          "nativeEnumName": "language_code_enum"
+        },
+        "currency": {
+          "name": "currency",
+          "type": "currency_enum",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'EUR'",
+          "comment": null,
+          "enumItems": [
+            "EUR",
+            "GBP",
+            "RON",
+            "PLN",
+            "MDL",
+            "CZK",
+            "HUF",
+            "BGN",
+            "HRK",
+            "DKK",
+            "SEK",
+            "NOK",
+            "CHF",
+            "ISK",
+            "RSD",
+            "BAM",
+            "ALL",
+            "MKD",
+            "UAH",
+            "BYN",
+            "RUB",
+            "TRY",
+            "JPY",
+            "CNY",
+            "INR",
+            "KRW",
+            "THB",
+            "SGD",
+            "MYR",
+            "IDR",
+            "PHP",
+            "VND",
+            "HKD",
+            "TWD",
+            "PKR",
+            "BDT",
+            "LKR",
+            "NPR",
+            "MMK",
+            "KHR",
+            "LAK",
+            "MNT",
+            "KZT",
+            "UZS",
+            "AZN",
+            "AMD",
+            "GEL",
+            "ILS",
+            "JOD",
+            "LBP",
+            "SAR",
+            "AED",
+            "QAR",
+            "KWD",
+            "BHD",
+            "OMR",
+            "IRR",
+            "IQD",
+            "ZAR",
+            "EGP",
+            "NGN",
+            "KES",
+            "GHS",
+            "ETB",
+            "UGX",
+            "TZS",
+            "RWF",
+            "XOF",
+            "XAF",
+            "MAD",
+            "TND",
+            "DZD",
+            "LYD",
+            "AOA",
+            "MZN",
+            "ZMW",
+            "BWP",
+            "MUR",
+            "USD",
+            "CAD",
+            "MXN",
+            "BRL",
+            "ARS",
+            "CLP",
+            "COP",
+            "PEN",
+            "VES",
+            "UYU",
+            "PYG",
+            "BOB",
+            "GTQ",
+            "HNL",
+            "NIO",
+            "CRC",
+            "PAB",
+            "DOP",
+            "HTG",
+            "JMD",
+            "BBD",
+            "BZD",
+            "TTD",
+            "XCD",
+            "GYD",
+            "SRD"
+          ],
+          "mappedType": "unknown",
+          "nativeEnumName": "currency_enum"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": true,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "password": {
+          "name": "password",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
         }
       },
       "name": "users",
@@ -2126,25 +5163,55 @@
             "email"
           ],
           "composite": false,
+          "constraint": false,
           "keyName": "users_email_unique",
-          "constraint": true,
-          "primary": false,
-          "unique": true
+          "unique": true,
+          "primary": false
         },
         {
-          "keyName": "users_pkey",
           "columnNames": [
             "id"
           ],
           "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
+          "constraint": false,
+          "keyName": "users_pkey",
+          "unique": true,
+          "primary": true
         }
       ],
       "checks": [],
       "foreignKeys": {},
       "nativeEnums": {
+        "ai_attempt_error_code_enum": {
+          "name": "ai_attempt_error_code_enum",
+          "schema": "public",
+          "items": [
+            "TIMEOUT",
+            "RATE_LIMIT",
+            "SERVER_ERROR",
+            "SCHEMA_INVALID",
+            "INVALID_RESPONSE",
+            "PROVIDER_ERROR",
+            "UNKNOWN"
+          ]
+        },
+        "ai_attempt_status_enum": {
+          "name": "ai_attempt_status_enum",
+          "schema": "public",
+          "items": [
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
+        "ai_request_status_enum": {
+          "name": "ai_request_status_enum",
+          "schema": "public",
+          "items": [
+            "PENDING",
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
         "currency_enum": {
           "name": "currency_enum",
           "schema": "public",
@@ -2255,21 +5322,6 @@
             "SRD"
           ]
         },
-        "period_type_enum": {
-          "name": "period_type_enum",
-          "schema": "public",
-          "items": [
-            "DAILY",
-            "WEEKLY",
-            "TWO_WEEKS",
-            "THREE_WEEKS",
-            "MONTHLY",
-            "TWO_MONTHS",
-            "QUARTERLY",
-            "SEMI_ANNUAL",
-            "YEARLY"
-          ]
-        },
         "language_code_enum": {
           "name": "language_code_enum",
           "schema": "public",
@@ -2299,261 +5351,6 @@
             "AUTH",
             "DATABASE"
           ]
-        }
-      }
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "gen_random_uuid()",
-          "mappedType": "uuid"
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "session_token": {
-          "name": "session_token",
-          "type": "varchar(500)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 500,
-          "mappedType": "string"
-        },
-        "ip_address": {
-          "name": "ip_address",
-          "type": "varchar(45)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 45,
-          "mappedType": "string"
-        },
-        "user_agent": {
-          "name": "user_agent",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "text"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "expires_at": {
-          "name": "expires_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "mappedType": "datetime"
-        },
-        "last_activity_at": {
-          "name": "last_activity_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 6,
-          "mappedType": "datetime"
-        },
-        "is_active": {
-          "name": "is_active",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "true",
-          "mappedType": "boolean"
-        }
-      },
-      "name": "sessions",
-      "schema": "public",
-      "indexes": [
-        {
-          "columnNames": [
-            "session_token"
-          ],
-          "composite": false,
-          "keyName": "sessions_session_token_index",
-          "constraint": false,
-          "primary": false,
-          "unique": false
-        },
-        {
-          "columnNames": [
-            "session_token"
-          ],
-          "composite": false,
-          "keyName": "sessions_session_token_unique",
-          "constraint": true,
-          "primary": false,
-          "unique": true
-        },
-        {
-          "keyName": "sessions_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "sessions_user_id_foreign": {
-          "constraintName": "sessions_user_id_foreign",
-          "columnNames": [
-            "user_id"
-          ],
-          "localTableName": "public.sessions",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.users",
-          "deleteRule": "cascade",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {
-        "currency_enum": {
-          "name": "currency_enum",
-          "schema": "public",
-          "items": [
-            "EUR",
-            "GBP",
-            "RON",
-            "PLN",
-            "MDL",
-            "CZK",
-            "HUF",
-            "BGN",
-            "HRK",
-            "DKK",
-            "SEK",
-            "NOK",
-            "CHF",
-            "ISK",
-            "RSD",
-            "BAM",
-            "ALL",
-            "MKD",
-            "UAH",
-            "BYN",
-            "RUB",
-            "TRY",
-            "JPY",
-            "CNY",
-            "INR",
-            "KRW",
-            "THB",
-            "SGD",
-            "MYR",
-            "IDR",
-            "PHP",
-            "VND",
-            "HKD",
-            "TWD",
-            "PKR",
-            "BDT",
-            "LKR",
-            "NPR",
-            "MMK",
-            "KHR",
-            "LAK",
-            "MNT",
-            "KZT",
-            "UZS",
-            "AZN",
-            "AMD",
-            "GEL",
-            "ILS",
-            "JOD",
-            "LBP",
-            "SAR",
-            "AED",
-            "QAR",
-            "KWD",
-            "BHD",
-            "OMR",
-            "IRR",
-            "IQD",
-            "ZAR",
-            "EGP",
-            "NGN",
-            "KES",
-            "GHS",
-            "ETB",
-            "UGX",
-            "TZS",
-            "RWF",
-            "XOF",
-            "XAF",
-            "MAD",
-            "TND",
-            "DZD",
-            "LYD",
-            "AOA",
-            "MZN",
-            "ZMW",
-            "BWP",
-            "MUR",
-            "USD",
-            "CAD",
-            "MXN",
-            "BRL",
-            "ARS",
-            "CLP",
-            "COP",
-            "PEN",
-            "VES",
-            "UYU",
-            "PYG",
-            "BOB",
-            "GTQ",
-            "HNL",
-            "NIO",
-            "CRC",
-            "PAB",
-            "DOP",
-            "HTG",
-            "JMD",
-            "BBD",
-            "BZD",
-            "TTD",
-            "XCD",
-            "GYD",
-            "SRD"
-          ]
         },
         "period_type_enum": {
           "name": "period_type_enum",
@@ -2569,741 +5366,42 @@
             "SEMI_ANNUAL",
             "YEARLY"
           ]
-        },
-        "language_code_enum": {
-          "name": "language_code_enum",
-          "schema": "public",
-          "items": [
-            "RU",
-            "EN",
-            "RO"
-          ]
-        },
-        "log_level_enum": {
-          "name": "log_level_enum",
-          "schema": "public",
-          "items": [
-            "DEBUG",
-            "INFO",
-            "WARN",
-            "ERROR"
-          ]
-        },
-        "log_source_enum": {
-          "name": "log_source_enum",
-          "schema": "public",
-          "items": [
-            "BACKEND",
-            "FRONTEND",
-            "API",
-            "AUTH",
-            "DATABASE"
-          ]
-        }
-      }
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "gen_random_uuid()",
-          "mappedType": "uuid"
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
-        "token": {
-          "name": "token",
-          "type": "varchar(500)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 500,
-          "mappedType": "string"
-        },
-        "family_id": {
-          "name": "family_id",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "ip_address": {
-          "name": "ip_address",
-          "type": "varchar(45)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 45,
-          "mappedType": "string"
-        },
-        "user_agent": {
-          "name": "user_agent",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "text"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        },
-        "expires_at": {
-          "name": "expires_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "mappedType": "datetime"
-        },
-        "used_at": {
-          "name": "used_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 6,
-          "mappedType": "datetime"
-        },
-        "is_active": {
-          "name": "is_active",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "true",
-          "mappedType": "boolean"
-        },
-        "is_revoked": {
-          "name": "is_revoked",
-          "type": "boolean",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "false",
-          "mappedType": "boolean"
         }
       },
-      "name": "refresh_tokens",
-      "schema": "public",
-      "indexes": [
-        {
-          "columnNames": [
-            "token"
-          ],
-          "composite": false,
-          "keyName": "refresh_tokens_token_index",
-          "constraint": false,
-          "primary": false,
-          "unique": false
-        },
-        {
-          "columnNames": [
-            "token"
-          ],
-          "composite": false,
-          "keyName": "refresh_tokens_token_unique",
-          "constraint": true,
-          "primary": false,
-          "unique": true
-        },
-        {
-          "columnNames": [
-            "family_id"
-          ],
-          "composite": false,
-          "keyName": "refresh_tokens_family_id_index",
-          "constraint": false,
-          "primary": false,
-          "unique": false
-        },
-        {
-          "keyName": "refresh_tokens_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "refresh_tokens_user_id_foreign": {
-          "constraintName": "refresh_tokens_user_id_foreign",
-          "columnNames": [
-            "user_id"
-          ],
-          "localTableName": "public.refresh_tokens",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.users",
-          "deleteRule": "cascade",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {
-        "currency_enum": {
-          "name": "currency_enum",
-          "schema": "public",
-          "items": [
-            "EUR",
-            "GBP",
-            "RON",
-            "PLN",
-            "MDL",
-            "CZK",
-            "HUF",
-            "BGN",
-            "HRK",
-            "DKK",
-            "SEK",
-            "NOK",
-            "CHF",
-            "ISK",
-            "RSD",
-            "BAM",
-            "ALL",
-            "MKD",
-            "UAH",
-            "BYN",
-            "RUB",
-            "TRY",
-            "JPY",
-            "CNY",
-            "INR",
-            "KRW",
-            "THB",
-            "SGD",
-            "MYR",
-            "IDR",
-            "PHP",
-            "VND",
-            "HKD",
-            "TWD",
-            "PKR",
-            "BDT",
-            "LKR",
-            "NPR",
-            "MMK",
-            "KHR",
-            "LAK",
-            "MNT",
-            "KZT",
-            "UZS",
-            "AZN",
-            "AMD",
-            "GEL",
-            "ILS",
-            "JOD",
-            "LBP",
-            "SAR",
-            "AED",
-            "QAR",
-            "KWD",
-            "BHD",
-            "OMR",
-            "IRR",
-            "IQD",
-            "ZAR",
-            "EGP",
-            "NGN",
-            "KES",
-            "GHS",
-            "ETB",
-            "UGX",
-            "TZS",
-            "RWF",
-            "XOF",
-            "XAF",
-            "MAD",
-            "TND",
-            "DZD",
-            "LYD",
-            "AOA",
-            "MZN",
-            "ZMW",
-            "BWP",
-            "MUR",
-            "USD",
-            "CAD",
-            "MXN",
-            "BRL",
-            "ARS",
-            "CLP",
-            "COP",
-            "PEN",
-            "VES",
-            "UYU",
-            "PYG",
-            "BOB",
-            "GTQ",
-            "HNL",
-            "NIO",
-            "CRC",
-            "PAB",
-            "DOP",
-            "HTG",
-            "JMD",
-            "BBD",
-            "BZD",
-            "TTD",
-            "XCD",
-            "GYD",
-            "SRD"
-          ]
-        },
-        "period_type_enum": {
-          "name": "period_type_enum",
-          "schema": "public",
-          "items": [
-            "DAILY",
-            "WEEKLY",
-            "TWO_WEEKS",
-            "THREE_WEEKS",
-            "MONTHLY",
-            "TWO_MONTHS",
-            "QUARTERLY",
-            "SEMI_ANNUAL",
-            "YEARLY"
-          ]
-        },
-        "language_code_enum": {
-          "name": "language_code_enum",
-          "schema": "public",
-          "items": [
-            "RU",
-            "EN",
-            "RO"
-          ]
-        },
-        "log_level_enum": {
-          "name": "log_level_enum",
-          "schema": "public",
-          "items": [
-            "DEBUG",
-            "INFO",
-            "WARN",
-            "ERROR"
-          ]
-        },
-        "log_source_enum": {
-          "name": "log_source_enum",
-          "schema": "public",
-          "items": [
-            "BACKEND",
-            "FRONTEND",
-            "API",
-            "AUTH",
-            "DATABASE"
-          ]
-        }
-      }
-    },
-    {
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "default": "gen_random_uuid()",
-          "mappedType": "uuid"
-        },
-        "level": {
-          "name": "level",
-          "type": "log_level_enum",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "nativeEnumName": "log_level_enum",
-          "enumItems": [
-            "DEBUG",
-            "INFO",
-            "WARN",
-            "ERROR"
-          ],
-          "mappedType": "enum"
-        },
-        "source": {
-          "name": "source",
-          "type": "log_source_enum",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "nativeEnumName": "log_source_enum",
-          "enumItems": [
-            "BACKEND",
-            "FRONTEND",
-            "API",
-            "AUTH",
-            "DATABASE"
-          ],
-          "mappedType": "enum"
-        },
-        "context": {
-          "name": "context",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "message": {
-          "name": "message",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "text"
-        },
-        "metadata": {
-          "name": "metadata",
-          "type": "jsonb",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "json"
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "uuid"
-        },
-        "ip_address": {
-          "name": "ip_address",
-          "type": "varchar(45)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 45,
-          "mappedType": "string"
-        },
-        "user_agent": {
-          "name": "user_agent",
-          "type": "text",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "text"
-        },
-        "endpoint": {
-          "name": "endpoint",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 255,
-          "mappedType": "string"
-        },
-        "http_method": {
-          "name": "http_method",
-          "type": "varchar(10)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "length": 10,
-          "mappedType": "string"
-        },
-        "status_code": {
-          "name": "status_code",
-          "type": "int",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "mappedType": "integer"
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamptz",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "length": 6,
-          "default": "now()",
-          "mappedType": "datetime"
-        }
-      },
-      "name": "logs",
-      "schema": "public",
-      "indexes": [
-        {
-          "columnNames": [
-            "level"
-          ],
-          "composite": false,
-          "keyName": "logs_level_index",
-          "constraint": false,
-          "primary": false,
-          "unique": false
-        },
-        {
-          "columnNames": [
-            "source"
-          ],
-          "composite": false,
-          "keyName": "logs_source_index",
-          "constraint": false,
-          "primary": false,
-          "unique": false
-        },
-        {
-          "columnNames": [
-            "context"
-          ],
-          "composite": false,
-          "keyName": "logs_context_index",
-          "constraint": false,
-          "primary": false,
-          "unique": false
-        },
-        {
-          "columnNames": [
-            "created_at"
-          ],
-          "composite": false,
-          "keyName": "logs_created_at_index",
-          "constraint": false,
-          "primary": false,
-          "unique": false
-        },
-        {
-          "keyName": "logs_pkey",
-          "columnNames": [
-            "id"
-          ],
-          "composite": false,
-          "constraint": true,
-          "primary": true,
-          "unique": true
-        }
-      ],
-      "checks": [],
-      "foreignKeys": {
-        "logs_user_id_foreign": {
-          "constraintName": "logs_user_id_foreign",
-          "columnNames": [
-            "user_id"
-          ],
-          "localTableName": "public.logs",
-          "referencedColumnNames": [
-            "id"
-          ],
-          "referencedTableName": "public.users",
-          "deleteRule": "set null",
-          "updateRule": "cascade"
-        }
-      },
-      "nativeEnums": {
-        "currency_enum": {
-          "name": "currency_enum",
-          "schema": "public",
-          "items": [
-            "EUR",
-            "GBP",
-            "RON",
-            "PLN",
-            "MDL",
-            "CZK",
-            "HUF",
-            "BGN",
-            "HRK",
-            "DKK",
-            "SEK",
-            "NOK",
-            "CHF",
-            "ISK",
-            "RSD",
-            "BAM",
-            "ALL",
-            "MKD",
-            "UAH",
-            "BYN",
-            "RUB",
-            "TRY",
-            "JPY",
-            "CNY",
-            "INR",
-            "KRW",
-            "THB",
-            "SGD",
-            "MYR",
-            "IDR",
-            "PHP",
-            "VND",
-            "HKD",
-            "TWD",
-            "PKR",
-            "BDT",
-            "LKR",
-            "NPR",
-            "MMK",
-            "KHR",
-            "LAK",
-            "MNT",
-            "KZT",
-            "UZS",
-            "AZN",
-            "AMD",
-            "GEL",
-            "ILS",
-            "JOD",
-            "LBP",
-            "SAR",
-            "AED",
-            "QAR",
-            "KWD",
-            "BHD",
-            "OMR",
-            "IRR",
-            "IQD",
-            "ZAR",
-            "EGP",
-            "NGN",
-            "KES",
-            "GHS",
-            "ETB",
-            "UGX",
-            "TZS",
-            "RWF",
-            "XOF",
-            "XAF",
-            "MAD",
-            "TND",
-            "DZD",
-            "LYD",
-            "AOA",
-            "MZN",
-            "ZMW",
-            "BWP",
-            "MUR",
-            "USD",
-            "CAD",
-            "MXN",
-            "BRL",
-            "ARS",
-            "CLP",
-            "COP",
-            "PEN",
-            "VES",
-            "UYU",
-            "PYG",
-            "BOB",
-            "GTQ",
-            "HNL",
-            "NIO",
-            "CRC",
-            "PAB",
-            "DOP",
-            "HTG",
-            "JMD",
-            "BBD",
-            "BZD",
-            "TTD",
-            "XCD",
-            "GYD",
-            "SRD"
-          ]
-        },
-        "period_type_enum": {
-          "name": "period_type_enum",
-          "schema": "public",
-          "items": [
-            "DAILY",
-            "WEEKLY",
-            "TWO_WEEKS",
-            "THREE_WEEKS",
-            "MONTHLY",
-            "TWO_MONTHS",
-            "QUARTERLY",
-            "SEMI_ANNUAL",
-            "YEARLY"
-          ]
-        },
-        "language_code_enum": {
-          "name": "language_code_enum",
-          "schema": "public",
-          "items": [
-            "RU",
-            "EN",
-            "RO"
-          ]
-        },
-        "log_level_enum": {
-          "name": "log_level_enum",
-          "schema": "public",
-          "items": [
-            "DEBUG",
-            "INFO",
-            "WARN",
-            "ERROR"
-          ]
-        },
-        "log_source_enum": {
-          "name": "log_source_enum",
-          "schema": "public",
-          "items": [
-            "BACKEND",
-            "FRONTEND",
-            "API",
-            "AUTH",
-            "DATABASE"
-          ]
-        }
-      }
+      "comment": null
     }
   ],
   "nativeEnums": {
+    "ai_attempt_error_code_enum": {
+      "name": "ai_attempt_error_code_enum",
+      "schema": "public",
+      "items": [
+        "TIMEOUT",
+        "RATE_LIMIT",
+        "SERVER_ERROR",
+        "SCHEMA_INVALID",
+        "INVALID_RESPONSE",
+        "PROVIDER_ERROR",
+        "UNKNOWN"
+      ]
+    },
+    "ai_attempt_status_enum": {
+      "name": "ai_attempt_status_enum",
+      "schema": "public",
+      "items": [
+        "SUCCESS",
+        "FAILED"
+      ]
+    },
+    "ai_request_status_enum": {
+      "name": "ai_request_status_enum",
+      "schema": "public",
+      "items": [
+        "PENDING",
+        "SUCCESS",
+        "FAILED"
+      ]
+    },
     "currency_enum": {
       "name": "currency_enum",
       "schema": "public",
@@ -3414,21 +5512,6 @@
         "SRD"
       ]
     },
-    "period_type_enum": {
-      "name": "period_type_enum",
-      "schema": "public",
-      "items": [
-        "DAILY",
-        "WEEKLY",
-        "TWO_WEEKS",
-        "THREE_WEEKS",
-        "MONTHLY",
-        "TWO_MONTHS",
-        "QUARTERLY",
-        "SEMI_ANNUAL",
-        "YEARLY"
-      ]
-    },
     "language_code_enum": {
       "name": "language_code_enum",
       "schema": "public",
@@ -3457,6 +5540,21 @@
         "API",
         "AUTH",
         "DATABASE"
+      ]
+    },
+    "period_type_enum": {
+      "name": "period_type_enum",
+      "schema": "public",
+      "items": [
+        "DAILY",
+        "WEEKLY",
+        "TWO_WEEKS",
+        "THREE_WEEKS",
+        "MONTHLY",
+        "TWO_MONTHS",
+        "QUARTERLY",
+        "SEMI_ANNUAL",
+        "YEARLY"
       ]
     }
   }
