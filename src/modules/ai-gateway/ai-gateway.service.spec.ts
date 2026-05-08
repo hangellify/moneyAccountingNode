@@ -130,6 +130,11 @@ async function buildModule(
 
 // ---- Tests ----------------------------------------------------------------
 
+// Each test uses task_name in this set; cleanup + assertions scope by it so
+// this spec can run in parallel with ai-request-logger.spec without stepping
+// on shared tables.
+const OWNED_TASK_NAMES = ['test.ping', 'test.vision-ping'] as const;
+
 describe('AiGatewayService', () => {
   let orm: MikroORM;
   let em: EntityManager;
@@ -166,12 +171,41 @@ describe('AiGatewayService', () => {
     }
   });
 
-  async function truncate() {
-    await (em
+  async function cleanupOwnedRows() {
+    const fork = em.fork();
+    const parents = await fork.find(
+      AiRequest,
+      { task_name: { $in: [...OWNED_TASK_NAMES] } },
+      { fields: ['id'] },
+    );
+    if (parents.length === 0) return;
+    const ids = parents.map((p) => p.id);
+    await (fork
       .getConnection()
-      .execute(
-        'TRUNCATE ai_request_attempts, ai_requests RESTART IDENTITY CASCADE',
-      ) as Promise<unknown>);
+      .execute('DELETE FROM ai_request_attempts WHERE ai_request_id IN (?)', [
+        ids,
+      ]) as Promise<unknown>);
+    await (fork
+      .getConnection()
+      .execute('DELETE FROM ai_requests WHERE id IN (?)', [
+        ids,
+      ]) as Promise<unknown>);
+  }
+
+  async function findOwnedParents() {
+    return em.fork().find(AiRequest, {
+      task_name: { $in: [...OWNED_TASK_NAMES] },
+    });
+  }
+
+  async function findOwnedAttempts(orderBy?: { attempt_number: 'asc' }) {
+    return em.fork().find(
+      AiRequestAttempt,
+      {
+        ai_request: { task_name: { $in: [...OWNED_TASK_NAMES] } },
+      },
+      orderBy ? { orderBy } : undefined,
+    );
   }
 
   it('succeeds on first provider and logs one SUCCESS attempt', async () => {
@@ -181,16 +215,16 @@ describe('AiGatewayService', () => {
       [okResponse({ ok: true })],
     );
     const svc = await boot([fake]);
-    await truncate();
+    await cleanupOwnedRows();
 
     const out = await svc.run(new PingTask(), { n: 1 });
     expect(out).toEqual({ ok: true });
 
-    const parents = await em.fork().find(AiRequest, {});
+    const parents = await findOwnedParents();
     expect(parents).toHaveLength(1);
     expect(parents[0].status).toBe(AiRequestStatus.SUCCESS);
     expect(parents[0].task_name).toBe('test.ping');
-    const attempts = await em.fork().find(AiRequestAttempt, {});
+    const attempts = await findOwnedAttempts();
     expect(attempts).toHaveLength(1);
     expect(attempts[0].status).toBe(AiAttemptStatus.SUCCESS);
     expect(attempts[0].provider_name).toBe('openai');
@@ -209,18 +243,16 @@ describe('AiGatewayService', () => {
       [okResponse({ ok: false })],
     );
     const svc = await boot([p1, p2]);
-    await truncate();
+    await cleanupOwnedRows();
 
     const out = await svc.run(new PingTask(), { n: 2 });
     expect(out).toEqual({ ok: false });
 
-    const parents = await em.fork().find(AiRequest, {});
+    const parents = await findOwnedParents();
     expect(parents).toHaveLength(1);
     expect(parents[0].status).toBe(AiRequestStatus.SUCCESS);
 
-    const attempts = await em
-      .fork()
-      .find(AiRequestAttempt, {}, { orderBy: { attempt_number: 'asc' } });
+    const attempts = await findOwnedAttempts({ attempt_number: 'asc' });
     expect(attempts).toHaveLength(2);
     expect(attempts[0].status).toBe(AiAttemptStatus.FAILED);
     expect(attempts[0].error_code).toBe(AiAttemptErrorCode.SCHEMA_INVALID);
@@ -242,18 +274,16 @@ describe('AiGatewayService', () => {
       [okResponse({ ok: true })],
     );
     const svc = await boot([p1, p2]);
-    await truncate();
+    await cleanupOwnedRows();
 
     const out = await svc.run(new PingTask(), { n: 3 });
     expect(out).toEqual({ ok: true });
 
-    const parents = await em.fork().find(AiRequest, {});
+    const parents = await findOwnedParents();
     expect(parents).toHaveLength(1);
     expect(parents[0].status).toBe(AiRequestStatus.SUCCESS);
 
-    const attempts = await em
-      .fork()
-      .find(AiRequestAttempt, {}, { orderBy: { attempt_number: 'asc' } });
+    const attempts = await findOwnedAttempts({ attempt_number: 'asc' });
     expect(attempts).toHaveLength(2);
     expect(attempts[0].status).toBe(AiAttemptStatus.FAILED);
     expect(attempts[0].error_code).toBe(AiAttemptErrorCode.SERVER_ERROR);
@@ -272,7 +302,7 @@ describe('AiGatewayService', () => {
       [okResponse({ not: 'matching' })],
     );
     const svc = await boot([p1, p2]);
-    await truncate();
+    await cleanupOwnedRows();
 
     let caught: unknown;
     try {
@@ -284,12 +314,12 @@ describe('AiGatewayService', () => {
     const exhausted = caught as AiGatewayExhaustedError;
     expect(exhausted.parentId).toBeTruthy();
 
-    const parents = await em.fork().find(AiRequest, {});
+    const parents = await findOwnedParents();
     expect(parents).toHaveLength(1);
     expect(parents[0].id).toBe(exhausted.parentId);
     expect(parents[0].status).toBe(AiRequestStatus.FAILED);
 
-    const attempts = await em.fork().find(AiRequestAttempt, {});
+    const attempts = await findOwnedAttempts();
     expect(attempts).toHaveLength(2);
     expect(attempts.every((a) => a.status === AiAttemptStatus.FAILED)).toBe(
       true,
@@ -304,7 +334,7 @@ describe('AiGatewayService', () => {
       [okResponse({ ok: true })],
     );
     const svc = await boot([fake]);
-    await truncate();
+    await cleanupOwnedRows();
 
     const out = await svc.run(new VisionPingTask(), { data: buf });
     expect(out).toEqual({ ok: true });
@@ -312,7 +342,7 @@ describe('AiGatewayService', () => {
     expect(putSpy).toHaveBeenCalledTimes(1);
     expect(putSpy).toHaveBeenCalledWith(buf, 'image/png');
 
-    const parents = await em.fork().find(AiRequest, {});
+    const parents = await findOwnedParents();
     expect(parents).toHaveLength(1);
     expect(parents[0].image_s3_keys).toEqual(['ai/images/fake.png']);
   });
@@ -326,11 +356,11 @@ describe('AiGatewayService', () => {
     );
     const task = new PingTask({ anthropic: 'claude-opus-4-7' });
     const svc = await boot([fake]);
-    await truncate();
+    await cleanupOwnedRows();
 
     await svc.run(task, { n: 5 });
 
-    const attempts = await em.fork().find(AiRequestAttempt, {});
+    const attempts = await findOwnedAttempts();
     expect(attempts).toHaveLength(1);
     expect(attempts[0].model).toBe('claude-opus-4-7');
     expect(attempts[0].provider_name).toBe('anthropic');
@@ -347,7 +377,7 @@ describe('AiGatewayService', () => {
       isTransient: () => false,
     };
     const svc = await boot([fake]);
-    await truncate();
+    await cleanupOwnedRows();
 
     await expect(
       // Invalid: `n` is not a number
@@ -355,7 +385,7 @@ describe('AiGatewayService', () => {
     ).rejects.toBeDefined();
 
     expect(completeSpy).not.toHaveBeenCalled();
-    const parents = await em.fork().find(AiRequest, {});
+    const parents = await findOwnedParents();
     expect(parents).toHaveLength(0);
   });
 
@@ -367,19 +397,19 @@ describe('AiGatewayService', () => {
       [],
     );
     const svc = await boot([fake]);
-    await truncate();
+    await cleanupOwnedRows();
 
     const buf = Buffer.from([9, 9, 9]);
     await expect(
       svc.run(new VisionPingTask(), { data: buf }),
     ).rejects.toBeInstanceOf(NoCapableProviderError);
 
-    const parents = await em.fork().find(AiRequest, {});
+    const parents = await findOwnedParents();
     expect(parents).toHaveLength(1);
     expect(parents[0].status).toBe(AiRequestStatus.FAILED);
     expect(parents[0].error_message).toMatch(/no capable provider/i);
 
-    const attempts = await em.fork().find(AiRequestAttempt, {});
+    const attempts = await findOwnedAttempts();
     expect(attempts).toHaveLength(0);
   });
 });

@@ -47,12 +47,29 @@ describe('AiRequestLogger', () => {
     await orm.close(true);
   });
 
+  // Scope cleanup to task names this spec owns, so it can run in parallel
+  // with ai-gateway.service.spec.ts without truncating each other's data.
+  const OWNED_TASK_NAMES = ['test.task', 't'];
+
   beforeEach(async () => {
-    await (em
+    const fork = em.fork();
+    const parents = await fork.find(
+      AiRequest,
+      { task_name: { $in: OWNED_TASK_NAMES } },
+      { fields: ['id'] },
+    );
+    if (parents.length === 0) return;
+    const ids = parents.map((p) => p.id);
+    await (fork
       .getConnection()
-      .execute(
-        'TRUNCATE ai_request_attempts, ai_requests RESTART IDENTITY CASCADE',
-      ) as Promise<unknown>);
+      .execute('DELETE FROM ai_request_attempts WHERE ai_request_id IN (?)', [
+        ids,
+      ]) as Promise<unknown>);
+    await (fork
+      .getConnection()
+      .execute('DELETE FROM ai_requests WHERE id IN (?)', [
+        ids,
+      ]) as Promise<unknown>);
   });
 
   it('creates a PENDING parent row', async () => {
