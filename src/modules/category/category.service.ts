@@ -7,6 +7,7 @@ import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository, EntityManager } from '@mikro-orm/core';
 import { Category } from '../../entities/category.entity';
 import { PlaningHorizon } from '../../entities/planing-horizon.entity';
+import { User } from '../../entities/user.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { BulkCreateCategoryDto } from './dto/bulk-create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -48,6 +49,7 @@ export class CategoryService {
     const category = new Category();
     category.name = createCategoryDto.name;
     category.description = createCategoryDto.description;
+    category.user = this.em.getReference(User, userId);
 
     // Link category to planning horizon
     category.planingHorizons.add(planingHorizon);
@@ -91,6 +93,7 @@ export class CategoryService {
       const category = new Category();
       category.name = categoryItem.name;
       category.description = categoryItem.description;
+      category.user = this.em.getReference(User, userId);
       category.planingHorizons.add(planingHorizon);
       categories.push(category);
     }
@@ -108,60 +111,29 @@ export class CategoryService {
 
   /**
    * Get a category by ID
-   * Only returns category if it belongs to the user through planning horizon -> budget
+   * Only returns category if it belongs to the user
    * Includes sub-categories in the response
    */
   async getCategory(id: string, userId: string): Promise<CategoryResponseDto> {
-    // First, get the category
     const category = await this.categoryRepository.findOne(
-      {
-        id,
-        deleted_at: null,
-      },
-      {
-        populate: ['planingHorizons', 'subCategories'],
-      },
+      { id, user: { id: userId }, deleted_at: null },
+      { populate: ['subCategories'] },
     );
-
     if (!category) {
       throw new NotFoundException(`Category with ID ${id} not found`);
     }
 
-    // Check if category is linked to at least one planning horizon that belongs to the user
-    if (!category.planingHorizons.isInitialized()) {
-      await category.planingHorizons.loadItems();
-    }
-    const planingHorizonIds = category.planingHorizons
+    const subCategories = category.subCategories
       .getItems()
-      .map((ph) => ph.id);
-    const userPlaningHorizons = await this.planingHorizonRepository.find({
-      id: { $in: planingHorizonIds },
-      budget: { user: { id: userId }, deleted_at: null },
-      is_archived: false,
-      deleted_at: null,
-    });
-
-    if (userPlaningHorizons.length === 0) {
-      throw new NotFoundException(`Category with ID ${id} not found`);
-    }
-
-    // Load and map sub-categories
-    const subCategories = [];
-    if (!category.subCategories.isInitialized()) {
-      await category.subCategories.loadItems();
-    }
-    for (const subCategory of category.subCategories) {
-      if (!subCategory.deleted_at) {
-        subCategories.push({
-          id: subCategory.id,
-          name: subCategory.name,
-          description: subCategory.description,
-          category_id: category.id,
-          created_at: subCategory.created_at,
-          updated_at: subCategory.updated_at,
-        });
-      }
-    }
+      .filter((sc) => !sc.deleted_at)
+      .map((sc) => ({
+        id: sc.id,
+        name: sc.name,
+        description: sc.description,
+        category_id: category.id,
+        created_at: sc.created_at,
+        updated_at: sc.updated_at,
+      }));
 
     return {
       id: category.id,
@@ -175,95 +147,47 @@ export class CategoryService {
 
   /**
    * Get all categories for a user
-   * Returns categories that belong to planning horizons that belong to budgets that belong to the user
+   * Returns categories that directly belong to the user
    * Does not include sub-categories in the response
    */
   async getAllUserCategories(
     userId: string,
   ): Promise<CategoryBaseResponseDto[]> {
-    // First, get all planning horizons for the user
-    const userPlaningHorizons = await this.planingHorizonRepository.find(
-      {
-        budget: { user: { id: userId }, deleted_at: null },
-        is_archived: false,
-        deleted_at: null,
-      },
-      {
-        populate: ['categories'],
-      },
+    const categories = await this.categoryRepository.find(
+      { user: { id: userId }, deleted_at: null },
+      { orderBy: { name: 'asc' } },
     );
-
-    // Collect all unique categories from these planning horizons
-    const uniqueCategories = new Map<string, Category>();
-    for (const planingHorizon of userPlaningHorizons) {
-      if (planingHorizon.categories.isInitialized()) {
-        for (const category of planingHorizon.categories) {
-          if (!category.deleted_at && !uniqueCategories.has(category.id)) {
-            uniqueCategories.set(category.id, category);
-          }
-        }
-      }
-    }
-
-    return Array.from(uniqueCategories.values()).map((category) => ({
-      id: category.id,
-      name: category.name,
-      description: category.description,
-      created_at: category.created_at,
-      updated_at: category.updated_at,
+    return categories.map((c) => ({
+      id: c.id,
+      name: c.name,
+      description: c.description,
+      created_at: c.created_at,
+      updated_at: c.updated_at,
     }));
   }
 
   /**
    * Update a category by ID
-   * Only updates category if it belongs to the user through planning horizon -> budget
+   * Only updates category if it belongs to the user
    */
   async updateCategory(
     id: string,
     userId: string,
     updateCategoryDto: UpdateCategoryDto,
   ): Promise<CategoryResponseDto> {
-    // First, get the category
-    const category = await this.categoryRepository.findOne(
-      {
-        id,
-        deleted_at: null,
-      },
-      {
-        populate: ['planingHorizons'],
-      },
-    );
-
+    const category = await this.categoryRepository.findOne({
+      id,
+      user: { id: userId },
+      deleted_at: null,
+    });
     if (!category) {
       throw new NotFoundException(`Category with ID ${id} not found`);
     }
 
-    // Check if category is linked to at least one planning horizon that belongs to the user
-    if (!category.planingHorizons.isInitialized()) {
-      await category.planingHorizons.loadItems();
-    }
-    const planingHorizonIds = category.planingHorizons
-      .getItems()
-      .map((ph) => ph.id);
-    const userPlaningHorizons = await this.planingHorizonRepository.find({
-      id: { $in: planingHorizonIds },
-      budget: { user: { id: userId }, deleted_at: null },
-      is_archived: false,
-      deleted_at: null,
-    });
-
-    if (userPlaningHorizons.length === 0) {
-      throw new NotFoundException(`Category with ID ${id} not found`);
-    }
-
-    // Update only provided fields
-    if (updateCategoryDto.name !== undefined) {
+    if (updateCategoryDto.name !== undefined)
       category.name = updateCategoryDto.name;
-    }
-
-    if (updateCategoryDto.description !== undefined) {
+    if (updateCategoryDto.description !== undefined)
       category.description = updateCategoryDto.description;
-    }
 
     await this.em.persist(category).flush();
 
@@ -278,49 +202,22 @@ export class CategoryService {
 
   /**
    * Soft delete a category by setting deleted_at timestamp
-   * Only deletes category if it belongs to the user through planning horizon -> budget
+   * Only deletes category if it belongs to the user
    */
   async deleteCategory(id: string, userId: string): Promise<void> {
-    // First, get the category
-    const category = await this.categoryRepository.findOne(
-      {
-        id,
-        deleted_at: null,
-      },
-      {
-        populate: ['planingHorizons'],
-      },
-    );
-
+    const category = await this.categoryRepository.findOne({
+      id,
+      user: { id: userId },
+      deleted_at: null,
+    });
     if (!category) {
       throw new NotFoundException(`Category with ID ${id} not found`);
     }
-
-    // Check if category is linked to at least one planning horizon that belongs to the user
-    if (!category.planingHorizons.isInitialized()) {
-      await category.planingHorizons.loadItems();
-    }
-    const planingHorizonIds = category.planingHorizons
-      .getItems()
-      .map((ph) => ph.id);
-    const userPlaningHorizons = await this.planingHorizonRepository.find({
-      id: { $in: planingHorizonIds },
-      budget: { user: { id: userId }, deleted_at: null },
-      is_archived: false,
-      deleted_at: null,
-    });
-
-    if (userPlaningHorizons.length === 0) {
-      throw new NotFoundException(`Category with ID ${id} not found`);
-    }
-
-    // Check if category is already soft deleted
     if (category.deleted_at) {
       throw new BadRequestException(
         `Category with ID ${id} is already deleted`,
       );
     }
-
     category.deleted_at = new Date();
     await this.em.persist(category).flush();
   }
