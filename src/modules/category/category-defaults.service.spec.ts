@@ -34,8 +34,14 @@ describe('CategoryDefaultsService', () => {
 
   async function cleanupOwned(): Promise<void> {
     const fork = em.fork();
-    // ON DELETE CASCADE on categories.user_id (and on sub_categories.category_id)
-    // takes care of dependent rows.
+    // sub_categories.category_id has no ON DELETE CASCADE, so we must delete
+    // in FK dependency order: sub_categories → categories → users.
+    await fork.nativeDelete(SubCategory, {
+      category: { user: { email: { $like: `${EMAIL_PREFIX}%` } } },
+    });
+    await fork.nativeDelete(Category, {
+      user: { email: { $like: `${EMAIL_PREFIX}%` } },
+    });
     await fork.nativeDelete(User, { email: { $like: `${EMAIL_PREFIX}%` } });
   }
 

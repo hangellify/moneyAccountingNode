@@ -55,7 +55,7 @@ jobs:
           DB_NAME: accounting
 
       - name: Apply migrations
-        run: npm run migration:up
+        run: npm run migration:fresh
         env:
           DB_HOST: localhost
           DB_PORT: 5432
