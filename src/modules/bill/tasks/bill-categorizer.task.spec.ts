@@ -2,6 +2,8 @@ import { BillCategorizerTask } from './bill-categorizer.task';
 import type { EntityRepository } from '@mikro-orm/core';
 import type { SubCategory } from '../../../entities/sub-category.entity';
 
+const USER_ID = '00000000-0000-0000-0000-0000000000aa';
+
 describe('BillCategorizerTask', () => {
   let repo: { find: jest.Mock };
   let task: BillCategorizerTask;
@@ -48,9 +50,10 @@ describe('BillCategorizerTask', () => {
           final_price: 1,
         },
       ],
+      userId: USER_ID,
     });
     expect(repo.find).toHaveBeenCalledWith(
-      { deleted_at: null },
+      { deleted_at: null, category: { user: { id: USER_ID } } },
       { populate: ['category'] },
     );
   });
@@ -75,6 +78,7 @@ describe('BillCategorizerTask', () => {
           final_price: 4.2,
         },
       ],
+      userId: USER_ID,
     });
     const user = req.messages.find((m) => m.role === 'user');
     expect(user?.text).toContain(

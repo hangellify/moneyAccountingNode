@@ -5,10 +5,18 @@ import { SubCategory } from '../../entities/sub-category.entity';
 import { BillParserTask } from './tasks/bill-parser.task';
 import { BillCategorizerTask } from './tasks/bill-categorizer.task';
 import { BillAiOrchestrator } from './bill-ai.orchestrator';
+import { BillPhotoService } from './bill-photo.service';
+import { BillController } from './bill.controller';
 
 @Module({
   imports: [MikroOrmModule.forFeature([Category, SubCategory])],
-  providers: [BillParserTask, BillCategorizerTask, BillAiOrchestrator],
+  controllers: [BillController],
+  providers: [
+    BillParserTask,
+    BillCategorizerTask,
+    BillAiOrchestrator,
+    BillPhotoService,
+  ],
   exports: [BillAiOrchestrator],
 })
 export class BillModule {}

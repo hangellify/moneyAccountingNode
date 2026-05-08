@@ -4,12 +4,14 @@ import {
   BeforeCreate,
   BeforeUpdate,
   ManyToMany,
+  ManyToOne,
   Collection,
   OneToMany,
 } from '@mikro-orm/core';
 import { BaseEntity } from './base.entity';
 import { PlaningHorizon } from './planing-horizon.entity';
 import { SubCategory } from './sub-category.entity';
+import { User } from './user.entity';
 
 @Entity({ tableName: 'categories' })
 export class Category extends BaseEntity {
@@ -36,6 +38,9 @@ export class Category extends BaseEntity {
 
   @OneToMany(() => SubCategory, (subCategory) => subCategory.category)
   subCategories = new Collection<SubCategory>(this);
+
+  @ManyToOne(() => User, { nullable: false, deleteRule: 'cascade' })
+  user!: User;
 
   @BeforeCreate()
   beforeCreate() {

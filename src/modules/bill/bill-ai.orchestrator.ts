@@ -26,9 +26,22 @@ export class BillAiOrchestrator {
     );
     const categorized = await this.gateway.run(
       this.categorizer,
-      { items: parsed.items },
+      { items: parsed.items, userId },
       { userId },
     );
     return { parsed, categorized };
+  }
+
+  async parseOnly(
+    image: Buffer,
+    mediaType: 'image/png' | 'image/jpeg' | 'image/webp',
+    userId: string,
+    hint?: string,
+  ): Promise<ParsedBill> {
+    return this.gateway.run(
+      this.parser,
+      { image, mediaType, hint },
+      { userId },
+    );
   }
 }
