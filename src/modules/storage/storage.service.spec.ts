@@ -1,59 +1,229 @@
-import { GenericContainer, StartedTestContainer, Wait } from 'testcontainers';
-import { S3StorageService } from './storage.service';
 import { createHash } from 'crypto';
+import {
+  S3Client,
+  PutObjectCommand,
+  HeadObjectCommand,
+  CreateBucketCommand,
+  HeadBucketCommand,
+  GetObjectCommand,
+} from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { S3StorageService } from './storage.service';
+import type { StorageEnv } from './storage.env';
 
-jest.setTimeout(120_000);
+jest.mock('@aws-sdk/client-s3');
+jest.mock('@aws-sdk/s3-request-presigner');
 
-describe('S3StorageService (integration)', () => {
-  let minio: StartedTestContainer;
-  let service: S3StorageService;
-  const bucket = 'test-bucket';
-  const accessKey = 'minioadmin';
-  const secretKey = 'minioadmin';
+const mockedGetSignedUrl = getSignedUrl as jest.MockedFunction<
+  typeof getSignedUrl
+>;
+const MockedS3Client = S3Client as unknown as jest.Mock;
 
-  beforeAll(async () => {
-    minio = await new GenericContainer('minio/minio:latest')
-      .withEnvironment({
-        MINIO_ROOT_USER: accessKey,
-        MINIO_ROOT_PASSWORD: secretKey,
-      })
-      .withCommand(['server', '/data'])
-      .withExposedPorts(9000)
-      .withWaitStrategy(Wait.forHttp('/minio/health/ready', 9000))
-      .start();
+function makeEnv(overrides: Partial<StorageEnv> = {}): StorageEnv {
+  return {
+    region: 'us-east-1',
+    bucket: 'test-bucket',
+    accessKey: 'ak',
+    secretKey: 'sk',
+    endpoint: 'http://minio.test:9000',
+    forcePathStyle: true,
+    ...overrides,
+  };
+}
 
-    const endpoint = `http://${minio.getHost()}:${minio.getMappedPort(9000)}`;
-    service = new S3StorageService({
-      region: 'us-east-1',
-      bucket,
-      accessKey,
-      secretKey,
-      endpoint,
-      forcePathStyle: true,
+type SendFn = (cmd: unknown) => Promise<unknown>;
+
+function wireSendMock(send: SendFn): void {
+  MockedS3Client.mockImplementation(() => ({ send }));
+}
+
+class NotFoundError extends Error {
+  override readonly name = 'NotFound';
+  readonly $metadata = { httpStatusCode: 404 };
+}
+
+describe('S3StorageService', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('put', () => {
+    it('stores the buffer at ai/images/<sha256>.<ext> and returns the key', async () => {
+      const buf = Buffer.from('fake-png-bytes');
+      const expectedHash = createHash('sha256').update(buf).digest('hex');
+      const send = jest
+        .fn()
+        .mockImplementationOnce(() =>
+          Promise.reject(new NotFoundError('missing')),
+        )
+        .mockImplementationOnce(() => Promise.resolve({}));
+      wireSendMock(send);
+
+      const svc = new S3StorageService(makeEnv());
+      const { key } = await svc.put(buf, 'image/png');
+
+      expect(key).toBe(`ai/images/${expectedHash}.png`);
+      expect(send).toHaveBeenNthCalledWith(1, expect.any(HeadObjectCommand));
+      expect(send).toHaveBeenNthCalledWith(2, expect.any(PutObjectCommand));
     });
-    await service.ensureBucket();
+
+    it('uses the jpg extension for image/jpeg', async () => {
+      const buf = Buffer.from('j');
+      const send = jest
+        .fn()
+        .mockImplementationOnce(() =>
+          Promise.reject(new NotFoundError('missing')),
+        )
+        .mockImplementationOnce(() => Promise.resolve({}));
+      wireSendMock(send);
+
+      const svc = new S3StorageService(makeEnv());
+      const { key } = await svc.put(buf, 'image/jpeg');
+
+      expect(key.endsWith('.jpg')).toBe(true);
+    });
+
+    it('dedupes: skips PUT when the object already exists', async () => {
+      const buf = Buffer.from('already-there');
+      const send = jest.fn().mockResolvedValue({});
+      wireSendMock(send);
+
+      const svc = new S3StorageService(makeEnv());
+      await svc.put(buf, 'image/png');
+
+      expect(send).toHaveBeenCalledTimes(1);
+      expect(send).toHaveBeenCalledWith(expect.any(HeadObjectCommand));
+    });
+
+    it('propagates non-404 errors from HEAD', async () => {
+      const send = jest.fn().mockRejectedValue(
+        Object.assign(new Error('denied'), {
+          $metadata: { httpStatusCode: 403 },
+        }),
+      );
+      wireSendMock(send);
+
+      const svc = new S3StorageService(makeEnv());
+      await expect(svc.put(Buffer.from('x'), 'image/png')).rejects.toThrow(
+        'denied',
+      );
+    });
   });
 
-  afterAll(async () => {
-    await minio?.stop();
+  describe('exists', () => {
+    it('returns true when HEAD succeeds', async () => {
+      wireSendMock(jest.fn().mockResolvedValue({}));
+      const svc = new S3StorageService(makeEnv());
+      expect(await svc.exists('ai/images/x.png')).toBe(true);
+    });
+
+    it('returns false when HEAD reports NotFound by name', async () => {
+      wireSendMock(jest.fn().mockRejectedValue(new NotFoundError('missing')));
+      const svc = new S3StorageService(makeEnv());
+      expect(await svc.exists('ai/images/missing.png')).toBe(false);
+    });
+
+    it('returns false when HEAD reports 404 via $metadata', async () => {
+      wireSendMock(
+        jest.fn().mockRejectedValue({
+          $metadata: { httpStatusCode: 404 },
+        }),
+      );
+      const svc = new S3StorageService(makeEnv());
+      expect(await svc.exists('ai/images/missing.png')).toBe(false);
+    });
+
+    it('throws on non-404 errors', async () => {
+      wireSendMock(
+        jest.fn().mockRejectedValue(
+          Object.assign(new Error('boom'), {
+            $metadata: { httpStatusCode: 500 },
+          }),
+        ),
+      );
+      const svc = new S3StorageService(makeEnv());
+      await expect(svc.exists('k')).rejects.toThrow('boom');
+    });
   });
 
-  it('puts an image and returns a content-addressed key', async () => {
-    const buf = Buffer.from('fake-png-bytes');
-    const expectedHash = createHash('sha256').update(buf).digest('hex');
-    const { key } = await service.put(buf, 'image/png');
-    expect(key).toBe(`ai/images/${expectedHash}.png`);
-    expect(await service.exists(key)).toBe(true);
+  describe('getSignedUrl', () => {
+    it('delegates to @aws-sdk/s3-request-presigner with a GetObjectCommand', async () => {
+      wireSendMock(jest.fn());
+      mockedGetSignedUrl.mockResolvedValue('https://signed.example');
+
+      const svc = new S3StorageService(makeEnv());
+      const url = await svc.getSignedUrl('ai/images/abc.png', 60);
+
+      expect(url).toBe('https://signed.example');
+      expect(mockedGetSignedUrl).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.any(GetObjectCommand),
+        { expiresIn: 60 },
+      );
+    });
+
+    it('defaults the expiry to 15 minutes', async () => {
+      wireSendMock(jest.fn());
+      mockedGetSignedUrl.mockResolvedValue('https://signed.example');
+
+      const svc = new S3StorageService(makeEnv());
+      await svc.getSignedUrl('k');
+
+      expect(mockedGetSignedUrl).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.any(GetObjectCommand),
+        { expiresIn: 900 },
+      );
+    });
   });
 
-  it('dedupes when the same buffer is uploaded twice', async () => {
-    const buf = Buffer.from('identical-bytes');
-    const first = await service.put(buf, 'image/jpeg');
-    const second = await service.put(buf, 'image/jpeg');
-    expect(first.key).toBe(second.key);
+  describe('ensureBucket', () => {
+    it('no-ops when the bucket already exists', async () => {
+      const send = jest.fn().mockResolvedValue({});
+      wireSendMock(send);
+
+      const svc = new S3StorageService(makeEnv());
+      await svc.ensureBucket();
+
+      expect(send).toHaveBeenCalledTimes(1);
+      expect(send).toHaveBeenCalledWith(expect.any(HeadBucketCommand));
+    });
+
+    it('creates the bucket when HEAD fails', async () => {
+      const send = jest
+        .fn()
+        .mockImplementationOnce(() =>
+          Promise.reject(new NotFoundError('missing')),
+        )
+        .mockImplementationOnce(() => Promise.resolve({}));
+      wireSendMock(send);
+
+      const svc = new S3StorageService(makeEnv());
+      await svc.ensureBucket();
+
+      expect(send).toHaveBeenCalledTimes(2);
+      expect(send).toHaveBeenNthCalledWith(1, expect.any(HeadBucketCommand));
+      expect(send).toHaveBeenNthCalledWith(2, expect.any(CreateBucketCommand));
+    });
   });
 
-  it('returns false for exists() on a missing key', async () => {
-    expect(await service.exists('ai/images/does-not-exist.png')).toBe(false);
+  describe('construction', () => {
+    it('passes env-derived config to the S3Client', () => {
+      wireSendMock(jest.fn());
+      new S3StorageService(
+        makeEnv({
+          region: 'eu-west-1',
+          endpoint: 'http://mock:9000',
+          forcePathStyle: true,
+        }),
+      );
+
+      expect(MockedS3Client).toHaveBeenCalledWith({
+        region: 'eu-west-1',
+        endpoint: 'http://mock:9000',
+        forcePathStyle: true,
+        credentials: { accessKeyId: 'ak', secretAccessKey: 'sk' },
+      });
+    });
   });
 });
