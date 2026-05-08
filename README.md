@@ -25,36 +25,120 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
-## Project setup
+## Prerequisites
+
+- Node 22+
+- Docker + Docker Compose
+- npm
+
+## Initial setup
 
 ```bash
-$ yarn install
+# install dependencies
+npm install
+
+# create your local env file from the template and fill in secrets
+cp .env.example .env
+
+# start Postgres and MinIO in the background
+docker compose up -d postgres minio
+
+# apply all pending migrations
+npm run migration:up
 ```
+
+`.env` is already gitignored. At minimum it needs the DB, JWT, and S3 entries. The AI provider keys (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `DEEPSEEK_API_KEY`) are optional — any adapter without a key is logged as "skipped" at boot and excluded from capability resolution.
 
 ## Compile and run the project
 
 ```bash
 # development
-$ yarn run start
+npm run start
 
 # watch mode
-$ yarn run start:dev
+npm run start:dev
 
-# production mode
-$ yarn run start:prod
+# production build + run
+npm run build
+npm run start:prod
 ```
 
 ## Run tests
 
 ```bash
-# unit tests
-$ yarn run test
+# unit + mocked-integration suites (fast, no infra)
+npm test
 
-# e2e tests
-$ yarn run test:e2e
+# integration specs that require a live Postgres
+docker compose up -d postgres
+npm test -- src/modules/ai-gateway/internal/ai-request-logger.spec.ts
+npm test -- src/modules/ai-gateway/ai-gateway.service.spec.ts
 
-# test coverage
-$ yarn run test:cov
+# coverage
+npm run test:cov
+
+# e2e
+npm run test:e2e
+```
+
+`npm test` already sets `NODE_OPTIONS=--experimental-vm-modules` so the AWS SDK v3's dynamic imports load cleanly inside Jest.
+
+## Local test env for smoke-booting the AI gateway
+
+For one-off smoke tests without touching your working `.env`, create `.env.test` (gitignored) with a full set of boot-ready values:
+
+```bash
+# DB
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_NAME=accounting
+
+# Server
+PORT=3333
+NODE_ENV=test
+
+# JWT (any string ≥32 chars works for a local smoke test)
+JWT_SECRET=test-secret-at-least-32-chars-long-xxxxxx
+JWT_EXPIRES_IN_MS=900000
+JWT_REFRESH_SECRET=test-refresh-secret-at-least-32-chars-long-xxxxxx
+JWT_REFRESH_EXPIRES_IN_MS=604800000
+
+# AI Gateway — any real or fake key enables the adapter (the key is only read
+# when an actual call is made; boot-time only checks that it's set)
+ANTHROPIC_API_KEY=sk-ant-test
+ANTHROPIC_MODEL=claude-sonnet-4-6
+
+# S3 / MinIO
+S3_REGION=us-east-1
+S3_BUCKET=money-accounting-ai
+S3_ACCESS_KEY=minioadmin
+S3_SECRET_KEY=minioadmin
+S3_ENDPOINT=http://localhost:9000
+S3_FORCE_PATH_STYLE=true
+```
+
+Source it and start the app:
+
+```bash
+set -a && source .env.test && set +a && npm run start
+```
+
+You should see the boot-time capability check output:
+
+```
+[AiGatewayModule] Configured providers: anthropic
+[AiGatewayModule] Skipped providers (no API key): openai, deepseek
+[AiGatewayModule] Task 'bill.parse' can run on: anthropic
+[AiGatewayModule] Task 'bill.categorize' can run on: anthropic
+[NestApplication] Nest application successfully started
+```
+
+If a task has no capable provider configured (e.g. only `DEEPSEEK_API_KEY` is set, but `bill.parse` needs vision), the app refuses to start and throws:
+
+```
+Error: No configured AI provider satisfies task 'bill.parse' (required: text, vision, json)
 ```
 
 ## Deployment
