@@ -1,0 +1,84 @@
+import {
+  Entity,
+  Property,
+  BeforeCreate,
+  BeforeUpdate,
+  ManyToOne,
+  OneToMany,
+  Collection,
+  Index,
+  Enum,
+} from '@mikro-orm/core';
+import { BaseEntity } from './base.entity';
+import { User } from './user.entity';
+import { AiRequestAttempt } from './ai-request-attempt.entity';
+
+export enum AiRequestStatus {
+  PENDING = 'PENDING',
+  SUCCESS = 'SUCCESS',
+  FAILED = 'FAILED',
+}
+
+@Entity({ tableName: 'ai_requests' })
+export class AiRequest extends BaseEntity {
+  @Property({ type: 'varchar', length: 128, nullable: false })
+  @Index()
+  task_name!: string;
+
+  @ManyToOne(() => User, { nullable: true, deleteRule: 'set null' })
+  user?: User;
+
+  @Enum({
+    items: () => AiRequestStatus,
+    type: 'enum',
+    nativeEnumName: 'ai_request_status_enum',
+    nullable: false,
+  })
+  @Index()
+  status!: AiRequestStatus;
+
+  @Property({ type: 'jsonb', nullable: false })
+  required_capabilities!: string[];
+
+  @Property({ type: 'jsonb', nullable: true })
+  image_s3_keys?: string[];
+
+  @Property({ type: 'jsonb', nullable: false })
+  prompt!: { messages: Array<{ role: string; text: string }> };
+
+  @Property({ type: 'jsonb', nullable: true })
+  final_output?: unknown;
+
+  @Property({ type: 'text', nullable: true })
+  error_message?: string;
+
+  @Property({ type: 'uuid', nullable: true })
+  chosen_attempt_id?: string;
+
+  @Property({ type: 'integer', nullable: true })
+  total_latency_ms?: number;
+
+  @Property({ type: 'decimal', precision: 12, scale: 6, nullable: true })
+  total_cost_usd?: number;
+
+  @OneToMany(() => AiRequestAttempt, (a) => a.ai_request)
+  attempts = new Collection<AiRequestAttempt>(this);
+
+  @Property({ type: 'timestamptz', nullable: false, defaultRaw: 'NOW()' })
+  @Index()
+  created_at!: Date;
+
+  @Property({ type: 'timestamptz', nullable: false, defaultRaw: 'NOW()' })
+  updated_at!: Date;
+
+  @BeforeCreate()
+  beforeCreate() {
+    this.created_at = new Date();
+    this.updated_at = new Date();
+  }
+
+  @BeforeUpdate()
+  beforeUpdate() {
+    this.updated_at = new Date();
+  }
+}
