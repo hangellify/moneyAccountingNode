@@ -18,6 +18,7 @@ import { RegisterDto } from './dto/register.dto';
 import { TokenResponseDto } from './dto/token-response.dto';
 import { JwtPayload } from './types/jwt-payload.interface';
 import { requireEnv, requireIntEnv } from './auth.env';
+import { CategoryDefaultsService } from '../category/category-defaults.service';
 
 interface IssuedTokens {
   tokens: TokenResponseDto;
@@ -42,6 +43,7 @@ export class AuthService {
     private readonly logRepository: EntityRepository<Log>,
     private readonly em: EntityManager,
     private readonly jwtService: JwtService,
+    private readonly categoryDefaults: CategoryDefaultsService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<User | null> {
@@ -128,6 +130,15 @@ export class AuthService {
     user.currency = Currency.EUR;
 
     await this.em.persist(user).flush();
+
+    try {
+      await this.categoryDefaults.seedForUser(user.id);
+    } catch (err) {
+      this.logger.error(
+        `Failed to seed default categories for user ${user.id}: ${err instanceof Error ? err.message : String(err)}`,
+      );
+      // Continue — user can invoke POST /users/me/seed-default-categories to backfill.
+    }
 
     const issued = await this.startSession(user, ipAddress, userAgent);
     await this.logAuthAttempt(

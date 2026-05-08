@@ -7,6 +7,7 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { UserModule } from '../user/user.module';
+import { CategoryModule } from '../category/category.module';
 import { User } from '../../entities/user.entity';
 import { RefreshToken } from '../../entities/refresh-token.entity';
 import { Session } from '../../entities/session.entity';
@@ -18,6 +19,7 @@ import { requireEnv, requireIntEnv } from './auth.env';
     MikroOrmModule.forFeature([User, RefreshToken, Session, Log]),
     PassportModule,
     UserModule,
+    CategoryModule,
     JwtModule.register({
       secret: requireEnv('JWT_SECRET'),
       signOptions: {
