@@ -3,7 +3,7 @@ import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { Category } from '../../entities/category.entity';
 import { SubCategory } from '../../entities/sub-category.entity';
 import { BillParserTask } from './tasks/bill-parser.task';
-import { BillCategorizerTask } from './tasks/bill-categorizer.task';
+import { BillParseCategorizeTask } from './tasks/bill-parse-categorize.task';
 import { BillAiOrchestrator } from './bill-ai.orchestrator';
 import { BillPhotoService } from './bill-photo.service';
 import { BillController } from './bill.controller';
@@ -13,7 +13,7 @@ import { BillController } from './bill.controller';
   controllers: [BillController],
   providers: [
     BillParserTask,
-    BillCategorizerTask,
+    BillParseCategorizeTask,
     BillAiOrchestrator,
     BillPhotoService,
   ],

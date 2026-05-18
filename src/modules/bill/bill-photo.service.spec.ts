@@ -14,31 +14,23 @@ describe('BillPhotoService', () => {
   }
 
   function makeOrchestrator(opts: {
-    parsed?: unknown;
-    categorized?: unknown;
+    bill?: unknown;
     parseOnlyResult?: unknown;
   }): BillAiOrchestrator {
     return {
-      parseAndCategorize: jest.fn().mockResolvedValue({
-        parsed: opts.parsed,
-        categorized: opts.categorized,
-      }),
+      parseAndCategorize: jest.fn().mockResolvedValue(opts.bill),
       parseOnly: jest.fn().mockResolvedValue(opts.parseOnlyResult),
     } as never;
   }
 
-  function makeRepo(
-    found: unknown[],
-    subCount = found.length,
-  ): EntityRepository<SubCategory> {
+  function makeRepo(found: unknown[]): EntityRepository<SubCategory> {
     return {
       find: jest.fn().mockResolvedValue(found),
-      count: jest.fn().mockResolvedValue(subCount),
     } as never;
   }
 
   it('merges parsed + categorized into a single item list with sub_category names', async () => {
-    const parsed = {
+    const bill = {
       market_name: 'Lidl',
       bill_date: '2026-05-07',
       currency: 'EUR',
@@ -51,6 +43,9 @@ describe('BillPhotoService', () => {
           weight_kg: null,
           price_per_kg: null,
           final_price: 1.2,
+          sub_category_id: 'sub-a',
+          category_confidence: 0.95,
+          category_reasoning: 'bread',
         },
         {
           name: 'MILK',
@@ -59,24 +54,15 @@ describe('BillPhotoService', () => {
           weight_kg: null,
           price_per_kg: null,
           final_price: 2.3,
+          sub_category_id: 'sub-b',
+          category_confidence: 0.9,
         },
       ],
       raw_extracted_text: '...',
     };
-    const categorized = {
-      items: [
-        {
-          item_index: 0,
-          sub_category_id: 'sub-a',
-          confidence: 0.95,
-          reasoning: 'bread',
-        },
-        { item_index: 1, sub_category_id: 'sub-b', confidence: 0.9 },
-      ],
-    };
     const svc = new BillPhotoService(
-      makeOrchestrator({ parsed, categorized }),
-      makeRepo(makeSubs(), 2),
+      makeOrchestrator({ bill }),
+      makeRepo(makeSubs()),
     );
     const res = await svc.parseAndCategorize(
       Buffer.from('x'),
@@ -98,8 +84,8 @@ describe('BillPhotoService', () => {
     });
   });
 
-  it('sets sub_category null when categorizer returned null id', async () => {
-    const parsed = {
+  it('sets sub_category null when AI returned null sub_category_id', async () => {
+    const bill = {
       market_name: null,
       bill_date: null,
       currency: null,
@@ -112,16 +98,15 @@ describe('BillPhotoService', () => {
           weight_kg: null,
           price_per_kg: null,
           final_price: 1,
+          sub_category_id: null,
+          category_confidence: 0.1,
         },
       ],
       raw_extracted_text: '',
     };
-    const categorized = {
-      items: [{ item_index: 0, sub_category_id: null, confidence: 0.1 }],
-    };
     const svc = new BillPhotoService(
-      makeOrchestrator({ parsed, categorized }),
-      makeRepo([], 5),
+      makeOrchestrator({ bill }),
+      makeRepo(makeSubs()),
     );
     const res = await svc.parseAndCategorize(
       Buffer.from('x'),
@@ -132,8 +117,8 @@ describe('BillPhotoService', () => {
     expect(res.items[0].category_confidence).toBe(0.1);
   });
 
-  it('defensively sets sub_category null when id does not resolve (hallucination)', async () => {
-    const parsed = {
+  it('defensively sets sub_category null when AI returned an unrecognised id (hallucination)', async () => {
+    const bill = {
       market_name: null,
       bill_date: null,
       currency: null,
@@ -146,16 +131,15 @@ describe('BillPhotoService', () => {
           weight_kg: null,
           price_per_kg: null,
           final_price: 1,
+          sub_category_id: 'ghost-id',
+          category_confidence: 0.8,
         },
       ],
       raw_extracted_text: '',
     };
-    const categorized = {
-      items: [{ item_index: 0, sub_category_id: 'ghost-id', confidence: 0.8 }],
-    };
     const svc = new BillPhotoService(
-      makeOrchestrator({ parsed, categorized }),
-      makeRepo([], 5),
+      makeOrchestrator({ bill }),
+      makeRepo(makeSubs()),
     );
     const res = await svc.parseAndCategorize(
       Buffer.from('x'),
@@ -192,7 +176,7 @@ describe('BillPhotoService', () => {
       raw_extracted_text: '',
     };
     const orchestrator = makeOrchestrator({ parseOnlyResult });
-    const repo = makeRepo([], 0); // count === 0 → short-circuit
+    const repo = makeRepo([]);
 
     const svc = new BillPhotoService(orchestrator, repo);
     const res = await svc.parseAndCategorize(
@@ -213,5 +197,30 @@ describe('BillPhotoService', () => {
         (i) => i.sub_category === null && i.category_confidence === 0,
       ),
     ).toBe(true);
+  });
+
+  it('passes subcategory info derived from fetched subs to the orchestrator', async () => {
+    const subs = makeSubs();
+    const orchestrator = makeOrchestrator({
+      bill: {
+        market_name: null,
+        bill_date: null,
+        currency: null,
+        total_amount: null,
+        items: [],
+        raw_extracted_text: '',
+      },
+    });
+    const svc = new BillPhotoService(orchestrator, makeRepo(subs));
+
+    await svc.parseAndCategorize(Buffer.from('x'), 'image/png', USER_ID);
+
+    expect(
+      (orchestrator as unknown as { parseAndCategorize: jest.Mock })
+        .parseAndCategorize,
+    ).toHaveBeenCalledWith(expect.any(Buffer), 'image/png', USER_ID, [
+      { id: 'sub-a', category_name: 'Bread', sub_category_name: 'bun' },
+      { id: 'sub-b', category_name: 'Dairy', sub_category_name: 'milk' },
+    ]);
   });
 });

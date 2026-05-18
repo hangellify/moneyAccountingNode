@@ -1,47 +1,42 @@
 import { Injectable } from '@nestjs/common';
 import { AiGatewayService } from '../ai-gateway/ai-gateway.service';
 import { BillParserTask } from './tasks/bill-parser.task';
-import { BillCategorizerTask } from './tasks/bill-categorizer.task';
+import { BillParseCategorizeTask } from './tasks/bill-parse-categorize.task';
 import { ParsedBill } from './tasks/schemas/parsed-bill.schema';
-import { CategorizedBill } from './tasks/schemas/categorized-bill.schema';
+import { ParsedAndCategorizedBill } from './tasks/schemas/parsed-and-categorized-bill.schema';
+
+export interface SubCategoryInfo {
+  id: string;
+  category_name: string;
+  sub_category_name: string;
+}
 
 @Injectable()
 export class BillAiOrchestrator {
   constructor(
     private readonly gateway: AiGatewayService,
     private readonly parser: BillParserTask,
-    private readonly categorizer: BillCategorizerTask,
+    private readonly parseCategorize: BillParseCategorizeTask,
   ) {}
 
   async parseAndCategorize(
     image: Buffer,
     mediaType: 'image/png' | 'image/jpeg' | 'image/webp',
     userId: string,
-    hint?: string,
-  ): Promise<{ parsed: ParsedBill; categorized: CategorizedBill }> {
-    const parsed = await this.gateway.run(
-      this.parser,
-      { image, mediaType, hint },
+    subcategories: SubCategoryInfo[],
+  ): Promise<ParsedAndCategorizedBill> {
+    return this.gateway.run(
+      this.parseCategorize,
+      { image, mediaType, subcategories },
       { userId },
     );
-    const categorized = await this.gateway.run(
-      this.categorizer,
-      { items: parsed.items, userId },
-      { userId },
-    );
-    return { parsed, categorized };
   }
 
   async parseOnly(
     image: Buffer,
     mediaType: 'image/png' | 'image/jpeg' | 'image/webp',
     userId: string,
-    hint?: string,
   ): Promise<ParsedBill> {
-    return this.gateway.run(
-      this.parser,
-      { image, mediaType, hint },
-      { userId },
-    );
+    return this.gateway.run(this.parser, { image, mediaType }, { userId });
   }
 }
