@@ -1,11 +1,11 @@
 import { BillAiOrchestrator } from './bill-ai.orchestrator';
 import type { AiGatewayService } from '../ai-gateway/ai-gateway.service';
 import type { BillParserTask } from './tasks/bill-parser.task';
-import type { BillCategorizerTask } from './tasks/bill-categorizer.task';
+import type { BillParseCategorizeTask } from './tasks/bill-parse-categorize.task';
 
 describe('BillAiOrchestrator', () => {
-  it('runs the parser, then the categorizer with the parser output, and returns both', async () => {
-    const parsed = {
+  it('parseAndCategorize makes a single combined AI call with image and subcategories', async () => {
+    const bill = {
       market_name: 'Test',
       bill_date: '2026-05-08',
       currency: 'EUR',
@@ -18,88 +18,46 @@ describe('BillAiOrchestrator', () => {
           weight_kg: null,
           price_per_kg: null,
           final_price: 2,
-        },
-        {
-          name: 'TOMATOES',
-          quantity: null,
-          unit: 'kg',
-          weight_kg: 1,
-          price_per_kg: 3,
-          final_price: 3,
+          sub_category_id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+          category_confidence: 0.9,
         },
       ],
       raw_extracted_text: '...',
     };
-    const categorized = {
-      items: [
-        {
-          item_index: 0,
-          sub_category_id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-          confidence: 0.9,
-        },
-        { item_index: 1, sub_category_id: null, confidence: 0.2 },
-      ],
-    };
+    const subcategories = [
+      {
+        id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+        category_name: 'Bakery',
+        sub_category_name: 'Bread',
+      },
+    ];
 
-    const runMock = jest
-      .fn()
-      .mockResolvedValueOnce(parsed)
-      .mockResolvedValueOnce(categorized);
-
+    const runMock = jest.fn().mockResolvedValueOnce(bill);
     const parser = { name: 'bill.parse' } as unknown as BillParserTask;
-    const categorizer = {
-      name: 'bill.categorize',
-    } as unknown as BillCategorizerTask;
+    const parseCategorize = {
+      name: 'bill.parse-categorize',
+    } as unknown as BillParseCategorizeTask;
     const gateway = { run: runMock } as unknown as AiGatewayService;
 
-    const orchestrator = new BillAiOrchestrator(gateway, parser, categorizer);
+    const orchestrator = new BillAiOrchestrator(
+      gateway,
+      parser,
+      parseCategorize,
+    );
     const buf = Buffer.from('img');
     const result = await orchestrator.parseAndCategorize(
       buf,
       'image/png',
       'user-123',
-      'Lidl',
+      subcategories,
     );
 
-    expect(result).toEqual({ parsed, categorized });
-    expect(runMock).toHaveBeenCalledTimes(2);
-    expect(runMock).toHaveBeenNthCalledWith(
-      1,
-      parser,
-      { image: buf, mediaType: 'image/png', hint: 'Lidl' },
+    expect(result).toEqual(bill);
+    expect(runMock).toHaveBeenCalledTimes(1);
+    expect(runMock).toHaveBeenCalledWith(
+      parseCategorize,
+      { image: buf, mediaType: 'image/png', subcategories },
       { userId: 'user-123' },
-    );
-    expect(runMock).toHaveBeenNthCalledWith(
-      2,
-      categorizer,
-      { items: parsed.items, userId: 'user-123' },
-      { userId: 'user-123' },
-    );
-  });
-
-  it('works without a hint', async () => {
-    const runMock = jest
-      .fn()
-      .mockResolvedValueOnce({ items: [] })
-      .mockResolvedValueOnce({ items: [] });
-    const parser = { name: 'bill.parse' } as unknown as BillParserTask;
-    const categorizer = {
-      name: 'bill.categorize',
-    } as unknown as BillCategorizerTask;
-    const gateway = { run: runMock } as unknown as AiGatewayService;
-
-    const orchestrator = new BillAiOrchestrator(gateway, parser, categorizer);
-    await orchestrator.parseAndCategorize(Buffer.from('x'), 'image/jpeg', 'u');
-
-    expect(runMock).toHaveBeenNthCalledWith(
-      1,
-      parser,
-      {
-        image: expect.any(Buffer) as Buffer,
-        mediaType: 'image/jpeg',
-        hint: undefined,
-      },
-      { userId: 'u' },
     );
   });
 
@@ -114,21 +72,24 @@ describe('BillAiOrchestrator', () => {
     };
     const runMock = jest.fn().mockResolvedValueOnce(parsed);
     const parser = { name: 'bill.parse' } as unknown as BillParserTask;
-    const categorizer = {
-      name: 'bill.categorize',
-    } as unknown as BillCategorizerTask;
+    const parseCategorize = {
+      name: 'bill.parse-categorize',
+    } as unknown as BillParseCategorizeTask;
     const gateway = { run: runMock } as unknown as AiGatewayService;
 
-    const orchestrator = new BillAiOrchestrator(gateway, parser, categorizer);
+    const orchestrator = new BillAiOrchestrator(
+      gateway,
+      parser,
+      parseCategorize,
+    );
     const buf = Buffer.from('img');
     const res = await orchestrator.parseOnly(buf, 'image/jpeg', 'user-1');
 
     expect(res).toBe(parsed);
     expect(runMock).toHaveBeenCalledTimes(1);
-    expect(runMock).toHaveBeenNthCalledWith(
-      1,
+    expect(runMock).toHaveBeenCalledWith(
       parser,
-      { image: buf, mediaType: 'image/jpeg', hint: undefined },
+      { image: buf, mediaType: 'image/jpeg' },
       { userId: 'user-1' },
     );
   });
