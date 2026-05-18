@@ -2173,6 +2173,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "datetime"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
         }
       },
       "name": "categories",
@@ -2187,10 +2203,34 @@
           "keyName": "categories_pkey",
           "unique": true,
           "primary": true
+        },
+        {
+          "columnNames": [
+            "user_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "categories_user_id_index",
+          "unique": false,
+          "primary": false
         }
       ],
       "checks": [],
-      "foreignKeys": {},
+      "foreignKeys": {
+        "categories_user_id_foreign": {
+          "columnNames": [
+            "user_id"
+          ],
+          "constraintName": "categories_user_id_foreign",
+          "localTableName": "public.categories",
+          "referencedTableName": "public.users",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "cascade",
+          "deleteRule": "cascade"
+        }
+      },
       "nativeEnums": {
         "ai_attempt_error_code_enum": {
           "name": "ai_attempt_error_code_enum",
