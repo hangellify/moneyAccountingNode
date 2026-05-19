@@ -3,24 +3,24 @@ import { Migration } from '@mikro-orm/migrations';
 export class Migration20260519120000_CreateMarketsTable extends Migration {
   override up(): void {
     this.addSql(`
-      CREATE TABLE "markets" (
-        "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-        "name" VARCHAR(255) NOT NULL,
-        "address" VARCHAR(500) NULL,
-        "city" VARCHAR(255) NOT NULL,
-        "country" VARCHAR(2) NOT NULL,
-        "user_id" UUID NOT NULL,
-        "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        "updated_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        "deleted_at" TIMESTAMPTZ NULL,
-        CONSTRAINT "markets_pkey" PRIMARY KEY ("id"),
-        CONSTRAINT "markets_user_id_fkey"
-          FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
+      create table "markets" (
+        "id" uuid not null default gen_random_uuid(),
+        "name" varchar(255) not null,
+        "address" varchar(500) null,
+        "city" varchar(255) not null,
+        "country" varchar(2) not null,
+        "user_id" uuid not null,
+        "created_at" timestamptz not null default now(),
+        "updated_at" timestamptz not null default now(),
+        "deleted_at" timestamptz null,
+        constraint "markets_pkey" primary key ("id"),
+        constraint "markets_user_id_fkey"
+          foreign key ("user_id") references "users" ("id") on delete cascade
       );
     `);
   }
 
   override down(): void {
-    this.addSql(`DROP TABLE IF EXISTS "markets";`);
+    this.addSql(`drop table if exists "markets";`);
   }
 }

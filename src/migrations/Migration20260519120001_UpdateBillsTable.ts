@@ -2,37 +2,39 @@ import { Migration } from '@mikro-orm/migrations';
 
 export class Migration20260519120001_UpdateBillsTable extends Migration {
   override up(): void {
-    this.addSql(`ALTER TABLE "bills" DROP COLUMN IF EXISTS "marked_name";`);
-    this.addSql(`ALTER TABLE "bills" DROP COLUMN IF EXISTS "product_count";`);
-    this.addSql(`ALTER TABLE "bills" ADD COLUMN "user_id" UUID NOT NULL;`);
-    this.addSql(`ALTER TABLE "bills" ADD COLUMN "market_id" UUID NULL;`);
+    this.addSql(`alter table "bills" drop column if exists "marked_name";`);
+    this.addSql(`alter table "bills" drop column if exists "product_count";`);
+    this.addSql(`alter table "bills" add column "user_id" uuid not null;`);
+    this.addSql(`alter table "bills" add column "market_id" uuid null;`);
     this.addSql(
-      `ALTER TABLE "bills" ADD COLUMN "currency" "currency_enum" NULL;`,
+      `alter table "bills" add column "currency" "currency_enum" null;`,
     );
     this.addSql(`
-      ALTER TABLE "bills"
-        ADD CONSTRAINT "bills_user_id_fkey"
-          FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE,
-        ADD CONSTRAINT "bills_market_id_fkey"
-          FOREIGN KEY ("market_id") REFERENCES "markets" ("id") ON DELETE SET NULL;
+      alter table "bills"
+        add constraint "bills_user_id_fkey"
+          foreign key ("user_id") references "users" ("id") on delete cascade,
+        add constraint "bills_market_id_fkey"
+          foreign key ("market_id") references "markets" ("id") on delete set null;
     `);
+    this.addSql(`create index "bills_user_id_index" on "bills" ("user_id");`);
   }
 
   override down(): void {
     this.addSql(
-      `ALTER TABLE "bills" DROP CONSTRAINT IF EXISTS "bills_user_id_fkey";`,
+      `alter table "bills" drop constraint if exists "bills_user_id_fkey";`,
     );
     this.addSql(
-      `ALTER TABLE "bills" DROP CONSTRAINT IF EXISTS "bills_market_id_fkey";`,
+      `alter table "bills" drop constraint if exists "bills_market_id_fkey";`,
     );
-    this.addSql(`ALTER TABLE "bills" DROP COLUMN IF EXISTS "user_id";`);
-    this.addSql(`ALTER TABLE "bills" DROP COLUMN IF EXISTS "market_id";`);
-    this.addSql(`ALTER TABLE "bills" DROP COLUMN IF EXISTS "currency";`);
+    this.addSql(`drop index if exists "bills_user_id_index";`);
+    this.addSql(`alter table "bills" drop column if exists "user_id";`);
+    this.addSql(`alter table "bills" drop column if exists "market_id";`);
+    this.addSql(`alter table "bills" drop column if exists "currency";`);
     this.addSql(
-      `ALTER TABLE "bills" ADD COLUMN "marked_name" VARCHAR(255) NULL;`,
+      `alter table "bills" add column "marked_name" varchar(255) null;`,
     );
     this.addSql(
-      `ALTER TABLE "bills" ADD COLUMN "product_count" INTEGER NOT NULL DEFAULT 1;`,
+      `alter table "bills" add column "product_count" integer not null default 1;`,
     );
   }
 }
