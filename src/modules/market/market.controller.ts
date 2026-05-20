@@ -60,7 +60,11 @@ export class MarketController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get a market by ID' })
-  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiParam({
+    name: 'id',
+    description: 'Market unique identifier',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
   @ApiGetMarketResponses()
   async getMarket(
     @CurrentUser() user: AuthenticatedUser,
@@ -72,7 +76,11 @@ export class MarketController {
   @Put(':id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Update a market by ID' })
-  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiParam({
+    name: 'id',
+    description: 'Market unique identifier',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
   @ApiUpdateMarketResponses()
   async updateMarket(
     @CurrentUser() user: AuthenticatedUser,
@@ -85,7 +93,11 @@ export class MarketController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Soft delete a market by ID' })
-  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiParam({
+    name: 'id',
+    description: 'Market unique identifier',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
   @ApiDeleteMarketResponses()
   async deleteMarket(
     @CurrentUser() user: AuthenticatedUser,
