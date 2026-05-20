@@ -72,3 +72,13 @@ export const ApiDeleteBudgetResponses = () =>
     ApiBadRequestResponse('Bad request - Budget already deleted'),
     ApiUnauthorizedResponse(),
   );
+
+export const ApiListBudgetsResponses = () =>
+  applyDecorators(
+    ApiResponse({
+      status: 200,
+      description: 'Budgets listed successfully',
+      type: [BudgetResponseDto],
+    }),
+    ApiUnauthorizedResponse(),
+  );
