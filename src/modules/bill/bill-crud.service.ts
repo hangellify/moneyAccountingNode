@@ -243,6 +243,8 @@ export class BillCrudService {
       bill.market = market;
     } else if (dto.new_market) {
       bill.market = await this.findOrCreateMarket(userId, dto.new_market);
+    } else {
+      bill.market = undefined;
     }
 
     // Apply overrides

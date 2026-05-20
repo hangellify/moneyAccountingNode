@@ -113,7 +113,11 @@ describe('BillCrudService', () => {
       const result = await service.listBills(userId);
       expect(result).toEqual([]);
       expect(billRepo.find as jest.Mock).toHaveBeenCalledWith(
-        expect.objectContaining({ user: { id: userId }, deleted_at: null }),
+        expect.objectContaining({
+          user: { id: userId },
+          status: BillStatus.CONFIRMED,
+          deleted_at: null,
+        }),
         expect.anything(),
       );
     });
