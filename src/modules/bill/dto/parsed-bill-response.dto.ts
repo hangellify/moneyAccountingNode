@@ -44,6 +44,9 @@ export class ParsedBillItemResponseDto {
 }
 
 export class ParsedBillResponseDto {
+  @ApiProperty({ format: 'uuid', description: 'UUID of the saved draft bill' })
+  draft_id!: string;
+
   @ApiProperty({ nullable: true, example: 'Lidl' })
   market_name!: string | null;
 

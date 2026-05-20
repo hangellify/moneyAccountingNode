@@ -77,3 +77,31 @@ export const ApiDeleteBillResponses = () =>
     ApiResponse({ status: 404, description: 'Bill not found' }),
     ApiResponse({ status: 401, description: 'Unauthorized' }),
   );
+
+export const ApiListDraftsResponses = () =>
+  applyDecorators(
+    ApiResponse({
+      status: 200,
+      type: [BillResponseDto],
+      description: 'Draft bills listed',
+    }),
+    ApiResponse({ status: 401, description: 'Unauthorized' }),
+  );
+
+export const ApiConfirmBillResponses = () =>
+  applyDecorators(
+    ApiResponse({
+      status: 200,
+      type: BillDetailResponseDto,
+      description: 'Bill confirmed',
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'Draft bill not found or already confirmed',
+    }),
+    ApiResponse({
+      status: 400,
+      description: 'Invalid market or sub-category reference',
+    }),
+    ApiResponse({ status: 401, description: 'Unauthorized' }),
+  );
