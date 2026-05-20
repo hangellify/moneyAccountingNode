@@ -60,8 +60,6 @@ export class BillCrudService {
     bill.currency = dto.currency;
     if (market) bill.market = market;
 
-    this.em.persist(bill);
-
     const bscEntities: BillSubCategory[] = [];
     for (const item of dto.items) {
       const subCat = await this.subCategoryRepository.findOne(
@@ -84,10 +82,11 @@ export class BillCrudService {
       bsc.amount = item.amount;
       if (item.product_weight !== undefined)
         bsc.product_weight = item.product_weight;
-      this.em.persist(bsc);
       bscEntities.push(bsc);
     }
 
+    this.em.persist(bill);
+    for (const bsc of bscEntities) this.em.persist(bsc);
     await this.em.flush();
     return this.toDetailDto(bill, bscEntities);
   }
