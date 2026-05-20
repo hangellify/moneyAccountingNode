@@ -14,6 +14,7 @@ import { AnthropicProvider } from './modules/ai-gateway/providers/anthropic.prov
 import { OpenAiProvider } from './modules/ai-gateway/providers/openai.provider';
 import { DeepSeekProvider } from './modules/ai-gateway/providers/deepseek.provider';
 import { BillModule } from './modules/bill/bill.module';
+import { MarketModule } from './modules/market/market.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { BillModule } from './modules/bill/bill.module';
       providers: [AnthropicProvider, OpenAiProvider, DeepSeekProvider],
     }),
     BillModule,
+    MarketModule,
   ],
   controllers: [AppController],
   providers: [AppService],
