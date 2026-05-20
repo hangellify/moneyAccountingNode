@@ -3,10 +3,13 @@ import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { EntityManager, EntityRepository } from '@mikro-orm/core';
 import { BillCrudService } from './bill-crud.service';
 import { Bill } from '../../entities/bill.entity';
+import { BillStatus } from '../../types/bill-status.enum';
 import { Market } from '../../entities/market.entity';
 import { SubCategory } from '../../entities/sub-category.entity';
 import { User } from '../../entities/user.entity';
 import { CreateBillDto } from './dto/create-bill.dto';
+import { ConfirmBillDto } from './dto/confirm-bill.dto';
+import { ParsedBillResponseDto } from './dto/parsed-bill-response.dto';
 import { Currency } from '../../types/currency.enum';
 
 function makeService() {
@@ -26,6 +29,8 @@ function makeService() {
   const em = {
     persist: jest.fn().mockReturnThis(),
     flush: jest.fn().mockResolvedValue(undefined),
+    getReference: jest.fn().mockReturnValue({}),
+    nativeDelete: jest.fn().mockResolvedValue(1),
   } as unknown as EntityManager;
   return {
     service: new BillCrudService(
@@ -135,6 +140,89 @@ describe('BillCrudService', () => {
 
       expect(bill.deleted_at).toBeInstanceOf(Date);
       expect(em.flush as jest.Mock).toHaveBeenCalled();
+    });
+  });
+
+  describe('createDraftFromParsed', () => {
+    it('saves a draft bill and returns its id', async () => {
+      const { service, em } = makeService();
+
+      const parsed: ParsedBillResponseDto = {
+        draft_id: '',
+        market_name: 'Lidl',
+        bill_date: '2026-05-19',
+        currency: 'EUR',
+        total_amount: 9.99,
+        raw_extracted_text: '',
+        items: [],
+      };
+
+      const draftId = await service.createDraftFromParsed(userId, parsed);
+
+      expect(typeof draftId).toBe('string');
+      expect(em.flush as jest.Mock).toHaveBeenCalled();
+    });
+  });
+
+  describe('listDrafts', () => {
+    it('returns draft bills for user', async () => {
+      const { service, billRepo } = makeService();
+      (billRepo.find as jest.Mock).mockResolvedValue([]);
+
+      const result = await service.listDrafts(userId);
+
+      expect(result).toEqual([]);
+      expect(billRepo.find as jest.Mock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user: { id: userId },
+          status: BillStatus.DRAFT,
+          deleted_at: null,
+        }),
+        expect.anything(),
+      );
+    });
+  });
+
+  describe('confirmBill', () => {
+    it('confirms a draft bill and returns detail DTO', async () => {
+      const { service, billRepo, subCategoryRepo, em } = makeService();
+      const bill = {
+        id: billId,
+        status: BillStatus.DRAFT,
+        amount: 9.99,
+        bill_date: new Date(),
+        created_at: new Date(),
+        deleted_at: undefined,
+        market: undefined,
+      } as unknown as Bill;
+      (billRepo.findOne as jest.Mock).mockResolvedValue(bill);
+      (subCategoryRepo.findOne as jest.Mock).mockResolvedValue({
+        id: subCatId,
+        name: 'bun',
+        deleted_at: null,
+        category: { name: 'Bread' },
+      });
+      jest.spyOn(em, 'nativeDelete').mockResolvedValue(1);
+
+      const dto: ConfirmBillDto = {
+        total_amount: 12,
+        items: [{ sub_category_id: subCatId, product_count: 1, amount: 12 }],
+      };
+
+      const result = await service.confirmBill(billId, userId, dto);
+
+      expect(bill.status).toBe(BillStatus.CONFIRMED);
+      expect(result.total_amount).toBe(12);
+      expect(em.flush as jest.Mock).toHaveBeenCalled();
+    });
+
+    it('throws NotFoundException when draft not found', async () => {
+      const { service, billRepo } = makeService();
+      (billRepo.findOne as jest.Mock).mockResolvedValue(null);
+
+      await expect(
+        service.confirmBill(billId, userId, { items: [] }),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 });
