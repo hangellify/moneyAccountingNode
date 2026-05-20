@@ -53,6 +53,7 @@ describe('PlaningHorizonService.listPlaningHorizons', () => {
           deleted_at: null,
         }),
       }),
+      expect.objectContaining({ populate: ['budget'] }),
     );
   });
 });

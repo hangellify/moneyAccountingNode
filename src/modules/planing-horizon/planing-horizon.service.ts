@@ -269,11 +269,14 @@ export class PlaningHorizonService {
   async listPlaningHorizons(
     userId: string,
   ): Promise<PlaningHorizonBaseResponseDto[]> {
-    const horizons = await this.planingHorizonRepository.find({
-      is_archived: false,
-      deleted_at: null,
-      budget: { user: { id: userId }, deleted_at: null },
-    });
+    const horizons = await this.planingHorizonRepository.find(
+      {
+        is_archived: false,
+        deleted_at: null,
+        budget: { user: { id: userId }, deleted_at: null },
+      },
+      { populate: ['budget'] },
+    );
     return horizons.map((ph) => ({
       id: ph.id,
       name: ph.name,
