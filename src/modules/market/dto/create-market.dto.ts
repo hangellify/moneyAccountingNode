@@ -7,15 +7,17 @@ export class CreateMarketDto {
   @Length(1, 255)
   name!: string;
 
-  @ApiProperty({ example: 'Bucharest' })
+  @ApiPropertyOptional({ example: 'Bucharest' })
   @IsString()
+  @IsOptional()
   @Length(1, 255)
-  city!: string;
+  city?: string;
 
-  @ApiProperty({ example: 'RO', minLength: 2, maxLength: 2 })
+  @ApiPropertyOptional({ example: 'RO', minLength: 2, maxLength: 2 })
   @IsString()
+  @IsOptional()
   @Length(2, 2)
-  country!: string;
+  country?: string;
 
   @ApiPropertyOptional({ example: 'Calea Moșilor 123' })
   @IsString()

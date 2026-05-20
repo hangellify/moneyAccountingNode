@@ -18,4 +18,10 @@ export class MarketResponseDto {
 
   @ApiProperty({ type: Date })
   created_at!: Date;
+
+  @ApiProperty({
+    example: 3,
+    description: 'Number of confirmed bills using this market',
+  })
+  bill_count!: number;
 }

@@ -37,7 +37,30 @@ export class MarketService {
       user: { id: userId },
       deleted_at: null,
     });
-    return markets.map((m) => this.toDto(m));
+
+    if (markets.length === 0) return [];
+
+    const conn = this.em.getConnection();
+    const counts = (await conn.execute(
+      `SELECT market_id, COUNT(*) AS cnt FROM bills WHERE market_id = ANY(?) AND status = 'confirmed' AND deleted_at IS NULL GROUP BY market_id`,
+      [markets.map((m) => m.id)],
+    )) as Array<{ market_id: string; cnt: string }>;
+    const countMap = new Map<string, number>(
+      counts.map((r) => [r.market_id, Number(r.cnt)]),
+    );
+
+    return markets
+      .map(
+        (m): MarketResponseDto => ({
+          ...this.toDto(m),
+          bill_count: countMap.get(m.id) ?? 0,
+        }),
+      )
+      .sort(
+        (a, b) =>
+          b.bill_count - a.bill_count ||
+          b.created_at.getTime() - a.created_at.getTime(),
+      );
   }
 
   async getMarket(id: string, userId: string): Promise<MarketResponseDto> {
@@ -88,6 +111,7 @@ export class MarketService {
       city: market.city,
       country: market.country,
       created_at: market.created_at,
+      bill_count: 0,
     };
   }
 }

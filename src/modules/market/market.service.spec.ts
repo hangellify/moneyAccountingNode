@@ -20,6 +20,7 @@ function makeService() {
   const em = {
     persist: jest.fn().mockReturnThis(),
     flush: jest.fn().mockResolvedValue(undefined),
+    getConnection: jest.fn(),
   } as unknown as EntityManager;
 
   const service = new MarketService(marketRepo, userRepo, em);
@@ -53,7 +54,7 @@ describe('MarketService', () => {
 
   describe('listMarkets', () => {
     it('returns non-deleted markets for the user', async () => {
-      const { service, marketRepo } = makeService();
+      const { service, marketRepo, em } = makeService();
       const markets = [
         {
           id: 'm1',
@@ -64,6 +65,8 @@ describe('MarketService', () => {
         },
       ] as unknown as Market[];
       (marketRepo.find as jest.Mock).mockResolvedValue(markets);
+      const mockConn = { execute: jest.fn().mockResolvedValue([]) };
+      jest.spyOn(em, 'getConnection').mockReturnValue(mockConn as any);
 
       const result = await service.listMarkets(userId);
       expect(result).toHaveLength(1);
@@ -151,5 +154,28 @@ describe('MarketService', () => {
         service.softDeleteMarket(marketId, userId),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
+  });
+});
+
+describe('MarketService.listMarkets — bill count + ordering', () => {
+  it('returns markets with bill_count and sorted by usage desc', async () => {
+    const { service, marketRepo, em } = makeService();
+    const now = new Date();
+    const markets = [
+      { id: 'm1', name: 'Lidl', created_at: now } as unknown as Market,
+      { id: 'm2', name: 'Penny', created_at: now } as unknown as Market,
+    ];
+    (marketRepo.find as jest.Mock).mockResolvedValue(markets);
+    const mockConn = {
+      execute: jest.fn().mockResolvedValue([{ market_id: 'm1', cnt: '3' }]),
+    };
+    jest.spyOn(em, 'getConnection').mockReturnValue(mockConn as any);
+
+    const result = await service.listMarkets('user-1');
+
+    expect(result[0].id).toBe('m1');
+    expect(result[0].bill_count).toBe(3);
+    expect(result[1].id).toBe('m2');
+    expect(result[1].bill_count).toBe(0);
   });
 });
