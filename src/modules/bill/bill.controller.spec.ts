@@ -2,19 +2,29 @@ import { Test } from '@nestjs/testing';
 import { APP_FILTER } from '@nestjs/core';
 import { BillController } from './bill.controller';
 import { BillPhotoService } from './bill-photo.service';
+import { BillCrudService } from './bill-crud.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AiGatewayExhaustedFilter } from './filters/ai-gateway-exhausted.filter';
 
 describe('BillController', () => {
   let controller: BillController;
   const parseAndCategorize = jest.fn();
+  const billCrudMock = {
+    createBill: jest.fn(),
+    listBills: jest.fn(),
+    getBill: jest.fn(),
+    updateBill: jest.fn(),
+    softDeleteBill: jest.fn(),
+  };
 
   beforeEach(async () => {
     parseAndCategorize.mockReset();
+    Object.values(billCrudMock).forEach((fn) => fn.mockReset());
     const mod = await Test.createTestingModule({
       controllers: [BillController],
       providers: [
         { provide: BillPhotoService, useValue: { parseAndCategorize } },
+        { provide: BillCrudService, useValue: billCrudMock },
         { provide: APP_FILTER, useClass: AiGatewayExhaustedFilter },
       ],
     })
