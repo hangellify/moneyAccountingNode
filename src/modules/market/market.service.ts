@@ -65,7 +65,7 @@ export class MarketService {
     if (dto.city !== undefined) market.city = dto.city;
     if (dto.country !== undefined) market.country = dto.country;
     if (dto.address !== undefined) market.address = dto.address;
-    await this.em.flush();
+    await this.em.persist(market).flush();
     return this.toDto(market);
   }
 
@@ -77,7 +77,7 @@ export class MarketService {
     });
     if (!market) throw new NotFoundException(`Market with ID ${id} not found`);
     market.deleted_at = new Date();
-    await this.em.flush();
+    await this.em.persist(market).flush();
   }
 
   private toDto(market: Market): MarketResponseDto {
