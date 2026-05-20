@@ -15,6 +15,9 @@ describe('BillController', () => {
     getBill: jest.fn(),
     updateBill: jest.fn(),
     softDeleteBill: jest.fn(),
+    createDraftFromParsed: jest.fn(),
+    listDrafts: jest.fn(),
+    confirmBill: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -43,7 +46,9 @@ describe('BillController', () => {
       items: [],
       raw_extracted_text: '',
     };
+    const draftId = 'draft-uuid-001';
     parseAndCategorize.mockResolvedValue(dto);
+    billCrudMock.createDraftFromParsed.mockResolvedValue(draftId);
     const fakeFile = {
       buffer: Buffer.from([1, 2, 3]),
       mimetype: 'image/png',
@@ -57,6 +62,10 @@ describe('BillController', () => {
       'image/png',
       'user-xyz',
     );
-    expect(res).toBe(dto);
+    expect(billCrudMock.createDraftFromParsed).toHaveBeenCalledWith(
+      'user-xyz',
+      dto,
+    );
+    expect(res).toEqual({ ...dto, draft_id: draftId });
   });
 });

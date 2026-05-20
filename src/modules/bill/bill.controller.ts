@@ -42,7 +42,10 @@ import {
   ApiGetBillResponses,
   ApiUpdateBillResponses,
   ApiDeleteBillResponses,
+  ApiListDraftsResponses,
+  ApiConfirmBillResponses,
 } from './dto/api-responses.decorator';
+import { ConfirmBillDto } from './dto/confirm-bill.dto';
 import { AiGatewayExhaustedFilter } from './filters/ai-gateway-exhausted.filter';
 
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
@@ -86,11 +89,13 @@ export class BillController {
     )
     file: Express.Multer.File,
   ): Promise<ParsedBillResponseDto> {
-    return this.billPhoto.parseAndCategorize(
+    const parsed = await this.billPhoto.parseAndCategorize(
       file.buffer,
       file.mimetype as 'image/png' | 'image/jpeg' | 'image/webp',
       user.id,
     );
+    const draftId = await this.billCrud.createDraftFromParsed(user.id, parsed);
+    return { ...parsed, draft_id: draftId };
   }
 
   @Post()
@@ -113,6 +118,15 @@ export class BillController {
     return this.billCrud.listBills(user.id);
   }
 
+  @Get('drafts')
+  @ApiOperation({ summary: 'List all draft bills for the current user' })
+  @ApiListDraftsResponses()
+  async listDrafts(
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<BillResponseDto[]> {
+    return this.billCrud.listDrafts(user.id);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get a bill by ID with line items' })
   @ApiParam({
@@ -126,6 +140,25 @@ export class BillController {
     @Param('id') id: string,
   ): Promise<BillDetailResponseDto> {
     return this.billCrud.getBill(id, user.id);
+  }
+
+  @Post(':id/confirm')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Confirm a draft bill — applies user edits and saves permanently',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Draft bill unique identifier',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @ApiConfirmBillResponses()
+  async confirmBill(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id') id: string,
+    @Body() dto: ConfirmBillDto,
+  ): Promise<BillDetailResponseDto> {
+    return this.billCrud.confirmBill(id, user.id, dto);
   }
 
   @Put(':id')
