@@ -16,11 +16,11 @@ export class Market extends BaseEntity {
   @Property({ type: 'varchar', length: 500, nullable: true })
   address?: string;
 
-  @Property({ type: 'varchar', length: 255, nullable: false })
-  city!: string;
+  @Property({ type: 'varchar', length: 255, nullable: true })
+  city?: string;
 
-  @Property({ type: 'varchar', length: 2, nullable: false })
-  country!: string;
+  @Property({ type: 'varchar', length: 2, nullable: true })
+  country?: string;
 
   @ManyToOne(() => User, { nullable: false })
   user!: User;

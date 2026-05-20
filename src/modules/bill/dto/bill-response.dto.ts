@@ -8,8 +8,8 @@ export class BillMarketRefDto {
   @ApiProperty({ example: 'Lidl' })
   name!: string;
 
-  @ApiProperty({ example: 'Bucharest' })
-  city!: string;
+  @ApiPropertyOptional({ example: 'Bucharest' })
+  city?: string;
 }
 
 export class BillResponseDto {

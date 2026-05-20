@@ -10,11 +10,11 @@ export class MarketResponseDto {
   @ApiPropertyOptional({ example: 'Calea Moșilor 123' })
   address?: string;
 
-  @ApiProperty({ example: 'Bucharest' })
-  city!: string;
+  @ApiPropertyOptional({ example: 'Bucharest' })
+  city?: string;
 
-  @ApiProperty({ example: 'RO' })
-  country!: string;
+  @ApiPropertyOptional({ example: 'RO' })
+  country?: string;
 
   @ApiProperty({ type: Date })
   created_at!: Date;

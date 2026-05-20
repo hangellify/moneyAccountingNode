@@ -14,6 +14,7 @@ import { BillSubCategory } from './bill-sub-category.entity';
 import { User } from './user.entity';
 import { Market } from './market.entity';
 import { Currency } from '../types/currency.enum';
+import { BillStatus } from '../types/bill-status.enum';
 
 @Entity({ tableName: 'bills' })
 export class Bill extends BaseEntity {
@@ -34,6 +35,18 @@ export class Bill extends BaseEntity {
 
   @Property({ type: 'timestamptz', nullable: true })
   deleted_at?: Date;
+
+  @Enum({
+    items: () => BillStatus,
+    type: 'enum',
+    nativeEnumName: 'bill_status_enum',
+    nullable: false,
+    default: BillStatus.CONFIRMED,
+  })
+  status: BillStatus = BillStatus.CONFIRMED;
+
+  @Property({ type: 'text', nullable: true })
+  market_name_raw?: string;
 
   @ManyToOne(() => User, { nullable: false })
   user!: User;
