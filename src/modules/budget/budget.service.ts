@@ -167,4 +167,20 @@ export class BudgetService {
     budget.deleted_at = new Date();
     await this.em.persist(budget).flush();
   }
+
+  /**
+   * List all non-deleted budgets for a user
+   */
+  async listBudgets(userId: string): Promise<BudgetResponseDto[]> {
+    const budgets = await this.budgetRepository.find({
+      user: { id: userId },
+      deleted_at: null,
+    });
+    return budgets.map((b) => ({
+      id: b.id,
+      name: b.name,
+      description: b.description,
+      created_at: b.created_at,
+    }));
+  }
 }

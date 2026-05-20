@@ -28,6 +28,7 @@ import {
   ApiGetBudgetResponses,
   ApiUpdateBudgetResponses,
   ApiDeleteBudgetResponses,
+  ApiListBudgetsResponses,
 } from './decorators/api-responses.decorator';
 
 @ApiTags('budgets')
@@ -46,6 +47,15 @@ export class BudgetController {
     @Body() createBudgetDto: CreateBudgetDto,
   ): Promise<BudgetResponseDto> {
     return this.budgetService.createBudget(user.id, createBudgetDto);
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'List all budgets for the current user' })
+  @ApiListBudgetsResponses()
+  async listBudgets(
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<BudgetResponseDto[]> {
+    return this.budgetService.listBudgets(user.id);
   }
 
   @Get(':id')

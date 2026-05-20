@@ -55,6 +55,7 @@ export class BillPhotoService {
 
   private fromParsed(parsed: ParsedBill): ParsedBillResponseDto {
     return {
+      draft_id: '',
       market_name: parsed.market_name,
       bill_date: parsed.bill_date,
       currency: parsed.currency,
@@ -80,6 +81,7 @@ export class BillPhotoService {
     byId: Map<string, SubCategory>,
   ): ParsedBillResponseDto {
     return {
+      draft_id: '',
       market_name: bill.market_name,
       bill_date: bill.bill_date,
       currency: bill.currency,

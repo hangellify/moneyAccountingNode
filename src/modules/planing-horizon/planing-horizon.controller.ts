@@ -29,6 +29,7 @@ import {
   ApiGetPlaningHorizonResponses,
   ApiUpdatePlaningHorizonResponses,
   ApiDeletePlaningHorizonResponses,
+  ApiListPlaningHorizonsResponses,
 } from './decorators/api-responses.decorator';
 
 @ApiTags('planing-horizons')
@@ -50,6 +51,15 @@ export class PlaningHorizonController {
       user.id,
       createPlaningHorizonDto,
     );
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'List all planning horizons for the current user' })
+  @ApiListPlaningHorizonsResponses()
+  async listPlaningHorizons(
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<PlaningHorizonBaseResponseDto[]> {
+    return this.planingHorizonService.listPlaningHorizons(user.id);
   }
 
   @Get(':id')

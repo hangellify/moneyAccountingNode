@@ -261,4 +261,33 @@ export class PlaningHorizonService {
     planingHorizon.is_archived = true;
     await this.em.persist(planingHorizon).flush();
   }
+
+  /**
+   * List all planning horizons for a user
+   * Returns only non-archived, non-deleted planning horizons that belong to the user through their budget
+   */
+  async listPlaningHorizons(
+    userId: string,
+  ): Promise<PlaningHorizonBaseResponseDto[]> {
+    const horizons = await this.planingHorizonRepository.find(
+      {
+        is_archived: false,
+        deleted_at: null,
+        budget: { user: { id: userId }, deleted_at: null },
+      },
+      { populate: ['budget'] },
+    );
+    return horizons.map((ph) => ({
+      id: ph.id,
+      name: ph.name,
+      description: ph.description,
+      amount: Number(ph.amount),
+      currency: ph.currency,
+      period_type: ph.period_type,
+      created_at: ph.created_at,
+      updated_at: ph.updated_at,
+      is_archived: ph.is_archived,
+      budget_id: ph.budget.id,
+    }));
+  }
 }

@@ -4,8 +4,11 @@ import {
   ApiBadRequestResponse,
   ApiUnauthorizedResponse,
   ApiBadGatewayResponse,
+  ApiResponse,
 } from '@nestjs/swagger';
 import { ParsedBillResponseDto } from './parsed-bill-response.dto';
+import { BillResponseDto } from './bill-response.dto';
+import { BillDetailResponseDto } from './bill-detail-response.dto';
 
 export function ApiParsePhotoResponses(): MethodDecorator & ClassDecorator {
   return applyDecorators(
@@ -20,3 +23,85 @@ export function ApiParsePhotoResponses(): MethodDecorator & ClassDecorator {
     }),
   );
 }
+
+export const ApiCreateBillResponses = () =>
+  applyDecorators(
+    ApiResponse({
+      status: 201,
+      type: BillDetailResponseDto,
+      description: 'Bill created',
+    }),
+    ApiResponse({
+      status: 400,
+      description: 'Invalid market or sub-category reference',
+    }),
+    ApiResponse({ status: 401, description: 'Unauthorized' }),
+  );
+
+export const ApiListBillsResponses = () =>
+  applyDecorators(
+    ApiResponse({
+      status: 200,
+      type: [BillResponseDto],
+      description: 'Bills listed',
+    }),
+    ApiResponse({ status: 401, description: 'Unauthorized' }),
+  );
+
+export const ApiGetBillResponses = () =>
+  applyDecorators(
+    ApiResponse({
+      status: 200,
+      type: BillDetailResponseDto,
+      description: 'Bill retrieved',
+    }),
+    ApiResponse({ status: 404, description: 'Bill not found' }),
+    ApiResponse({ status: 401, description: 'Unauthorized' }),
+  );
+
+export const ApiUpdateBillResponses = () =>
+  applyDecorators(
+    ApiResponse({
+      status: 200,
+      type: BillResponseDto,
+      description: 'Bill updated',
+    }),
+    ApiResponse({ status: 404, description: 'Bill not found' }),
+    ApiResponse({ status: 400, description: 'Invalid market reference' }),
+    ApiResponse({ status: 401, description: 'Unauthorized' }),
+  );
+
+export const ApiDeleteBillResponses = () =>
+  applyDecorators(
+    ApiResponse({ status: 204, description: 'Bill soft deleted' }),
+    ApiResponse({ status: 404, description: 'Bill not found' }),
+    ApiResponse({ status: 401, description: 'Unauthorized' }),
+  );
+
+export const ApiListDraftsResponses = () =>
+  applyDecorators(
+    ApiResponse({
+      status: 200,
+      type: [BillResponseDto],
+      description: 'Draft bills listed',
+    }),
+    ApiResponse({ status: 401, description: 'Unauthorized' }),
+  );
+
+export const ApiConfirmBillResponses = () =>
+  applyDecorators(
+    ApiResponse({
+      status: 200,
+      type: BillDetailResponseDto,
+      description: 'Bill confirmed',
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'Draft bill not found or already confirmed',
+    }),
+    ApiResponse({
+      status: 400,
+      description: 'Invalid market or sub-category reference',
+    }),
+    ApiResponse({ status: 401, description: 'Unauthorized' }),
+  );
