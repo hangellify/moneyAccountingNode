@@ -75,3 +75,13 @@ export const ApiDeletePlaningHorizonResponses = () =>
     ApiBadRequestResponse('Bad request - Planning horizon already archived'),
     ApiUnauthorizedResponse(),
   );
+
+export const ApiListPlaningHorizonsResponses = () =>
+  applyDecorators(
+    ApiResponse({
+      status: 200,
+      description: 'Planning horizons listed successfully',
+      type: [PlaningHorizonBaseResponseDto],
+    }),
+    ApiUnauthorizedResponse(),
+  );
