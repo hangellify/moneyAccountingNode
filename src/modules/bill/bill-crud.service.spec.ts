@@ -151,6 +151,17 @@ describe('BillCrudService', () => {
     it('saves a draft bill and returns its id', async () => {
       const { service, em } = makeService();
 
+      // Simulate MikroORM populating bill.id after the INSERT (gen_random_uuid())
+      let persistedBill: Bill | undefined;
+      (em.persist as jest.Mock).mockImplementation((entity: unknown) => {
+        if (entity instanceof Bill) persistedBill = entity;
+        return em;
+      });
+      (em.flush as jest.Mock).mockImplementation(() => {
+        if (persistedBill) persistedBill.id = 'generated-uuid';
+        return Promise.resolve();
+      });
+
       const parsed: ParsedBillResponseDto = {
         draft_id: '',
         market_name: 'Lidl',

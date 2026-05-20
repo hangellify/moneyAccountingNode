@@ -161,7 +161,6 @@ export class BillCrudService {
     dto: ParsedBillResponseDto,
   ): Promise<string> {
     const bill = new Bill();
-    bill.id = crypto.randomUUID();
     bill.user = this.em.getReference(User, userId);
     bill.status = BillStatus.DRAFT;
     bill.market_name_raw = dto.market_name ?? undefined;
@@ -244,7 +243,8 @@ export class BillCrudService {
     } else if (dto.new_market) {
       bill.market = await this.findOrCreateMarket(userId, dto.new_market);
     } else {
-      bill.market = undefined;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      bill.market = null as any;
     }
 
     // Apply overrides
@@ -281,9 +281,9 @@ export class BillCrudService {
       bscEntities.push(bsc);
     }
 
+    bill.status = BillStatus.CONFIRMED;
     this.em.persist(bill);
     for (const bsc of bscEntities) this.em.persist(bsc);
-    bill.status = BillStatus.CONFIRMED;
     await this.em.flush();
 
     return this.toDetailDto(bill, bscEntities);
