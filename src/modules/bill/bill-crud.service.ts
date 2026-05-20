@@ -65,7 +65,11 @@ export class BillCrudService {
     const bscEntities: BillSubCategory[] = [];
     for (const item of dto.items) {
       const subCat = await this.subCategoryRepository.findOne(
-        { id: item.sub_category_id, deleted_at: null },
+        {
+          id: item.sub_category_id,
+          deleted_at: null,
+          category: { user: { id: userId }, deleted_at: null },
+        },
         { populate: ['category'] },
       );
       if (!subCat) {
