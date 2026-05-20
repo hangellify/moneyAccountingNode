@@ -1,0 +1,140 @@
+/* eslint-disable @typescript-eslint/unbound-method */
+import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { EntityManager, EntityRepository } from '@mikro-orm/core';
+import { BillCrudService } from './bill-crud.service';
+import { Bill } from '../../entities/bill.entity';
+import { Market } from '../../entities/market.entity';
+import { SubCategory } from '../../entities/sub-category.entity';
+import { User } from '../../entities/user.entity';
+import { CreateBillDto } from './dto/create-bill.dto';
+import { Currency } from '../../types/currency.enum';
+
+function makeService() {
+  const billRepo = {
+    findOne: jest.fn(),
+    find: jest.fn(),
+  } as unknown as EntityRepository<Bill>;
+  const marketRepo = {
+    findOne: jest.fn(),
+  } as unknown as EntityRepository<Market>;
+  const subCategoryRepo = {
+    findOne: jest.fn(),
+  } as unknown as EntityRepository<SubCategory>;
+  const userRepo = {
+    findOneOrFail: jest.fn(),
+  } as unknown as EntityRepository<User>;
+  const em = {
+    persist: jest.fn().mockReturnThis(),
+    flush: jest.fn().mockResolvedValue(undefined),
+  } as unknown as EntityManager;
+  return {
+    service: new BillCrudService(
+      billRepo,
+      marketRepo,
+      subCategoryRepo,
+      userRepo,
+      em,
+    ),
+    billRepo,
+    marketRepo,
+    subCategoryRepo,
+    userRepo,
+    em,
+  };
+}
+
+const userId = 'user-1';
+const billId = 'bill-1';
+const marketId = 'market-1';
+const subCatId = 'subcat-1';
+
+describe('BillCrudService', () => {
+  describe('createBill', () => {
+    it('creates a bill with items and returns the detail DTO', async () => {
+      const { service, userRepo, marketRepo, subCategoryRepo, em } =
+        makeService();
+      (userRepo.findOneOrFail as jest.Mock).mockResolvedValue({ id: userId });
+      (marketRepo.findOne as jest.Mock).mockResolvedValue({
+        id: marketId,
+        name: 'Lidl',
+        city: 'Bucharest',
+        user: { id: userId },
+        deleted_at: null,
+      });
+      (subCategoryRepo.findOne as jest.Mock).mockResolvedValue({
+        id: subCatId,
+        name: 'bun',
+        deleted_at: null,
+        category: { name: 'Bread' },
+        user: { id: userId },
+      });
+
+      const dto: CreateBillDto = {
+        market_id: marketId,
+        bill_date: '2026-05-19',
+        currency: Currency.EUR,
+        total_amount: 9.99,
+        items: [{ sub_category_id: subCatId, product_count: 1, amount: 9.99 }],
+      };
+
+      const result = await service.createBill(userId, dto);
+      expect(result.total_amount).toBe(9.99);
+      expect(em.flush as jest.Mock).toHaveBeenCalled();
+    });
+
+    it('throws BadRequestException when market not found for user', async () => {
+      const { service, userRepo, marketRepo } = makeService();
+      (userRepo.findOneOrFail as jest.Mock).mockResolvedValue({ id: userId });
+      (marketRepo.findOne as jest.Mock).mockResolvedValue(null);
+
+      const dto: CreateBillDto = {
+        market_id: marketId,
+        bill_date: '2026-05-19',
+        total_amount: 9.99,
+        items: [],
+      };
+
+      await expect(service.createBill(userId, dto)).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+    });
+  });
+
+  describe('listBills', () => {
+    it('returns non-deleted bills for user', async () => {
+      const { service, billRepo } = makeService();
+      (billRepo.find as jest.Mock).mockResolvedValue([]);
+
+      const result = await service.listBills(userId);
+      expect(result).toEqual([]);
+      expect(billRepo.find as jest.Mock).toHaveBeenCalledWith(
+        expect.objectContaining({ user: { id: userId }, deleted_at: null }),
+        expect.anything(),
+      );
+    });
+  });
+
+  describe('getBill', () => {
+    it('throws NotFoundException when bill not found', async () => {
+      const { service, billRepo } = makeService();
+      (billRepo.findOne as jest.Mock).mockResolvedValue(null);
+
+      await expect(service.getBill(billId, userId)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('softDeleteBill', () => {
+    it('sets deleted_at on the bill', async () => {
+      const { service, billRepo, em } = makeService();
+      const bill = { id: billId, deleted_at: undefined } as unknown as Bill;
+      (billRepo.findOne as jest.Mock).mockResolvedValue(bill);
+
+      await service.softDeleteBill(billId, userId);
+
+      expect(bill.deleted_at).toBeInstanceOf(Date);
+      expect(em.flush as jest.Mock).toHaveBeenCalled();
+    });
+  });
+});
