@@ -375,5 +375,57 @@ describe('BillCrudService', () => {
       expect(bsc.category_confidence).toBeCloseTo(0.96); // from first item
       expect(bsc.category_reasoning).toBe('milk'); // from first item
     });
+
+    it('handles a mix of categorized and uncategorized items producing separate rows', async () => {
+      const { service, em } = makeService();
+      const parsed: ParsedBillResponseDto = {
+        draft_id: '',
+        market_name: null,
+        bill_date: null,
+        currency: null,
+        total_amount: 100,
+        raw_extracted_text: '',
+        items: [
+          {
+            name: 'Lapte 1L',
+            quantity: 1,
+            unit: 'piece',
+            weight_kg: null,
+            price_per_kg: null,
+            final_price: 27.5,
+            sub_category: {
+              id: 'milk-id',
+              name: 'milk',
+              category_name: 'Dairy',
+            },
+            category_confidence: 0.96,
+            category_reasoning: 'milk',
+          },
+          {
+            name: 'Unknown item',
+            quantity: 1,
+            unit: null,
+            weight_kg: null,
+            price_per_kg: null,
+            final_price: 72.5,
+            sub_category: null,
+            category_confidence: 0.1,
+            category_reasoning: undefined,
+          },
+        ],
+      };
+
+      await service.createDraftFromParsed(userId, parsed);
+
+      const calls = (em.persist as jest.Mock).mock.calls as [unknown][];
+      // bill + 1 categorized BSC + 1 uncategorized BSC = 3 persist calls
+      expect(calls).toHaveLength(3);
+      const bsc1 = calls[1][0] as BillSubCategory;
+      const bsc2 = calls[2][0] as BillSubCategory;
+      expect(bsc1.raw_name).toBe('Lapte 1L');
+      expect(bsc1.sub_category).toBeDefined();
+      expect(bsc2.raw_name).toBe('Unknown item');
+      expect(bsc2.sub_category).toBeUndefined();
+    });
   });
 });

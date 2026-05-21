@@ -194,6 +194,10 @@ export class BillCrudService {
         if (existing) {
           existing.amount += item.final_price;
           existing.product_count += item.quantity ?? 1;
+          existing.weight_kg ??= item.weight_kg ?? undefined;
+          existing.unit ??= item.unit ?? undefined;
+          existing.price_per_unit ??= item.price_per_kg ?? undefined;
+          // category_confidence and category_reasoning: keep first item's values per spec
         } else {
           categorized.set(id, {
             raw_name: item.name,
@@ -201,7 +205,7 @@ export class BillCrudService {
             product_count: item.quantity ?? 1,
             weight_kg: item.weight_kg ?? undefined,
             unit: item.unit ?? undefined,
-            price_per_unit: item.price_per_kg ?? undefined,
+            price_per_unit: item.price_per_kg ?? undefined, // DTO field is price_per_kg; entity is price_per_unit (unit varies: kg, l, piece)
             category_confidence: item.category_confidence,
             category_reasoning: item.category_reasoning ?? undefined,
             sub_category_id: id,
