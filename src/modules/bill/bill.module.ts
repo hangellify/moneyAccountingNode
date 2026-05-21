@@ -11,6 +11,7 @@ import { BillParseCategorizeTask } from './tasks/bill-parse-categorize.task';
 import { BillAiOrchestrator } from './bill-ai.orchestrator';
 import { BillPhotoService } from './bill-photo.service';
 import { BillCrudService } from './bill-crud.service';
+import { BillDashboardService } from './bill-dashboard.service';
 import { BillController } from './bill.controller';
 
 @Module({
@@ -31,6 +32,7 @@ import { BillController } from './bill.controller';
     BillAiOrchestrator,
     BillPhotoService,
     BillCrudService,
+    BillDashboardService,
   ],
   exports: [BillAiOrchestrator],
 })

@@ -6,6 +6,7 @@ import {
   Delete,
   Param,
   Body,
+  Query,
   HttpCode,
   HttpStatus,
   UseGuards,
@@ -30,11 +31,16 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/types/jwt-payload.interface';
 import { BillPhotoService } from './bill-photo.service';
 import { BillCrudService } from './bill-crud.service';
+import { BillDashboardService } from './bill-dashboard.service';
 import { ParsedBillResponseDto } from './dto/parsed-bill-response.dto';
 import { CreateBillDto } from './dto/create-bill.dto';
 import { UpdateBillDto } from './dto/update-bill.dto';
 import { BillResponseDto } from './dto/bill-response.dto';
 import { BillDetailResponseDto } from './dto/bill-detail-response.dto';
+import {
+  BillDashboardResponseDto,
+  BillDashboardQueryDto,
+} from './dto/bill-dashboard.dto';
 import {
   ApiParsePhotoResponses,
   ApiCreateBillResponses,
@@ -58,6 +64,7 @@ export class BillController {
   constructor(
     private readonly billPhoto: BillPhotoService,
     private readonly billCrud: BillCrudService,
+    private readonly billDashboard: BillDashboardService,
   ) {}
 
   @Post('parse-photo')
@@ -125,6 +132,17 @@ export class BillController {
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<BillResponseDto[]> {
     return this.billCrud.listDrafts(user.id);
+  }
+
+  @Get('dashboard')
+  @ApiOperation({
+    summary: 'Dashboard data: period totals, bill list, category stats',
+  })
+  async getDashboard(
+    @CurrentUser() user: AuthenticatedUser,
+    @Query() query: BillDashboardQueryDto,
+  ): Promise<BillDashboardResponseDto> {
+    return this.billDashboard.getDashboard(user.id, query);
   }
 
   @Get(':id')
