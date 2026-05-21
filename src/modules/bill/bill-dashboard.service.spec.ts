@@ -35,6 +35,46 @@ describe('BillDashboardService', () => {
       expect(
         result.period_totals.find((p) => p.period === '2026-04-01')?.total,
       ).toBe(0);
+      expect(
+        result.period_totals.find((p) => p.period === '2026-04-30')?.total,
+      ).toBe(0);
+    });
+
+    it('returns 28 entries for February in a non-leap year', async () => {
+      const { service, conn } = makeService();
+      conn.execute
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([]);
+
+      const dto: BillDashboardQueryDto = {
+        type: 'month',
+        year: 2026,
+        month: 2,
+      };
+      const result = await service.getDashboard(userId, dto);
+
+      expect(result.period_totals).toHaveLength(28);
+      expect(result.period_totals[0].period).toBe('2026-02-01');
+      expect(result.period_totals[27].period).toBe('2026-02-28');
+    });
+
+    it('returns 31 entries for January', async () => {
+      const { service, conn } = makeService();
+      conn.execute
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([]);
+
+      const dto: BillDashboardQueryDto = {
+        type: 'month',
+        year: 2026,
+        month: 1,
+      };
+      const result = await service.getDashboard(userId, dto);
+
+      expect(result.period_totals).toHaveLength(31);
+      expect(result.period_totals[30].period).toBe('2026-01-31');
     });
   });
 
@@ -118,6 +158,23 @@ describe('BillDashboardService', () => {
         month: 4,
       });
       expect(result.category_stats).toEqual([]);
+    });
+
+    it('returns 0% for all categories when all amounts are zero', async () => {
+      const { service, conn } = makeService();
+      conn.execute
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([
+          { category_id: 'cat-1', category_name: 'Dairy', total_amount: '0' },
+        ]);
+
+      const result = await service.getDashboard(userId, {
+        type: 'month',
+        year: 2026,
+        month: 4,
+      });
+      expect(result.category_stats[0].percentage).toBe(0);
     });
   });
 

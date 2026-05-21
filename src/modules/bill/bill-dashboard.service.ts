@@ -67,6 +67,10 @@ export class BillDashboardService {
     end: string,
     granularity: 'day' | 'month',
   ): Promise<Array<{ period: string; total: string }>> {
+    const SAFE_GRANULARITIES = new Set<string>(['day', 'month']);
+    if (!SAFE_GRANULARITIES.has(granularity)) {
+      throw new Error(`Invalid granularity: ${granularity}`);
+    }
     const fmt = granularity === 'day' ? 'YYYY-MM-DD' : 'YYYY-MM';
     return conn.execute(
       `SELECT TO_CHAR(DATE_TRUNC('${granularity}', bill_date), '${fmt}') AS period,
@@ -162,6 +166,7 @@ export class BillDashboardService {
     end: string,
     type: 'month' | 'quarter' | 'year',
   ): DashboardPeriodTotalDto[] {
+    // Assumes `end` is always the first day of a month (guaranteed by computeDateRange).
     const rowMap = new Map(rows.map((r) => [r.period, Number(r.total)]));
     const result: DashboardPeriodTotalDto[] = [];
     const pad = (n: number) => String(n).padStart(2, '0');
