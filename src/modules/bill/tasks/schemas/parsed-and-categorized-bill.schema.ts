@@ -4,7 +4,7 @@ import { ParsedBillItemSchema, ParsedBillSchema } from './parsed-bill.schema';
 export const ParsedAndCategorizedBillItemSchema = ParsedBillItemSchema.extend({
   sub_category_id: z.string().uuid().nullable(),
   category_confidence: z.number().min(0).max(1),
-  category_reasoning: z.string().nullable().optional(),
+  category_reasoning: z.string().nullable(),
 });
 
 export const ParsedAndCategorizedBillSchema = ParsedBillSchema.omit({
