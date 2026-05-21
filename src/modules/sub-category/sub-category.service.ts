@@ -93,6 +93,7 @@ export class SubCategoryService {
       name: subCategory.name,
       description: subCategory.description,
       category_id: subCategory.category.id,
+      category_name: subCategory.category.name,
       created_at: subCategory.created_at,
       updated_at: subCategory.updated_at,
     };
@@ -129,6 +130,7 @@ export class SubCategoryService {
       name: subCategory.name,
       description: subCategory.description,
       category_id: subCategory.category.id,
+      category_name: subCategory.category.name,
       created_at: subCategory.created_at,
       updated_at: subCategory.updated_at,
     }));
@@ -164,6 +166,7 @@ export class SubCategoryService {
       name: subCategory.name,
       description: subCategory.description,
       category_id: subCategory.category.id,
+      category_name: subCategory.category.name,
       created_at: subCategory.created_at,
       updated_at: subCategory.updated_at,
     };
@@ -216,6 +219,7 @@ export class SubCategoryService {
       name: subCategory.name,
       description: subCategory.description,
       category_id: subCategory.category.id,
+      category_name: subCategory.category.name,
       created_at: subCategory.created_at,
       updated_at: subCategory.updated_at,
     }));
@@ -263,6 +267,7 @@ export class SubCategoryService {
       name: subCategory.name,
       description: subCategory.description,
       category_id: subCategory.category.id,
+      category_name: subCategory.category.name,
       created_at: subCategory.created_at,
       updated_at: subCategory.updated_at,
     };

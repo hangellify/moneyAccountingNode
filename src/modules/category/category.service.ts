@@ -131,6 +131,7 @@ export class CategoryService {
         name: sc.name,
         description: sc.description,
         category_id: category.id,
+        category_name: category.name,
         created_at: sc.created_at,
         updated_at: sc.updated_at,
       }));
