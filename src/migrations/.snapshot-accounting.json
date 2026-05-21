@@ -373,6 +373,14 @@
             "FAILED"
           ]
         },
+        "bill_status_enum": {
+          "name": "bill_status_enum",
+          "schema": "public",
+          "items": [
+            "draft",
+            "confirmed"
+          ]
+        },
         "currency_enum": {
           "name": "currency_enum",
           "schema": "public",
@@ -854,6 +862,14 @@
             "FAILED"
           ]
         },
+        "bill_status_enum": {
+          "name": "bill_status_enum",
+          "schema": "public",
+          "items": [
+            "draft",
+            "confirmed"
+          ]
+        },
         "currency_enum": {
           "name": "currency_enum",
           "schema": "public",
@@ -1216,6 +1232,14 @@
             "FAILED"
           ]
         },
+        "bill_status_enum": {
+          "name": "bill_status_enum",
+          "schema": "public",
+          "items": [
+            "draft",
+            "confirmed"
+          ]
+        },
         "currency_enum": {
           "name": "currency_enum",
           "schema": "public",
@@ -1408,22 +1432,6 @@
           "enumItems": [],
           "mappedType": "text"
         },
-        "marked_name": {
-          "name": "marked_name",
-          "type": "varchar(255)",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": true,
-          "unique": false,
-          "length": 255,
-          "precision": null,
-          "scale": null,
-          "default": null,
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "string"
-        },
         "amount": {
           "name": "amount",
           "type": "numeric(19,2)",
@@ -1439,22 +1447,6 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "decimal"
-        },
-        "product_count": {
-          "name": "product_count",
-          "type": "int4",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "unique": false,
-          "length": null,
-          "precision": 32,
-          "scale": 0,
-          "default": "1",
-          "comment": null,
-          "enumItems": [],
-          "mappedType": "integer"
         },
         "bill_date": {
           "name": "bill_date",
@@ -1519,6 +1511,196 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "datetime"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "market_id": {
+          "name": "market_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "currency": {
+          "name": "currency",
+          "type": "currency_enum",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [
+            "EUR",
+            "GBP",
+            "RON",
+            "PLN",
+            "MDL",
+            "CZK",
+            "HUF",
+            "BGN",
+            "HRK",
+            "DKK",
+            "SEK",
+            "NOK",
+            "CHF",
+            "ISK",
+            "RSD",
+            "BAM",
+            "ALL",
+            "MKD",
+            "UAH",
+            "BYN",
+            "RUB",
+            "TRY",
+            "JPY",
+            "CNY",
+            "INR",
+            "KRW",
+            "THB",
+            "SGD",
+            "MYR",
+            "IDR",
+            "PHP",
+            "VND",
+            "HKD",
+            "TWD",
+            "PKR",
+            "BDT",
+            "LKR",
+            "NPR",
+            "MMK",
+            "KHR",
+            "LAK",
+            "MNT",
+            "KZT",
+            "UZS",
+            "AZN",
+            "AMD",
+            "GEL",
+            "ILS",
+            "JOD",
+            "LBP",
+            "SAR",
+            "AED",
+            "QAR",
+            "KWD",
+            "BHD",
+            "OMR",
+            "IRR",
+            "IQD",
+            "ZAR",
+            "EGP",
+            "NGN",
+            "KES",
+            "GHS",
+            "ETB",
+            "UGX",
+            "TZS",
+            "RWF",
+            "XOF",
+            "XAF",
+            "MAD",
+            "TND",
+            "DZD",
+            "LYD",
+            "AOA",
+            "MZN",
+            "ZMW",
+            "BWP",
+            "MUR",
+            "USD",
+            "CAD",
+            "MXN",
+            "BRL",
+            "ARS",
+            "CLP",
+            "COP",
+            "PEN",
+            "VES",
+            "UYU",
+            "PYG",
+            "BOB",
+            "GTQ",
+            "HNL",
+            "NIO",
+            "CRC",
+            "PAB",
+            "DOP",
+            "HTG",
+            "JMD",
+            "BBD",
+            "BZD",
+            "TTD",
+            "XCD",
+            "GYD",
+            "SRD"
+          ],
+          "mappedType": "unknown",
+          "nativeEnumName": "currency_enum"
+        },
+        "status": {
+          "name": "status",
+          "type": "bill_status_enum",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "'confirmed'",
+          "comment": null,
+          "enumItems": [
+            "draft",
+            "confirmed"
+          ],
+          "mappedType": "unknown",
+          "nativeEnumName": "bill_status_enum"
+        },
+        "market_name_raw": {
+          "name": "market_name_raw",
+          "type": "text",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "text"
         }
       },
       "name": "bills",
@@ -1543,10 +1725,47 @@
           "keyName": "bills_pkey",
           "unique": true,
           "primary": true
+        },
+        {
+          "columnNames": [
+            "user_id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "bills_user_id_index",
+          "unique": false,
+          "primary": false
         }
       ],
       "checks": [],
-      "foreignKeys": {},
+      "foreignKeys": {
+        "bills_market_id_fkey": {
+          "columnNames": [
+            "market_id"
+          ],
+          "constraintName": "bills_market_id_fkey",
+          "localTableName": "public.bills",
+          "referencedTableName": "public.markets",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "set null"
+        },
+        "bills_user_id_fkey": {
+          "columnNames": [
+            "user_id"
+          ],
+          "constraintName": "bills_user_id_fkey",
+          "localTableName": "public.bills",
+          "referencedTableName": "public.users",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "cascade"
+        }
+      },
       "nativeEnums": {
         "ai_attempt_error_code_enum": {
           "name": "ai_attempt_error_code_enum",
@@ -1576,6 +1795,14 @@
             "PENDING",
             "SUCCESS",
             "FAILED"
+          ]
+        },
+        "bill_status_enum": {
+          "name": "bill_status_enum",
+          "schema": "public",
+          "items": [
+            "draft",
+            "confirmed"
           ]
         },
         "currency_enum": {
@@ -1916,6 +2143,14 @@
             "PENDING",
             "SUCCESS",
             "FAILED"
+          ]
+        },
+        "bill_status_enum": {
+          "name": "bill_status_enum",
+          "schema": "public",
+          "items": [
+            "draft",
+            "confirmed"
           ]
         },
         "currency_enum": {
@@ -2260,6 +2495,14 @@
             "PENDING",
             "SUCCESS",
             "FAILED"
+          ]
+        },
+        "bill_status_enum": {
+          "name": "bill_status_enum",
+          "schema": "public",
+          "items": [
+            "draft",
+            "confirmed"
           ]
         },
         "currency_enum": {
@@ -2755,6 +2998,388 @@
             "FAILED"
           ]
         },
+        "bill_status_enum": {
+          "name": "bill_status_enum",
+          "schema": "public",
+          "items": [
+            "draft",
+            "confirmed"
+          ]
+        },
+        "currency_enum": {
+          "name": "currency_enum",
+          "schema": "public",
+          "items": [
+            "EUR",
+            "GBP",
+            "RON",
+            "PLN",
+            "MDL",
+            "CZK",
+            "HUF",
+            "BGN",
+            "HRK",
+            "DKK",
+            "SEK",
+            "NOK",
+            "CHF",
+            "ISK",
+            "RSD",
+            "BAM",
+            "ALL",
+            "MKD",
+            "UAH",
+            "BYN",
+            "RUB",
+            "TRY",
+            "JPY",
+            "CNY",
+            "INR",
+            "KRW",
+            "THB",
+            "SGD",
+            "MYR",
+            "IDR",
+            "PHP",
+            "VND",
+            "HKD",
+            "TWD",
+            "PKR",
+            "BDT",
+            "LKR",
+            "NPR",
+            "MMK",
+            "KHR",
+            "LAK",
+            "MNT",
+            "KZT",
+            "UZS",
+            "AZN",
+            "AMD",
+            "GEL",
+            "ILS",
+            "JOD",
+            "LBP",
+            "SAR",
+            "AED",
+            "QAR",
+            "KWD",
+            "BHD",
+            "OMR",
+            "IRR",
+            "IQD",
+            "ZAR",
+            "EGP",
+            "NGN",
+            "KES",
+            "GHS",
+            "ETB",
+            "UGX",
+            "TZS",
+            "RWF",
+            "XOF",
+            "XAF",
+            "MAD",
+            "TND",
+            "DZD",
+            "LYD",
+            "AOA",
+            "MZN",
+            "ZMW",
+            "BWP",
+            "MUR",
+            "USD",
+            "CAD",
+            "MXN",
+            "BRL",
+            "ARS",
+            "CLP",
+            "COP",
+            "PEN",
+            "VES",
+            "UYU",
+            "PYG",
+            "BOB",
+            "GTQ",
+            "HNL",
+            "NIO",
+            "CRC",
+            "PAB",
+            "DOP",
+            "HTG",
+            "JMD",
+            "BBD",
+            "BZD",
+            "TTD",
+            "XCD",
+            "GYD",
+            "SRD"
+          ]
+        },
+        "language_code_enum": {
+          "name": "language_code_enum",
+          "schema": "public",
+          "items": [
+            "RU",
+            "EN",
+            "RO"
+          ]
+        },
+        "log_level_enum": {
+          "name": "log_level_enum",
+          "schema": "public",
+          "items": [
+            "DEBUG",
+            "INFO",
+            "WARN",
+            "ERROR"
+          ]
+        },
+        "log_source_enum": {
+          "name": "log_source_enum",
+          "schema": "public",
+          "items": [
+            "BACKEND",
+            "FRONTEND",
+            "API",
+            "AUTH",
+            "DATABASE"
+          ]
+        },
+        "period_type_enum": {
+          "name": "period_type_enum",
+          "schema": "public",
+          "items": [
+            "DAILY",
+            "WEEKLY",
+            "TWO_WEEKS",
+            "THREE_WEEKS",
+            "MONTHLY",
+            "TWO_MONTHS",
+            "QUARTERLY",
+            "SEMI_ANNUAL",
+            "YEARLY"
+          ]
+        }
+      },
+      "comment": null
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": true,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": "gen_random_uuid()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "address": {
+          "name": "address",
+          "type": "varchar(500)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 500,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "city": {
+          "name": "city",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 255,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "country": {
+          "name": "country",
+          "type": "varchar(2)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 2,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "string"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": null,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "uuid"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": "now()",
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamptz(6)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        }
+      },
+      "name": "markets",
+      "schema": "public",
+      "indexes": [
+        {
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": false,
+          "keyName": "markets_pkey",
+          "unique": true,
+          "primary": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "markets_user_id_fkey": {
+          "columnNames": [
+            "user_id"
+          ],
+          "constraintName": "markets_user_id_fkey",
+          "localTableName": "public.markets",
+          "referencedTableName": "public.users",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "updateRule": "no action",
+          "deleteRule": "cascade"
+        }
+      },
+      "nativeEnums": {
+        "ai_attempt_error_code_enum": {
+          "name": "ai_attempt_error_code_enum",
+          "schema": "public",
+          "items": [
+            "TIMEOUT",
+            "RATE_LIMIT",
+            "SERVER_ERROR",
+            "SCHEMA_INVALID",
+            "INVALID_RESPONSE",
+            "PROVIDER_ERROR",
+            "UNKNOWN"
+          ]
+        },
+        "ai_attempt_status_enum": {
+          "name": "ai_attempt_status_enum",
+          "schema": "public",
+          "items": [
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
+        "ai_request_status_enum": {
+          "name": "ai_request_status_enum",
+          "schema": "public",
+          "items": [
+            "PENDING",
+            "SUCCESS",
+            "FAILED"
+          ]
+        },
+        "bill_status_enum": {
+          "name": "bill_status_enum",
+          "schema": "public",
+          "items": [
+            "draft",
+            "confirmed"
+          ]
+        },
         "currency_enum": {
           "name": "currency_enum",
           "schema": "public",
@@ -3041,6 +3666,14 @@
             "PENDING",
             "SUCCESS",
             "FAILED"
+          ]
+        },
+        "bill_status_enum": {
+          "name": "bill_status_enum",
+          "schema": "public",
+          "items": [
+            "draft",
+            "confirmed"
           ]
         },
         "currency_enum": {
@@ -3568,6 +4201,14 @@
             "FAILED"
           ]
         },
+        "bill_status_enum": {
+          "name": "bill_status_enum",
+          "schema": "public",
+          "items": [
+            "draft",
+            "confirmed"
+          ]
+        },
         "currency_enum": {
           "name": "currency_enum",
           "schema": "public",
@@ -4023,6 +4664,14 @@
             "FAILED"
           ]
         },
+        "bill_status_enum": {
+          "name": "bill_status_enum",
+          "schema": "public",
+          "items": [
+            "draft",
+            "confirmed"
+          ]
+        },
         "currency_enum": {
           "name": "currency_enum",
           "schema": "public",
@@ -4403,6 +5052,14 @@
             "FAILED"
           ]
         },
+        "bill_status_enum": {
+          "name": "bill_status_enum",
+          "schema": "public",
+          "items": [
+            "draft",
+            "confirmed"
+          ]
+        },
         "currency_enum": {
           "name": "currency_enum",
           "schema": "public",
@@ -4745,6 +5402,14 @@
             "PENDING",
             "SUCCESS",
             "FAILED"
+          ]
+        },
+        "bill_status_enum": {
+          "name": "bill_status_enum",
+          "schema": "public",
+          "items": [
+            "draft",
+            "confirmed"
           ]
         },
         "currency_enum": {
@@ -5252,6 +5917,14 @@
             "FAILED"
           ]
         },
+        "bill_status_enum": {
+          "name": "bill_status_enum",
+          "schema": "public",
+          "items": [
+            "draft",
+            "confirmed"
+          ]
+        },
         "currency_enum": {
           "name": "currency_enum",
           "schema": "public",
@@ -5440,6 +6113,14 @@
         "PENDING",
         "SUCCESS",
         "FAILED"
+      ]
+    },
+    "bill_status_enum": {
+      "name": "bill_status_enum",
+      "schema": "public",
+      "items": [
+        "draft",
+        "confirmed"
       ]
     },
     "currency_enum": {
