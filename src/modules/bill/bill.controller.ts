@@ -50,6 +50,7 @@ import {
   ApiDeleteBillResponses,
   ApiListDraftsResponses,
   ApiConfirmBillResponses,
+  ApiDashboardResponses,
 } from './dto/api-responses.decorator';
 import { ConfirmBillDto } from './dto/confirm-bill.dto';
 import { AiGatewayExhaustedFilter } from './filters/ai-gateway-exhausted.filter';
@@ -138,6 +139,7 @@ export class BillController {
   @ApiOperation({
     summary: 'Dashboard data: period totals, bill list, category stats',
   })
+  @ApiDashboardResponses()
   async getDashboard(
     @CurrentUser() user: AuthenticatedUser,
     @Query() query: BillDashboardQueryDto,

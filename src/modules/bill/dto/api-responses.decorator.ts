@@ -9,6 +9,7 @@ import {
 import { ParsedBillResponseDto } from './parsed-bill-response.dto';
 import { BillResponseDto } from './bill-response.dto';
 import { BillDetailResponseDto } from './bill-detail-response.dto';
+import { BillDashboardResponseDto } from './bill-dashboard.dto';
 
 export function ApiParsePhotoResponses(): MethodDecorator & ClassDecorator {
   return applyDecorators(
@@ -102,6 +103,16 @@ export const ApiConfirmBillResponses = () =>
     ApiResponse({
       status: 400,
       description: 'Invalid market or sub-category reference',
+    }),
+    ApiResponse({ status: 401, description: 'Unauthorized' }),
+  );
+
+export const ApiDashboardResponses = () =>
+  applyDecorators(
+    ApiResponse({
+      status: 200,
+      type: BillDashboardResponseDto,
+      description: 'Dashboard data retrieved',
     }),
     ApiResponse({ status: 401, description: 'Unauthorized' }),
   );

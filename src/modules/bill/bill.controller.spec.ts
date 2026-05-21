@@ -26,6 +26,7 @@ describe('BillController', () => {
   beforeEach(async () => {
     parseAndCategorize.mockReset();
     Object.values(billCrudMock).forEach((fn) => fn.mockReset());
+    billDashboardMock?.getDashboard?.mockReset?.();
     const mod = await Test.createTestingModule({
       controllers: [BillController],
       providers: [
