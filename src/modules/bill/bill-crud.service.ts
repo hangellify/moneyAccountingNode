@@ -336,11 +336,13 @@ export class BillCrudService {
       ...this.toListDto(bill),
       items: items.map(
         (bsc): BillItemResponseDto => ({
-          sub_category: {
-            id: bsc.sub_category.id,
-            name: bsc.sub_category.name,
-            category_name: bsc.sub_category.category?.name ?? '',
-          },
+          sub_category: bsc.sub_category
+            ? {
+                id: bsc.sub_category.id,
+                name: bsc.sub_category.name,
+                category_name: bsc.sub_category.category?.name ?? '',
+              }
+            : null,
           product_count: bsc.product_count,
           amount: bsc.amount,
           product_weight: bsc.product_weight,

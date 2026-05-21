@@ -3,8 +3,8 @@ import { BillResponseDto } from './bill-response.dto';
 import { SubCategoryRefDto } from './parsed-bill-response.dto';
 
 export class BillItemResponseDto {
-  @ApiProperty({ type: SubCategoryRefDto })
-  sub_category!: SubCategoryRefDto;
+  @ApiProperty({ type: SubCategoryRefDto, nullable: true })
+  sub_category!: SubCategoryRefDto | null;
 
   @ApiProperty({ example: 2 })
   product_count!: number;

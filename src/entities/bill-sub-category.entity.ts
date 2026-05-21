@@ -8,8 +8,11 @@ export class BillSubCategory extends BaseEntity {
   @ManyToOne(() => Bill, { nullable: false })
   bill!: Bill;
 
-  @ManyToOne(() => SubCategory, { nullable: false })
-  sub_category!: SubCategory;
+  @ManyToOne(() => SubCategory, { nullable: true })
+  sub_category?: SubCategory;
+
+  @Property({ type: 'varchar', length: 255, nullable: false })
+  raw_name!: string;
 
   @Property({ type: 'integer', nullable: false, default: 1 })
   product_count!: number;
@@ -19,4 +22,16 @@ export class BillSubCategory extends BaseEntity {
 
   @Property({ type: 'decimal', precision: 10, scale: 3, nullable: true })
   product_weight?: number;
+
+  @Property({ type: 'varchar', length: 10, nullable: true })
+  unit?: string;
+
+  @Property({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  price_per_unit?: number;
+
+  @Property({ type: 'decimal', precision: 5, scale: 4, nullable: true })
+  category_confidence?: number;
+
+  @Property({ type: 'text', nullable: true })
+  category_reasoning?: string;
 }
