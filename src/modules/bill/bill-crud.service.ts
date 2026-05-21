@@ -82,6 +82,7 @@ export class BillCrudService {
       const bsc = new BillSubCategory();
       bsc.bill = bill;
       bsc.sub_category = subCat;
+      bsc.raw_name = subCat.name;
       bsc.product_count = item.product_count;
       bsc.amount = item.amount;
       if (item.product_weight !== undefined)
@@ -274,6 +275,7 @@ export class BillCrudService {
       const bsc = new BillSubCategory();
       bsc.bill = bill;
       bsc.sub_category = subCat;
+      bsc.raw_name = subCat.name;
       bsc.product_count = item.product_count;
       bsc.amount = item.amount;
       if (item.product_weight !== undefined)
