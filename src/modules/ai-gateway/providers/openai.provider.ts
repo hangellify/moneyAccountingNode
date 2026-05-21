@@ -74,12 +74,17 @@ export class OpenAiProvider implements LlmProvider {
     }
 
     if (req.jsonSchema) {
+      const patchedSchema = patchAdditionalProperties(req.jsonSchema);
+      console.log(
+        '[OpenAI] schema sent:',
+        JSON.stringify(patchedSchema, null, 2),
+      );
       body.response_format = {
         type: 'json_schema',
         json_schema: {
           name: 'output',
           strict: true,
-          schema: patchAdditionalProperties(req.jsonSchema),
+          schema: patchedSchema,
         },
       };
     }
