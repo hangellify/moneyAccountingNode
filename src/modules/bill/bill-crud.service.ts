@@ -170,37 +170,77 @@ export class BillCrudService {
     bill.currency = dto.currency
       ? (dto.currency as unknown as Currency)
       : undefined;
+    this.em.persist(bill);
 
-    // Merge items by sub_category id (AI may return same category twice)
-    const merged = new Map<
-      string,
-      { amount: number; product_count: number; weight_kg?: number }
-    >();
+    type Entry = {
+      raw_name: string;
+      amount: number;
+      product_count: number;
+      weight_kg?: number;
+      unit?: string;
+      price_per_unit?: number;
+      category_confidence?: number;
+      category_reasoning?: string;
+      sub_category_id?: string;
+    };
+
+    const categorized = new Map<string, Entry>();
+    const uncategorized: Entry[] = [];
+
     for (const item of dto.items) {
-      if (!item.sub_category) continue;
-      const id = item.sub_category.id;
-      const existing = merged.get(id);
-      if (existing) {
-        existing.amount += item.final_price;
-        existing.product_count += item.quantity ?? 1;
+      if (item.sub_category) {
+        const id = item.sub_category.id;
+        const existing = categorized.get(id);
+        if (existing) {
+          existing.amount += item.final_price;
+          existing.product_count += item.quantity ?? 1;
+        } else {
+          categorized.set(id, {
+            raw_name: item.name,
+            amount: item.final_price,
+            product_count: item.quantity ?? 1,
+            weight_kg: item.weight_kg ?? undefined,
+            unit: item.unit ?? undefined,
+            price_per_unit: item.price_per_kg ?? undefined,
+            category_confidence: item.category_confidence,
+            category_reasoning: item.category_reasoning ?? undefined,
+            sub_category_id: id,
+          });
+        }
       } else {
-        merged.set(id, {
+        uncategorized.push({
+          raw_name: item.name,
           amount: item.final_price,
           product_count: item.quantity ?? 1,
           weight_kg: item.weight_kg ?? undefined,
+          unit: item.unit ?? undefined,
+          price_per_unit: item.price_per_kg ?? undefined,
+          category_confidence: item.category_confidence,
+          category_reasoning: item.category_reasoning ?? undefined,
         });
       }
     }
 
-    this.em.persist(bill);
-
-    for (const [subCatId, data] of merged) {
+    for (const entry of [...categorized.values(), ...uncategorized]) {
       const bsc = new BillSubCategory();
       bsc.bill = bill;
-      bsc.sub_category = this.em.getReference(SubCategory, subCatId);
-      bsc.product_count = data.product_count;
-      bsc.amount = data.amount;
-      if (data.weight_kg !== undefined) bsc.product_weight = data.weight_kg;
+      bsc.raw_name = entry.raw_name;
+      bsc.product_count = entry.product_count;
+      bsc.amount = entry.amount;
+      if (entry.weight_kg !== undefined) bsc.product_weight = entry.weight_kg;
+      if (entry.unit !== undefined) bsc.unit = entry.unit;
+      if (entry.price_per_unit !== undefined)
+        bsc.price_per_unit = entry.price_per_unit;
+      if (entry.category_confidence !== undefined)
+        bsc.category_confidence = entry.category_confidence;
+      if (entry.category_reasoning !== undefined)
+        bsc.category_reasoning = entry.category_reasoning;
+      if (entry.sub_category_id !== undefined) {
+        bsc.sub_category = this.em.getReference(
+          SubCategory,
+          entry.sub_category_id,
+        );
+      }
       this.em.persist(bsc);
     }
 

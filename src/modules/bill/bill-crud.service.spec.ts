@@ -3,6 +3,7 @@ import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { EntityManager, EntityRepository } from '@mikro-orm/core';
 import { BillCrudService } from './bill-crud.service';
 import { Bill } from '../../entities/bill.entity';
+import { BillSubCategory } from '../../entities/bill-sub-category.entity';
 import { BillStatus } from '../../types/bill-status.enum';
 import { Market } from '../../entities/market.entity';
 import { SubCategory } from '../../entities/sub-category.entity';
@@ -238,6 +239,141 @@ describe('BillCrudService', () => {
       await expect(
         service.confirmBill(billId, userId, { items: [] }),
       ).rejects.toBeInstanceOf(NotFoundException);
+    });
+  });
+
+  describe('createDraftFromParsed', () => {
+    it('persists items with null sub_category using raw_name and other fields', async () => {
+      const { service, em } = makeService();
+      const parsed: ParsedBillResponseDto = {
+        draft_id: '',
+        market_name: null,
+        bill_date: null,
+        currency: null,
+        total_amount: 28.2,
+        raw_extracted_text: '',
+        items: [
+          {
+            name: 'Paine Pumpern',
+            quantity: 1,
+            unit: 'piece',
+            weight_kg: null,
+            price_per_kg: null,
+            final_price: 28.2,
+            sub_category: null,
+            category_confidence: 0.34,
+            category_reasoning: undefined,
+          },
+        ],
+      };
+
+      await service.createDraftFromParsed(userId, parsed);
+
+      const calls = (em.persist as jest.Mock).mock.calls as [unknown][];
+      // bill + 1 BillSubCategory for the uncategorized item
+      expect(calls).toHaveLength(2);
+      const bsc = calls[1][0] as BillSubCategory;
+      expect(bsc.raw_name).toBe('Paine Pumpern');
+      expect(bsc.unit).toBe('piece');
+      expect(bsc.sub_category).toBeUndefined();
+      expect(bsc.category_confidence).toBeCloseTo(0.34);
+      expect(bsc.amount).toBeCloseTo(28.2);
+    });
+
+    it('sets all new fields for categorized items', async () => {
+      const { service, em } = makeService();
+      const parsed: ParsedBillResponseDto = {
+        draft_id: '',
+        market_name: null,
+        bill_date: null,
+        currency: null,
+        total_amount: 88.39,
+        raw_extracted_text: '',
+        items: [
+          {
+            name: 'Carnaciori Ki',
+            quantity: null,
+            unit: 'kg',
+            weight_kg: 0.539,
+            price_per_kg: 164.3,
+            final_price: 88.39,
+            sub_category: {
+              id: 'scat-1',
+              name: 'sausages',
+              category_name: 'Meat & Fish',
+            },
+            category_confidence: 0.95,
+            category_reasoning: '"Carnaciori" are sausages.',
+          },
+        ],
+      };
+
+      await service.createDraftFromParsed(userId, parsed);
+
+      const calls = (em.persist as jest.Mock).mock.calls as [unknown][];
+      expect(calls).toHaveLength(2);
+      const bsc = calls[1][0] as BillSubCategory;
+      expect(bsc.raw_name).toBe('Carnaciori Ki');
+      expect(bsc.unit).toBe('kg');
+      expect(bsc.price_per_unit).toBeCloseTo(164.3);
+      expect(bsc.category_confidence).toBeCloseTo(0.95);
+      expect(bsc.category_reasoning).toBe('"Carnaciori" are sausages.');
+      expect(bsc.product_weight).toBeCloseTo(0.539);
+    });
+
+    it('merges same sub_category items and takes raw_name from first', async () => {
+      const { service, em } = makeService();
+      const parsed: ParsedBillResponseDto = {
+        draft_id: '',
+        market_name: null,
+        bill_date: null,
+        currency: null,
+        total_amount: 60,
+        raw_extracted_text: '',
+        items: [
+          {
+            name: 'Lapte 1L',
+            quantity: 1,
+            unit: 'piece',
+            weight_kg: null,
+            price_per_kg: null,
+            final_price: 27.5,
+            sub_category: {
+              id: 'milk-id',
+              name: 'milk',
+              category_name: 'Dairy',
+            },
+            category_confidence: 0.96,
+            category_reasoning: 'milk',
+          },
+          {
+            name: 'Lapte 0.5L',
+            quantity: 2,
+            unit: 'piece',
+            weight_kg: null,
+            price_per_kg: null,
+            final_price: 32.5,
+            sub_category: {
+              id: 'milk-id',
+              name: 'milk',
+              category_name: 'Dairy',
+            },
+            category_confidence: 0.96,
+            category_reasoning: 'milk',
+          },
+        ],
+      };
+
+      await service.createDraftFromParsed(userId, parsed);
+
+      const calls = (em.persist as jest.Mock).mock.calls as [unknown][];
+      expect(calls).toHaveLength(2); // bill + 1 merged BillSubCategory
+      const bsc = calls[1][0] as BillSubCategory;
+      expect(bsc.raw_name).toBe('Lapte 1L'); // first item wins
+      expect(bsc.amount).toBeCloseTo(60); // summed
+      expect(bsc.product_count).toBe(3); // summed
+      expect(bsc.category_confidence).toBeCloseTo(0.96); // from first item
+      expect(bsc.category_reasoning).toBe('milk'); // from first item
     });
   });
 });
