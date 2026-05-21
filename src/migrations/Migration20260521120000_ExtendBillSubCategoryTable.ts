@@ -19,7 +19,7 @@ export class Migration20260521120000_ExtendBillSubCategoryTable extends Migratio
         add column "raw_name" varchar(255) not null default '',
         add column "unit" varchar(10),
         add column "price_per_unit" decimal(10, 2),
-        add column "category_confidence" decimal(4, 3),
+        add column "category_confidence" decimal(5, 4),
         add column "category_reasoning" text;
     `);
 
@@ -63,12 +63,18 @@ export class Migration20260521120000_ExtendBillSubCategoryTable extends Migratio
   }
 
   override down(): void {
+    // NOTE: this rollback will fail with "column contains null values" if any uncategorized
+    // bill_sub_categories rows (sub_category_id IS NULL) exist in the database. Safe only
+    // on a fresh install or before any uncategorized data has been written.
     this.addSql(
       `drop index if exists "bill_sub_categories_sub_category_id_partial_index";`,
     );
+    // Drop the index created by this migration's up() before recreating the original below.
     this.addSql(`drop index if exists "bill_sub_categories_bill_id_index";`);
     this.addSql(`drop index if exists "bills_user_status_date_index";`);
-    // Restore the old non-partial bsc indexes
+    // Restore the original (pre-migration) non-partial indexes.
+    // Note: bill_sub_categories_bill_id_index shares a name with the one just dropped —
+    // this is intentional; we're restoring the pre-migration version of that index.
     this.addSql(`
       create index "bill_sub_categories_bill_id_index"
         on "bill_sub_categories" ("bill_id");
