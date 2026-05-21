@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { zodToJsonSchema } from 'zod-to-json-schema';
+import { z } from 'zod';
 import { AiTask } from './types/ai-task';
 import type { LlmProvider } from './types/llm-provider';
 import { LLM_PROVIDERS } from './types/llm-provider';
@@ -54,9 +54,8 @@ export class AiGatewayService {
     }
 
     // 4. Compile JSON schema once
-    const jsonSchema = zodToJsonSchema(
-      task.outputSchema as unknown as Parameters<typeof zodToJsonSchema>[0],
-      { target: 'openApi3' },
+    const jsonSchema = z.toJSONSchema(
+      task.outputSchema as unknown as Parameters<typeof z.toJSONSchema>[0],
     ) as object;
 
     // 5. Open audit parent row

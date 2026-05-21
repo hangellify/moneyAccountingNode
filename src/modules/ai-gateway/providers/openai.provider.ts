@@ -7,20 +7,6 @@ import { readOptionalKey, readModelWhenConfigured } from './provider.env';
 import { withRetry } from '../internal/retry';
 import { InvalidResponseError } from '../internal/error-classifier';
 
-function patchAdditionalProperties(schema: unknown): unknown {
-  if (typeof schema !== 'object' || schema === null) return schema;
-  if (Array.isArray(schema)) return schema.map(patchAdditionalProperties);
-  const obj = schema as Record<string, unknown>;
-  const patched: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(obj)) {
-    patched[k] = patchAdditionalProperties(v);
-  }
-  if (patched['type'] === 'object' || patched['properties'] !== undefined) {
-    patched['additionalProperties'] = false;
-  }
-  return patched;
-}
-
 @Injectable()
 export class OpenAiProvider implements LlmProvider {
   readonly name: ProviderName = 'openai';
@@ -74,17 +60,12 @@ export class OpenAiProvider implements LlmProvider {
     }
 
     if (req.jsonSchema) {
-      const patchedSchema = patchAdditionalProperties(req.jsonSchema);
-      console.log(
-        '[OpenAI] schema sent:',
-        JSON.stringify(patchedSchema, null, 2),
-      );
       body.response_format = {
         type: 'json_schema',
         json_schema: {
           name: 'output',
           strict: true,
-          schema: patchedSchema,
+          schema: req.jsonSchema,
         },
       };
     }
