@@ -46,6 +46,10 @@ export const ApiListBillsResponses = () =>
       type: [BillResponseDto],
       description: 'Bills listed',
     }),
+    ApiResponse({
+      status: 400,
+      description: 'Invalid filter parameters or date_from is after date_to',
+    }),
     ApiResponse({ status: 401, description: 'Unauthorized' }),
   );
 
