@@ -56,6 +56,11 @@ function makeService(opts?: Partial<Deps>): {
       return { flush: jest.fn().mockResolvedValue(undefined) };
     }),
     flush: jest.fn().mockResolvedValue(undefined),
+    transactional: jest
+      .fn()
+      .mockImplementation((fn: (txEm: EntityManager) => Promise<unknown>) =>
+        fn(em as unknown as EntityManager),
+      ),
   } as unknown as EntityManager;
 
   const jwtService = {

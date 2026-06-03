@@ -32,8 +32,6 @@ export class HouseholdService {
     private readonly householdRepo: EntityRepository<Household>,
     @InjectRepository(HouseholdMember)
     private readonly memberRepo: EntityRepository<HouseholdMember>,
-    @InjectRepository(HouseholdInvite)
-    private readonly inviteRepo: EntityRepository<HouseholdInvite>,
     private readonly em: EntityManager,
   ) {
     const url = process.env.FRONTEND_URL;
@@ -76,7 +74,7 @@ export class HouseholdService {
       { populate: ['household', 'household.members'] },
     );
     return memberships.map((m) =>
-      this.toDto(m.household, m.household.members.length),
+      this.toDto(m.household, m.household.members.getItems().length),
     );
   }
 
@@ -154,35 +152,37 @@ export class HouseholdService {
 
   async acceptInvite(rawToken: string, userId: string): Promise<void> {
     const tokenHash = createHash('sha256').update(rawToken).digest('hex');
-    const invite = await this.inviteRepo.findOne({ token_hash: tokenHash });
 
-    if (!invite) throw new GoneException({ reason: 'not_found' });
-    if (invite.expires_at < new Date())
-      throw new GoneException({ reason: 'expired' });
-    if (invite.status === 'accepted')
-      throw new GoneException({ reason: 'already_accepted' });
-    if (invite.status === 'revoked')
-      throw new GoneException({ reason: 'revoked' });
+    await this.em.transactional(async (txEm) => {
+      const lockedInvite = await txEm.findOne(
+        HouseholdInvite,
+        { token_hash: tokenHash },
+        { lockMode: LockMode.PESSIMISTIC_WRITE, populate: ['household'] },
+      );
+      if (!lockedInvite) throw new GoneException({ reason: 'not_found' });
+      if (lockedInvite.household.deleted_at)
+        throw new GoneException({ reason: 'household_deleted' });
+      if (lockedInvite.expires_at < new Date())
+        throw new GoneException({ reason: 'expired' });
+      if (lockedInvite.status === 'accepted')
+        throw new GoneException({ reason: 'already_accepted' });
+      if (lockedInvite.status === 'revoked')
+        throw new GoneException({ reason: 'revoked' });
 
-    const existing = await this.memberRepo.findOne({
-      household: { id: invite.household.id },
-      user: { id: userId },
+      const existing = await txEm.findOne(HouseholdMember, {
+        household: { id: lockedInvite.household.id },
+        user: { id: userId },
+      });
+      if (!existing) {
+        const member = new HouseholdMember();
+        member.household = lockedInvite.household;
+        member.user = txEm.getReference(User, userId);
+        member.role = 'member';
+        txEm.persist(member);
+      }
+      lockedInvite.status = 'accepted';
+      txEm.persist(lockedInvite);
     });
-    if (existing) {
-      invite.status = 'accepted';
-      await this.em.persist(invite).flush();
-      return;
-    }
-
-    const member = new HouseholdMember();
-    member.household = invite.household;
-    member.user = this.em.getReference(User, userId);
-    member.role = 'member';
-
-    invite.status = 'accepted';
-    this.em.persist(member);
-    this.em.persist(invite);
-    await this.em.flush();
   }
 
   async removeMember(

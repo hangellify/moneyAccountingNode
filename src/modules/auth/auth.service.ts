@@ -140,10 +140,12 @@ export class AuthService {
     membership.user = user;
     membership.role = 'owner';
 
-    this.em.persist(user);
-    this.em.persist(household);
-    this.em.persist(membership);
-    await this.em.flush();
+    await this.em.transactional((txEm) => {
+      txEm.persist(user);
+      txEm.persist(household);
+      txEm.persist(membership);
+      return Promise.resolve();
+    });
 
     try {
       await this.categoryDefaults.seedForUser(user.id);
