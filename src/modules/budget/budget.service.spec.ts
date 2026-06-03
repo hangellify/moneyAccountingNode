@@ -33,7 +33,10 @@ describe('BudgetService.listBudgets', () => {
 
     expect(result).toHaveLength(1);
     expect(budgetRepo.find as jest.Mock).toHaveBeenCalledWith(
-      expect.objectContaining({ household: { id: 'household-1' }, deleted_at: null }),
+      expect.objectContaining({
+        household: { id: 'household-1' },
+        deleted_at: null,
+      }),
     );
   });
 });

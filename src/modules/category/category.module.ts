@@ -10,7 +10,12 @@ import { CategoryDefaultsService } from './category-defaults.service';
 
 @Module({
   imports: [
-    MikroOrmModule.forFeature([Category, PlaningHorizon, SubCategory, Household]),
+    MikroOrmModule.forFeature([
+      Category,
+      PlaningHorizon,
+      SubCategory,
+      Household,
+    ]),
   ],
   controllers: [CategoryController],
   providers: [CategoryService, CategoryDefaultsService],

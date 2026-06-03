@@ -64,7 +64,10 @@ export class CategoryController {
     @CurrentHousehold() ctx: HouseholdContext,
     @Body() createCategoryDto: CreateCategoryDto,
   ): Promise<CategoryResponseDto> {
-    return this.categoryService.createCategory(ctx.householdId, createCategoryDto);
+    return this.categoryService.createCategory(
+      ctx.householdId,
+      createCategoryDto,
+    );
   }
 
   @Get()
@@ -105,7 +108,11 @@ export class CategoryController {
     @Param('id') id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
   ): Promise<CategoryResponseDto> {
-    return this.categoryService.updateCategory(id, ctx.householdId, updateCategoryDto);
+    return this.categoryService.updateCategory(
+      id,
+      ctx.householdId,
+      updateCategoryDto,
+    );
   }
 
   @Delete(':id')

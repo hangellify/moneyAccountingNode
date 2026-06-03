@@ -214,7 +214,10 @@ export class BillCrudService {
     return { data, meta };
   }
 
-  async getBill(id: string, householdId: string): Promise<BillDetailResponseDto> {
+  async getBill(
+    id: string,
+    householdId: string,
+  ): Promise<BillDetailResponseDto> {
     const bill = await this.billRepository.findOne(
       { id, household: { id: householdId }, deleted_at: null },
       { populate: ['market', 'billSubCategories.sub_category.category'] },
@@ -366,7 +369,11 @@ export class BillCrudService {
 
   async listDrafts(householdId: string): Promise<BillResponseDto[]> {
     const bills = await this.billRepository.find(
-      { household: { id: householdId }, status: BillStatus.DRAFT, deleted_at: null },
+      {
+        household: { id: householdId },
+        status: BillStatus.DRAFT,
+        deleted_at: null,
+      },
       { populate: ['market'] },
     );
     return bills.map((b) => this.toListDto(b));
@@ -379,7 +386,12 @@ export class BillCrudService {
     dto: ConfirmBillDto,
   ): Promise<BillDetailResponseDto> {
     const bill = await this.billRepository.findOne(
-      { id, household: { id: householdId }, status: BillStatus.DRAFT, deleted_at: null },
+      {
+        id,
+        household: { id: householdId },
+        status: BillStatus.DRAFT,
+        deleted_at: null,
+      },
       { populate: ['market'] },
     );
     if (!bill)

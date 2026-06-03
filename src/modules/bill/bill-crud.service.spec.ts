@@ -60,12 +60,7 @@ function makeService() {
     getConnection: jest.fn().mockReturnValue({ execute: mockExecute }),
   } as unknown as EntityManager;
   return {
-    service: new BillCrudService(
-      billRepo,
-      marketRepo,
-      subCategoryRepo,
-      em,
-    ),
+    service: new BillCrudService(billRepo, marketRepo, subCategoryRepo, em),
     billRepo,
     marketRepo,
     subCategoryRepo,
@@ -83,8 +78,7 @@ const subCatId = 'subcat-1';
 describe('BillCrudService', () => {
   describe('createBill', () => {
     it('creates a bill with items and returns the detail DTO', async () => {
-      const { service, marketRepo, subCategoryRepo, em } =
-        makeService();
+      const { service, marketRepo, subCategoryRepo, em } = makeService();
       (marketRepo.findOne as jest.Mock).mockResolvedValue({
         id: marketId,
         name: 'Lidl',
@@ -124,9 +118,9 @@ describe('BillCrudService', () => {
         items: [],
       };
 
-      await expect(service.createBill(householdId, userId, dto)).rejects.toBeInstanceOf(
-        BadRequestException,
-      );
+      await expect(
+        service.createBill(householdId, userId, dto),
+      ).rejects.toBeInstanceOf(BadRequestException);
     });
   });
 
@@ -496,7 +490,11 @@ describe('BillCrudService', () => {
         items: [],
       };
 
-      const draftId = await service.createDraftFromParsed(householdId, userId, parsed);
+      const draftId = await service.createDraftFromParsed(
+        householdId,
+        userId,
+        parsed,
+      );
 
       expect(typeof draftId).toBe('string');
       expect(em.flush as jest.Mock).toHaveBeenCalled();
@@ -548,7 +546,12 @@ describe('BillCrudService', () => {
         items: [{ sub_category_id: subCatId, product_count: 1, amount: 12 }],
       };
 
-      const result = await service.confirmBill(billId, householdId, userId, dto);
+      const result = await service.confirmBill(
+        billId,
+        householdId,
+        userId,
+        dto,
+      );
 
       expect(bill.status).toBe(BillStatus.CONFIRMED);
       expect(result.total_amount).toBe(12);

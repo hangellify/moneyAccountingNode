@@ -20,7 +20,9 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')
 export class UserController {
-  constructor(private readonly categoryDefaultsService: CategoryDefaultsService) {}
+  constructor(
+    private readonly categoryDefaultsService: CategoryDefaultsService,
+  ) {}
 
   @Post('me/seed-default-categories')
   @HttpCode(HttpStatus.NO_CONTENT)

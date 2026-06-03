@@ -16,7 +16,9 @@ function makeService() {
     persist: jest.fn().mockReturnThis(),
     flush: jest.fn().mockResolvedValue(undefined),
     getConnection: jest.fn(),
-    getReference: jest.fn().mockImplementation((_cls: unknown, id: string) => ({ id })),
+    getReference: jest
+      .fn()
+      .mockImplementation((_cls: unknown, id: string) => ({ id })),
   } as unknown as EntityManager;
 
   const service = new MarketService(marketRepo, em);
@@ -65,7 +67,10 @@ describe('MarketService', () => {
       const result = await service.listMarkets(householdId);
       expect(result).toHaveLength(1);
       expect(marketRepo.find as jest.Mock).toHaveBeenCalledWith(
-        expect.objectContaining({ household: { id: householdId }, deleted_at: null }),
+        expect.objectContaining({
+          household: { id: householdId },
+          deleted_at: null,
+        }),
       );
     });
   });
@@ -90,9 +95,9 @@ describe('MarketService', () => {
       const { service, marketRepo } = makeService();
       (marketRepo.findOne as jest.Mock).mockResolvedValue(null);
 
-      await expect(service.getMarket(marketId, householdId)).rejects.toBeInstanceOf(
-        NotFoundException,
-      );
+      await expect(
+        service.getMarket(marketId, householdId),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 

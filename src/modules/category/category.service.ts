@@ -114,7 +114,10 @@ export class CategoryService {
    * Only returns category if it belongs to the household
    * Includes sub-categories in the response
    */
-  async getCategory(id: string, householdId: string): Promise<CategoryResponseDto> {
+  async getCategory(
+    id: string,
+    householdId: string,
+  ): Promise<CategoryResponseDto> {
     const category = await this.categoryRepository.findOne(
       { id, household: { id: householdId }, deleted_at: null },
       { populate: ['subCategories'] },

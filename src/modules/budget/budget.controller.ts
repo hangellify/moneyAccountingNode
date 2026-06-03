@@ -88,7 +88,11 @@ export class BudgetController {
     @Param('id') id: string,
     @Body() updateBudgetDto: UpdateBudgetDto,
   ): Promise<BudgetResponseDto> {
-    return this.budgetService.updateBudget(id, ctx.householdId, updateBudgetDto);
+    return this.budgetService.updateBudget(
+      id,
+      ctx.householdId,
+      updateBudgetDto,
+    );
   }
 
   @Delete(':id')
