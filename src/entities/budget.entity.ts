@@ -8,7 +8,7 @@ import {
 } from '@mikro-orm/core';
 import { BaseEntity } from './base.entity';
 import { PlaningHorizon } from './planing-horizon.entity';
-import { User } from './user.entity';
+import { Household } from './household.entity';
 
 @Entity({ tableName: 'budgets' })
 export class Budget extends BaseEntity {
@@ -24,8 +24,8 @@ export class Budget extends BaseEntity {
   @Property({ type: 'timestamptz', nullable: true })
   deleted_at?: Date;
 
-  @ManyToOne(() => User, { nullable: false })
-  user!: User;
+  @ManyToOne(() => Household, { nullable: false })
+  household!: Household;
 
   @OneToMany(() => PlaningHorizon, (planingHorizon) => planingHorizon.budget)
   planingHorizons = new Collection<PlaningHorizon>(this);
