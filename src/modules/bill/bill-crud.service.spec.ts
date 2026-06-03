@@ -141,36 +141,44 @@ describe('BillCrudService', () => {
     it('returns all confirmed bills when no filters are given', async () => {
       const { service, mockExecute } = makeService();
       const row = makeRow();
-      mockExecute.mockResolvedValue([row]);
+      mockExecute
+        .mockResolvedValueOnce([{ count: '1' }])
+        .mockResolvedValueOnce([row]);
 
       const result = await service.listBills(userId, {});
 
-      expect(result).toHaveLength(1);
-      expect(result[0].id).toBe('bill-1');
-      expect(result[0].total_amount).toBe(52.3);
-      expect(result[0].market?.name).toBe('Lidl');
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0].id).toBe('bill-1');
+      expect(result.data[0].total_amount).toBe(52.3);
+      expect(result.data[0].market?.name).toBe('Lidl');
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      const sql: string = mockExecute.mock.calls[0][0] as string;
-      expect(sql).toContain('b.user_id    = ?');
-      expect(sql).toContain("b.status     = 'confirmed'");
-      expect(sql).toContain('ORDER  BY b.bill_date DESC');
+      const countSql: string = mockExecute.mock.calls[0][0] as string;
+      expect(countSql).toContain('b.user_id    = ?');
+      expect(countSql).toContain("b.status     = 'confirmed'");
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      const dataSql: string = mockExecute.mock.calls[1][0] as string;
+      expect(dataSql).toContain('ORDER  BY b.bill_date DESC');
     });
 
     it('returns bills sorted bill_date DESC (most recent first)', async () => {
       const { service, mockExecute } = makeService();
       const older = makeRow({ id: 'bill-old', bill_date: '2026-01-01' });
       const newer = makeRow({ id: 'bill-new', bill_date: '2026-06-01' });
-      mockExecute.mockResolvedValue([newer, older]);
+      mockExecute
+        .mockResolvedValueOnce([{ count: '2' }])
+        .mockResolvedValueOnce([newer, older]);
 
       const result = await service.listBills(userId, {});
 
-      expect(result[0].id).toBe('bill-new');
-      expect(result[1].id).toBe('bill-old');
+      expect(result.data[0].id).toBe('bill-new');
+      expect(result.data[1].id).toBe('bill-old');
     });
 
     it('appends date_from condition when provided', async () => {
       const { service, mockExecute } = makeService();
-      mockExecute.mockResolvedValue([]);
+      mockExecute
+        .mockResolvedValueOnce([{ count: '0' }])
+        .mockResolvedValueOnce([]);
 
       await service.listBills(userId, {
         date_from: '2026-03-01',
@@ -183,7 +191,9 @@ describe('BillCrudService', () => {
 
     it('appends date_to condition when provided', async () => {
       const { service, mockExecute } = makeService();
-      mockExecute.mockResolvedValue([]);
+      mockExecute
+        .mockResolvedValueOnce([{ count: '0' }])
+        .mockResolvedValueOnce([]);
 
       await service.listBills(userId, {
         date_to: '2026-03-31',
@@ -196,7 +206,9 @@ describe('BillCrudService', () => {
 
     it('appends both date conditions when both are provided', async () => {
       const { service, mockExecute } = makeService();
-      mockExecute.mockResolvedValue([]);
+      mockExecute
+        .mockResolvedValueOnce([{ count: '0' }])
+        .mockResolvedValueOnce([]);
 
       await service.listBills(userId, {
         date_from: '2026-03-01',
@@ -212,7 +224,9 @@ describe('BillCrudService', () => {
 
     it('appends market_names condition (single value)', async () => {
       const { service, mockExecute } = makeService();
-      mockExecute.mockResolvedValue([]);
+      mockExecute
+        .mockResolvedValueOnce([{ count: '0' }])
+        .mockResolvedValueOnce([]);
 
       await service.listBills(userId, {
         market_names: ['Lidl'],
@@ -225,7 +239,9 @@ describe('BillCrudService', () => {
 
     it('appends market_names condition (multiple values)', async () => {
       const { service, mockExecute } = makeService();
-      mockExecute.mockResolvedValue([]);
+      mockExecute
+        .mockResolvedValueOnce([{ count: '0' }])
+        .mockResolvedValueOnce([]);
 
       await service.listBills(userId, {
         market_names: ['Lidl', 'Kaufland'],
@@ -238,7 +254,9 @@ describe('BillCrudService', () => {
 
     it('appends currency condition when provided', async () => {
       const { service, mockExecute } = makeService();
-      mockExecute.mockResolvedValue([]);
+      mockExecute
+        .mockResolvedValueOnce([{ count: '0' }])
+        .mockResolvedValueOnce([]);
 
       await service.listBills(userId, {
         currency: Currency.EUR,
@@ -251,7 +269,9 @@ describe('BillCrudService', () => {
 
     it('appends gt condition for amount_range=gt_100', async () => {
       const { service, mockExecute } = makeService();
-      mockExecute.mockResolvedValue([]);
+      mockExecute
+        .mockResolvedValueOnce([{ count: '0' }])
+        .mockResolvedValueOnce([]);
 
       await service.listBills(userId, {
         amount_range: ['gt_100'],
@@ -264,7 +284,9 @@ describe('BillCrudService', () => {
 
     it('appends lt condition for amount_range=lt_500', async () => {
       const { service, mockExecute } = makeService();
-      mockExecute.mockResolvedValue([]);
+      mockExecute
+        .mockResolvedValueOnce([{ count: '0' }])
+        .mockResolvedValueOnce([]);
 
       await service.listBills(userId, {
         amount_range: ['lt_500'],
@@ -277,7 +299,9 @@ describe('BillCrudService', () => {
 
     it('appends both gt and lt conditions for a range', async () => {
       const { service, mockExecute } = makeService();
-      mockExecute.mockResolvedValue([]);
+      mockExecute
+        .mockResolvedValueOnce([{ count: '0' }])
+        .mockResolvedValueOnce([]);
 
       await service.listBills(userId, {
         amount_range: ['gt_100', 'lt_500'],
@@ -292,7 +316,9 @@ describe('BillCrudService', () => {
 
     it('combines two filters with AND semantics', async () => {
       const { service, mockExecute } = makeService();
-      mockExecute.mockResolvedValue([]);
+      mockExecute
+        .mockResolvedValueOnce([{ count: '0' }])
+        .mockResolvedValueOnce([]);
 
       await service.listBills(userId, {
         currency: Currency.EUR,
@@ -308,13 +334,15 @@ describe('BillCrudService', () => {
 
     it('maps rows with no market to undefined market on response', async () => {
       const { service, mockExecute } = makeService();
-      mockExecute.mockResolvedValue([
-        makeRow({ market_id: null, market_name: null, market_city: null }),
-      ]);
+      mockExecute
+        .mockResolvedValueOnce([{ count: '1' }])
+        .mockResolvedValueOnce([
+          makeRow({ market_id: null, market_name: null, market_city: null }),
+        ]);
 
       const result = await service.listBills(userId, {});
 
-      expect(result[0].market).toBeUndefined();
+      expect(result.data[0].market).toBeUndefined();
     });
 
     it('throws BadRequestException when date_from is after date_to', async () => {
@@ -326,6 +354,103 @@ describe('BillCrudService', () => {
           date_to: '2026-01-01',
         } as ListBillsQueryDto),
       ).rejects.toThrow('date_from must not be later than date_to');
+    });
+
+    // --- pagination ---
+
+    it('returns data array and meta object', async () => {
+      const { service, mockExecute } = makeService();
+      mockExecute
+        .mockResolvedValueOnce([{ count: '5' }])
+        .mockResolvedValueOnce([makeRow()]);
+
+      const result = await service.listBills(userId, {});
+
+      expect(result).toHaveProperty('data');
+      expect(result).toHaveProperty('meta');
+      expect(result.data).toHaveLength(1);
+      expect(result.meta.total).toBe(5);
+    });
+
+    it('defaults to page=1 and limit=20', async () => {
+      const { service, mockExecute } = makeService();
+      mockExecute
+        .mockResolvedValueOnce([{ count: '0' }])
+        .mockResolvedValueOnce([]);
+
+      await service.listBills(userId, {});
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      const dataSql: string = mockExecute.mock.calls[1][0] as string;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      const dataParams = mockExecute.mock.calls[1][1] as unknown[];
+      expect(dataSql).toContain('LIMIT  ?');
+      expect(dataSql).toContain('OFFSET ?');
+      expect(dataParams).toContain(20); // limit
+      expect(dataParams).toContain(0); // offset = (1-1)*20
+    });
+
+    it('applies custom page and limit', async () => {
+      const { service, mockExecute } = makeService();
+      mockExecute
+        .mockResolvedValueOnce([{ count: '100' }])
+        .mockResolvedValueOnce([]);
+
+      await service.listBills(userId, {
+        page: 3,
+        limit: 10,
+      } as ListBillsQueryDto);
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      const dataParams = mockExecute.mock.calls[1][1] as unknown[];
+      expect(dataParams).toContain(10); // limit
+      expect(dataParams).toContain(20); // offset = (3-1)*10
+    });
+
+    it('computes total_pages correctly', async () => {
+      const { service, mockExecute } = makeService();
+      mockExecute
+        .mockResolvedValueOnce([{ count: '25' }])
+        .mockResolvedValueOnce([]);
+
+      const result = await service.listBills(userId, {
+        limit: 10,
+      } as ListBillsQueryDto);
+
+      expect(result.meta.total_pages).toBe(3); // ceil(25/10)
+    });
+
+    it('returns page and limit in meta', async () => {
+      const { service, mockExecute } = makeService();
+      mockExecute
+        .mockResolvedValueOnce([{ count: '50' }])
+        .mockResolvedValueOnce([]);
+
+      const result = await service.listBills(userId, {
+        page: 2,
+        limit: 15,
+      } as ListBillsQueryDto);
+
+      expect(result.meta.page).toBe(2);
+      expect(result.meta.limit).toBe(15);
+    });
+
+    it('COUNT query shares same WHERE conditions as data query', async () => {
+      const { service, mockExecute } = makeService();
+      mockExecute
+        .mockResolvedValueOnce([{ count: '0' }])
+        .mockResolvedValueOnce([]);
+
+      await service.listBills(userId, {
+        currency: Currency.EUR,
+      } as ListBillsQueryDto);
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      const countSql: string = mockExecute.mock.calls[0][0] as string;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      const countParams = mockExecute.mock.calls[0][1] as unknown[];
+      expect(countSql).toContain('COUNT(*)');
+      expect(countParams).toContain('EUR');
     });
   });
 

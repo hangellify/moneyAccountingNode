@@ -7,8 +7,11 @@ import {
   MinLength,
   MaxLength,
   Matches,
+  IsInt,
+  Min,
+  Max,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Currency } from '../../../types/currency.enum';
 
@@ -79,4 +82,27 @@ export class ListBillsQueryDto {
       'Each amount_range value must be gt_N or lt_N (e.g. gt_100, lt_500)',
   })
   amount_range?: string[];
+
+  @ApiPropertyOptional({
+    example: 1,
+    description: 'Page number (1-based). Defaults to 1.',
+    default: 1,
+  })
+  @Type(() => Number)
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  page?: number;
+
+  @ApiPropertyOptional({
+    example: 20,
+    description: 'Number of results per page. Defaults to 20, max 100.',
+    default: 20,
+  })
+  @Type(() => Number)
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit?: number;
 }

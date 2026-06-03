@@ -10,6 +10,7 @@ import { ParsedBillResponseDto } from './parsed-bill-response.dto';
 import { BillResponseDto } from './bill-response.dto';
 import { BillDetailResponseDto } from './bill-detail-response.dto';
 import { BillDashboardResponseDto } from './bill-dashboard.dto';
+import { BillListResponseDto } from './bill-list-response.dto';
 
 export function ApiParsePhotoResponses(): MethodDecorator & ClassDecorator {
   return applyDecorators(
@@ -43,8 +44,8 @@ export const ApiListBillsResponses = () =>
   applyDecorators(
     ApiResponse({
       status: 200,
-      type: [BillResponseDto],
-      description: 'Bills listed',
+      type: BillListResponseDto,
+      description: 'Paginated bill list',
     }),
     ApiResponse({
       status: 400,

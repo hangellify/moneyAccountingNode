@@ -22,6 +22,10 @@ import {
   BillDetailResponseDto,
   BillItemResponseDto,
 } from './dto/bill-detail-response.dto';
+import {
+  BillListResponseDto,
+  PaginationMetaDto,
+} from './dto/bill-list-response.dto';
 
 @Injectable()
 export class BillCrudService {
@@ -100,7 +104,7 @@ export class BillCrudService {
   async listBills(
     userId: string,
     filters: ListBillsQueryDto,
-  ): Promise<BillResponseDto[]> {
+  ): Promise<BillListResponseDto> {
     if (
       filters.date_from &&
       filters.date_to &&
@@ -145,32 +149,52 @@ export class BillCrudService {
     }
 
     const where = conditions.join(' AND ');
+    const page = filters.page ?? 1;
+    const limit = filters.limit ?? 20;
+    const offset = (page - 1) * limit;
 
-    // LEFT JOIN is always present so market columns are available whether or not
-    // market_names filter is active. Bills with market_id IS NULL produce null
-    // market columns and are included unless market_names is set.
-    const rows = (await this.em.getConnection().execute(
-      `SELECT b.id, b.bill_date::text, b.currency, b.amount::text, b.description,
-              b.created_at::text,
-              m.id AS market_id, m.name AS market_name, m.city AS market_city
-       FROM   bills b
-       LEFT   JOIN markets m ON m.id = b.market_id
-       WHERE  ${where}
-       ORDER  BY b.bill_date DESC`,
-      params,
-    )) as Array<{
-      id: string;
-      bill_date: string;
-      currency: string | null;
-      amount: string;
-      description: string | null;
-      market_id: string | null;
-      market_name: string | null;
-      market_city: string | null;
-      created_at: string;
-    }>;
+    const [countRows, dataRows] = await Promise.all([
+      this.em.getConnection().execute(
+        `SELECT COUNT(*) AS count
+         FROM   bills b
+         LEFT   JOIN markets m ON m.id = b.market_id
+         WHERE  ${where}`,
+        params,
+      ) as Promise<Array<{ count: string }>>,
+      this.em.getConnection().execute(
+        `SELECT b.id, b.bill_date::text, b.currency, b.amount::text, b.description,
+                b.created_at::text,
+                m.id AS market_id, m.name AS market_name, m.city AS market_city
+         FROM   bills b
+         LEFT   JOIN markets m ON m.id = b.market_id
+         WHERE  ${where}
+         ORDER  BY b.bill_date DESC
+         LIMIT  ? OFFSET ?`,
+        [...params, limit, offset],
+      ) as Promise<
+        Array<{
+          id: string;
+          bill_date: string;
+          currency: string | null;
+          amount: string;
+          description: string | null;
+          market_id: string | null;
+          market_name: string | null;
+          market_city: string | null;
+          created_at: string;
+        }>
+      >,
+    ]);
 
-    return rows.map(
+    const total = Number(countRows[0].count);
+    const meta: PaginationMetaDto = {
+      total,
+      page,
+      limit,
+      total_pages: Math.ceil(total / limit),
+    };
+
+    const data = dataRows.map(
       (r): BillResponseDto => ({
         id: r.id,
         bill_date: new Date(r.bill_date),
@@ -187,6 +211,8 @@ export class BillCrudService {
         created_at: new Date(r.created_at),
       }),
     );
+
+    return { data, meta };
   }
 
   async getBill(id: string, userId: string): Promise<BillDetailResponseDto> {

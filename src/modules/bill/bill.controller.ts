@@ -37,6 +37,7 @@ import { CreateBillDto } from './dto/create-bill.dto';
 import { UpdateBillDto } from './dto/update-bill.dto';
 import { BillResponseDto } from './dto/bill-response.dto';
 import { BillDetailResponseDto } from './dto/bill-detail-response.dto';
+import { BillListResponseDto } from './dto/bill-list-response.dto';
 import {
   BillDashboardResponseDto,
   BillDashboardQueryDto,
@@ -127,7 +128,7 @@ export class BillController {
   async listBills(
     @CurrentUser() user: AuthenticatedUser,
     @Query() query: ListBillsQueryDto,
-  ): Promise<BillResponseDto[]> {
+  ): Promise<BillListResponseDto> {
     return this.billCrud.listBills(user.id, query);
   }
 
