@@ -22,8 +22,9 @@ import { BulkCreateSubCategoryDto } from './dto/bulk-create-sub-category.dto';
 import { UpdateSubCategoryDto } from './dto/update-sub-category.dto';
 import { SubCategoryResponseDto } from './dto/sub-category-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import type { AuthenticatedUser } from '../auth/types/jwt-payload.interface';
+import { HouseholdMemberGuard } from '../household/guards/household-member.guard';
+import type { HouseholdContext } from '../household/guards/household-member.guard';
+import { CurrentHousehold } from '../household/decorators/current-household.decorator';
 import {
   ApiCreateSubCategoryResponses,
   ApiBulkCreateSubCategoryResponses,
@@ -34,8 +35,8 @@ import {
 } from './decorators/api-responses.decorator';
 
 @ApiTags('sub-categories')
-@Controller('sub-categories')
-@UseGuards(JwtAuthGuard)
+@Controller('households/:hid/sub-categories')
+@UseGuards(JwtAuthGuard, HouseholdMemberGuard)
 @ApiBearerAuth('JWT-auth')
 export class SubCategoryController {
   constructor(private readonly subCategoryService: SubCategoryService) {}
@@ -45,11 +46,11 @@ export class SubCategoryController {
   @ApiOperation({ summary: 'Bulk create sub-categories for a category' })
   @ApiBulkCreateSubCategoryResponses()
   async bulkCreateSubCategories(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Body() bulkCreateSubCategoryDto: BulkCreateSubCategoryDto,
   ): Promise<SubCategoryResponseDto[]> {
     return this.subCategoryService.bulkCreateSubCategories(
-      user.id,
+      ctx.householdId,
       bulkCreateSubCategoryDto,
     );
   }
@@ -59,22 +60,22 @@ export class SubCategoryController {
   @ApiOperation({ summary: 'Create a new sub-category' })
   @ApiCreateSubCategoryResponses()
   async createSubCategory(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Body() createSubCategoryDto: CreateSubCategoryDto,
   ): Promise<SubCategoryResponseDto> {
     return this.subCategoryService.createSubCategory(
-      user.id,
+      ctx.householdId,
       createSubCategoryDto,
     );
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all user sub-categories' })
+  @ApiOperation({ summary: 'Get all household sub-categories' })
   @ApiGetAllSubCategoriesResponses()
   async getAllUserSubCategories(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
   ): Promise<SubCategoryResponseDto[]> {
-    return this.subCategoryService.getAllUserSubCategories(user.id);
+    return this.subCategoryService.getAllUserSubCategories(ctx.householdId);
   }
 
   @Get(':id')
@@ -86,10 +87,10 @@ export class SubCategoryController {
   })
   @ApiGetSubCategoryResponses()
   async getSubCategory(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Param('id') id: string,
   ): Promise<SubCategoryResponseDto> {
-    return this.subCategoryService.getSubCategory(id, user.id);
+    return this.subCategoryService.getSubCategory(id, ctx.householdId);
   }
 
   @Put(':id')
@@ -102,13 +103,13 @@ export class SubCategoryController {
   })
   @ApiUpdateSubCategoryResponses()
   async updateSubCategory(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Param('id') id: string,
     @Body() updateSubCategoryDto: UpdateSubCategoryDto,
   ): Promise<SubCategoryResponseDto> {
     return this.subCategoryService.updateSubCategory(
       id,
-      user.id,
+      ctx.householdId,
       updateSubCategoryDto,
     );
   }
@@ -123,9 +124,9 @@ export class SubCategoryController {
   })
   @ApiDeleteSubCategoryResponses()
   async deleteSubCategory(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Param('id') id: string,
   ): Promise<void> {
-    return this.subCategoryService.softDeleteSubCategory(id, user.id);
+    return this.subCategoryService.softDeleteSubCategory(id, ctx.householdId);
   }
 }

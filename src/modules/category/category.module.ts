@@ -3,14 +3,14 @@ import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { Category } from '../../entities/category.entity';
 import { PlaningHorizon } from '../../entities/planing-horizon.entity';
 import { SubCategory } from '../../entities/sub-category.entity';
-import { User } from '../../entities/user.entity';
+import { Household } from '../../entities/household.entity';
 import { CategoryController } from './category.controller';
 import { CategoryService } from './category.service';
 import { CategoryDefaultsService } from './category-defaults.service';
 
 @Module({
   imports: [
-    MikroOrmModule.forFeature([Category, PlaningHorizon, SubCategory, User]),
+    MikroOrmModule.forFeature([Category, PlaningHorizon, SubCategory, Household]),
   ],
   controllers: [CategoryController],
   providers: [CategoryService, CategoryDefaultsService],
