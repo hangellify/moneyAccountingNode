@@ -12,6 +12,8 @@ import { User } from '../../entities/user.entity';
 import { RefreshToken } from '../../entities/refresh-token.entity';
 import { Session } from '../../entities/session.entity';
 import { Log, LogLevel, LogSource } from '../../entities/log.entity';
+import { Household } from '../../entities/household.entity';
+import { HouseholdMember } from '../../entities/household-member.entity';
 import { Currency } from '../../types/currency.enum';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -129,7 +131,19 @@ export class AuthService {
     user.username = registerDto.username;
     user.currency = Currency.EUR;
 
-    await this.em.persist(user).flush();
+    const household = new Household();
+    household.name = 'Personal';
+    household.created_by = user;
+
+    const membership = new HouseholdMember();
+    membership.household = household;
+    membership.user = user;
+    membership.role = 'owner';
+
+    this.em.persist(user);
+    this.em.persist(household);
+    this.em.persist(membership);
+    await this.em.flush();
 
     try {
       await this.categoryDefaults.seedForUser(user.id);

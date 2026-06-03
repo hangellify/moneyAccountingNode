@@ -12,11 +12,20 @@ import { User } from '../../entities/user.entity';
 import { RefreshToken } from '../../entities/refresh-token.entity';
 import { Session } from '../../entities/session.entity';
 import { Log } from '../../entities/log.entity';
+import { Household } from '../../entities/household.entity';
+import { HouseholdMember } from '../../entities/household-member.entity';
 import { requireEnv, requireIntEnv } from './auth.env';
 
 @Module({
   imports: [
-    MikroOrmModule.forFeature([User, RefreshToken, Session, Log]),
+    MikroOrmModule.forFeature([
+      User,
+      RefreshToken,
+      Session,
+      Log,
+      Household,
+      HouseholdMember,
+    ]),
     PassportModule,
     UserModule,
     CategoryModule,
