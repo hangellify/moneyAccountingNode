@@ -52,7 +52,11 @@ export class Bill extends BaseEntity {
   @ManyToOne(() => Household, { nullable: false })
   household!: Household;
 
-  @ManyToOne(() => User, { nullable: true, deleteRule: 'set null' })
+  @ManyToOne(() => User, {
+    nullable: true,
+    deleteRule: 'set null',
+    fieldName: 'created_by_user_id',
+  })
   created_by?: User;
 
   @ManyToOne(() => Market, { nullable: true })

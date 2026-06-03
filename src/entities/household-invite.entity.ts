@@ -11,7 +11,7 @@ export class HouseholdInvite extends BaseEntity {
   @Property({ type: 'varchar', length: 255, nullable: false })
   invitee_email!: string;
 
-  @ManyToOne(() => User, { nullable: false })
+  @ManyToOne(() => User, { nullable: false, fieldName: 'invited_by' })
   invited_by!: User;
 
   /** SHA-256 hex of the raw token. Raw token is returned to client once, never persisted. */

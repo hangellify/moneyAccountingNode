@@ -16,7 +16,7 @@ export class Household extends BaseEntity {
   @Property({ type: 'varchar', length: 255, nullable: false })
   name!: string;
 
-  @ManyToOne(() => User, { nullable: false })
+  @ManyToOne(() => User, { nullable: false, fieldName: 'created_by' })
   created_by!: User;
 
   @Property({ type: 'timestamptz', nullable: false, defaultRaw: 'NOW()' })
