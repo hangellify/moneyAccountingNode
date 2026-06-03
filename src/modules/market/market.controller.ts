@@ -21,8 +21,9 @@ import { CreateMarketDto } from './dto/create-market.dto';
 import { UpdateMarketDto } from './dto/update-market.dto';
 import { MarketResponseDto } from './dto/market-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import type { AuthenticatedUser } from '../auth/types/jwt-payload.interface';
+import { HouseholdMemberGuard } from '../household/guards/household-member.guard';
+import { CurrentHousehold } from '../household/decorators/current-household.decorator';
+import type { HouseholdContext } from '../household/guards/household-member.guard';
 import {
   ApiCreateMarketResponses,
   ApiListMarketsResponses,
@@ -32,8 +33,8 @@ import {
 } from './decorators/api-responses.decorator';
 
 @ApiTags('markets')
-@Controller('markets')
-@UseGuards(JwtAuthGuard)
+@Controller('households/:hid/markets')
+@UseGuards(JwtAuthGuard, HouseholdMemberGuard)
 @ApiBearerAuth('JWT-auth')
 export class MarketController {
   constructor(private readonly marketService: MarketService) {}
@@ -43,19 +44,19 @@ export class MarketController {
   @ApiOperation({ summary: 'Create a new market' })
   @ApiCreateMarketResponses()
   async createMarket(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Body() dto: CreateMarketDto,
   ): Promise<MarketResponseDto> {
-    return this.marketService.createMarket(user.id, dto);
+    return this.marketService.createMarket(ctx.householdId, dto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'List all markets for the current user' })
+  @ApiOperation({ summary: 'List all markets for the current household' })
   @ApiListMarketsResponses()
   async listMarkets(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
   ): Promise<MarketResponseDto[]> {
-    return this.marketService.listMarkets(user.id);
+    return this.marketService.listMarkets(ctx.householdId);
   }
 
   @Get(':id')
@@ -67,10 +68,10 @@ export class MarketController {
   })
   @ApiGetMarketResponses()
   async getMarket(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Param('id') id: string,
   ): Promise<MarketResponseDto> {
-    return this.marketService.getMarket(id, user.id);
+    return this.marketService.getMarket(id, ctx.householdId);
   }
 
   @Put(':id')
@@ -83,11 +84,11 @@ export class MarketController {
   })
   @ApiUpdateMarketResponses()
   async updateMarket(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Param('id') id: string,
     @Body() dto: UpdateMarketDto,
   ): Promise<MarketResponseDto> {
-    return this.marketService.updateMarket(id, user.id, dto);
+    return this.marketService.updateMarket(id, ctx.householdId, dto);
   }
 
   @Delete(':id')
@@ -100,9 +101,9 @@ export class MarketController {
   })
   @ApiDeleteMarketResponses()
   async deleteMarket(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Param('id') id: string,
   ): Promise<void> {
-    return this.marketService.softDeleteMarket(id, user.id);
+    return this.marketService.softDeleteMarket(id, ctx.householdId);
   }
 }

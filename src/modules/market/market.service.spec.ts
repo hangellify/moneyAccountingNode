@@ -3,7 +3,6 @@ import { NotFoundException } from '@nestjs/common';
 import { EntityManager, EntityRepository } from '@mikro-orm/core';
 import { MarketService } from './market.service';
 import { Market } from '../../entities/market.entity';
-import { User } from '../../entities/user.entity';
 import { CreateMarketDto } from './dto/create-market.dto';
 import { UpdateMarketDto } from './dto/update-market.dto';
 
@@ -13,29 +12,24 @@ function makeService() {
     find: jest.fn(),
   } as unknown as EntityRepository<Market>;
 
-  const userRepo = {
-    findOneOrFail: jest.fn(),
-  } as unknown as EntityRepository<User>;
-
   const em = {
     persist: jest.fn().mockReturnThis(),
     flush: jest.fn().mockResolvedValue(undefined),
     getConnection: jest.fn(),
+    getReference: jest.fn().mockImplementation((_cls: unknown, id: string) => ({ id })),
   } as unknown as EntityManager;
 
-  const service = new MarketService(marketRepo, userRepo, em);
-  return { service, marketRepo, userRepo, em };
+  const service = new MarketService(marketRepo, em);
+  return { service, marketRepo, em };
 }
 
-const userId = 'user-1';
+const householdId = 'household-1';
 const marketId = 'market-1';
 
 describe('MarketService', () => {
   describe('createMarket', () => {
     it('creates and returns the new market', async () => {
-      const { service, userRepo, em } = makeService();
-      const user = { id: userId } as User;
-      (userRepo.findOneOrFail as jest.Mock).mockResolvedValue(user);
+      const { service, em } = makeService();
       (em.persist as jest.Mock).mockReturnThis();
 
       const dto: CreateMarketDto = {
@@ -43,7 +37,7 @@ describe('MarketService', () => {
         city: 'Bucharest',
         country: 'RO',
       };
-      const result = await service.createMarket(userId, dto);
+      const result = await service.createMarket(householdId, dto);
 
       expect(result.name).toBe('Lidl');
       expect(result.city).toBe('Bucharest');
@@ -53,7 +47,7 @@ describe('MarketService', () => {
   });
 
   describe('listMarkets', () => {
-    it('returns non-deleted markets for the user', async () => {
+    it('returns non-deleted markets for the household', async () => {
       const { service, marketRepo, em } = makeService();
       const markets = [
         {
@@ -68,16 +62,16 @@ describe('MarketService', () => {
       const mockConn = { execute: jest.fn().mockResolvedValue([]) };
       jest.spyOn(em, 'getConnection').mockReturnValue(mockConn as any);
 
-      const result = await service.listMarkets(userId);
+      const result = await service.listMarkets(householdId);
       expect(result).toHaveLength(1);
       expect(marketRepo.find as jest.Mock).toHaveBeenCalledWith(
-        expect.objectContaining({ user: { id: userId }, deleted_at: null }),
+        expect.objectContaining({ household: { id: householdId }, deleted_at: null }),
       );
     });
   });
 
   describe('getMarket', () => {
-    it('returns a market by id for the correct user', async () => {
+    it('returns a market by id for the correct household', async () => {
       const { service, marketRepo } = makeService();
       const market = {
         id: marketId,
@@ -88,7 +82,7 @@ describe('MarketService', () => {
       } as unknown as Market;
       (marketRepo.findOne as jest.Mock).mockResolvedValue(market);
 
-      const result = await service.getMarket(marketId, userId);
+      const result = await service.getMarket(marketId, householdId);
       expect(result.id).toBe(marketId);
     });
 
@@ -96,7 +90,7 @@ describe('MarketService', () => {
       const { service, marketRepo } = makeService();
       (marketRepo.findOne as jest.Mock).mockResolvedValue(null);
 
-      await expect(service.getMarket(marketId, userId)).rejects.toBeInstanceOf(
+      await expect(service.getMarket(marketId, householdId)).rejects.toBeInstanceOf(
         NotFoundException,
       );
     });
@@ -115,7 +109,7 @@ describe('MarketService', () => {
       (marketRepo.findOne as jest.Mock).mockResolvedValue(market);
 
       const dto: UpdateMarketDto = { name: 'Penny' };
-      const result = await service.updateMarket(marketId, userId, dto);
+      const result = await service.updateMarket(marketId, householdId, dto);
 
       expect(result.name).toBe('Penny');
       expect(em.flush as jest.Mock).toHaveBeenCalled();
@@ -126,7 +120,7 @@ describe('MarketService', () => {
       (marketRepo.findOne as jest.Mock).mockResolvedValue(null);
 
       await expect(
-        service.updateMarket(marketId, userId, {}),
+        service.updateMarket(marketId, householdId, {}),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
@@ -140,7 +134,7 @@ describe('MarketService', () => {
       } as unknown as Market;
       (marketRepo.findOne as jest.Mock).mockResolvedValue(market);
 
-      await service.softDeleteMarket(marketId, userId);
+      await service.softDeleteMarket(marketId, householdId);
 
       expect(market.deleted_at).toBeInstanceOf(Date);
       expect(em.flush as jest.Mock).toHaveBeenCalled();
@@ -151,7 +145,7 @@ describe('MarketService', () => {
       (marketRepo.findOne as jest.Mock).mockResolvedValue(null);
 
       await expect(
-        service.softDeleteMarket(marketId, userId),
+        service.softDeleteMarket(marketId, householdId),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
@@ -171,7 +165,7 @@ describe('MarketService.listMarkets — bill count + ordering', () => {
     };
     jest.spyOn(em, 'getConnection').mockReturnValue(mockConn as any);
 
-    const result = await service.listMarkets('user-1');
+    const result = await service.listMarkets('household-1');
 
     expect(result[0].id).toBe('m1');
     expect(result[0].bill_count).toBe(3);
