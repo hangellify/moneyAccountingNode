@@ -10,15 +10,15 @@ import { Log } from '../../entities/log.entity';
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 
 interface Deps {
-  seedForUser: jest.Mock;
+  seedForHousehold: jest.Mock;
 }
 
 function makeService(opts?: Partial<Deps>): {
   service: AuthService;
   deps: Deps;
 } {
-  const seedForUser =
-    opts?.seedForUser ??
+  const seedForHousehold =
+    opts?.seedForHousehold ??
     jest.fn().mockResolvedValue({
       categoriesCreated: 12,
       subCategoriesCreated: 70,
@@ -75,9 +75,9 @@ function makeService(opts?: Partial<Deps>): {
     logRepo,
     em,
     jwtService,
-    { seedForUser } as unknown as CategoryDefaultsService,
+    { seedForHousehold } as unknown as CategoryDefaultsService,
   );
-  return { service, deps: { seedForUser } };
+  return { service, deps: { seedForHousehold } };
 }
 
 describe('AuthService.register seeder hook', () => {
@@ -92,13 +92,13 @@ describe('AuthService.register seeder hook', () => {
       '1.2.3.4',
       'jest',
     );
-    expect(deps.seedForUser).toHaveBeenCalledTimes(1);
-    expect(deps.seedForUser).toHaveBeenCalledWith(expect.any(String));
+    expect(deps.seedForHousehold).toHaveBeenCalledTimes(1);
+    expect(deps.seedForHousehold).toHaveBeenCalledWith(expect.any(String));
   });
 
-  it('does NOT fail registration when seedForUser throws', async () => {
+  it('does NOT fail registration when seedForHousehold throws', async () => {
     const { service } = makeService({
-      seedForUser: jest.fn().mockRejectedValue(new Error('db down')),
+      seedForHousehold: jest.fn().mockRejectedValue(new Error('db down')),
     });
     const tokens = await service.register(
       {
