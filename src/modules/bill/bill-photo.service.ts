@@ -21,10 +21,11 @@ export class BillPhotoService {
   async parseAndCategorize(
     image: Buffer,
     mediaType: 'image/png' | 'image/jpeg' | 'image/webp',
+    householdId: string,
     userId: string,
   ): Promise<ParsedBillResponseDto> {
     const subs = await this.subCategoryRepo.find(
-      { deleted_at: null, category: { user: { id: userId } } },
+      { deleted_at: null, category: { household: { id: householdId } } },
       { populate: ['category'] },
     );
 

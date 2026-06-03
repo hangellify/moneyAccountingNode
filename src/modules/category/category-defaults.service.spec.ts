@@ -33,6 +33,7 @@ describe('CategoryDefaultsService', () => {
     const h = fork.create(Household, {
       name: `${NAME_PREFIX}${label}`,
       created_by: u,
+      created_at: new Date(),
     });
     await fork.persist(u).persist(h).flush();
     return h;

@@ -106,9 +106,14 @@ export class BillController {
     const parsed = await this.billPhoto.parseAndCategorize(
       file.buffer,
       file.mimetype as 'image/png' | 'image/jpeg' | 'image/webp',
+      ctx.householdId,
       user.id,
     );
-    const draftId = await this.billCrud.createDraftFromParsed(ctx.householdId, user.id, parsed);
+    const draftId = await this.billCrud.createDraftFromParsed(
+      ctx.householdId,
+      user.id,
+      parsed,
+    );
     return { ...parsed, draft_id: draftId };
   }
 

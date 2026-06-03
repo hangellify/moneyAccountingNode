@@ -6,6 +6,7 @@ import { BillCrudService } from './bill-crud.service';
 import { BillDashboardService } from './bill-dashboard.service';
 import { BillDashboardQueryDto } from './dto/bill-dashboard.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { HouseholdMemberGuard } from '../household/guards/household-member.guard';
 import { AiGatewayExhaustedFilter } from './filters/ai-gateway-exhausted.filter';
 
 describe('BillController', () => {
@@ -41,6 +42,8 @@ describe('BillController', () => {
     })
       .overrideGuard(JwtAuthGuard)
       .useValue({ canActivate: () => true })
+      .overrideGuard(HouseholdMemberGuard)
+      .useValue({ canActivate: () => true })
       .compile();
     controller = mod.get(BillController);
     billDashboardMock = mod.get(BillDashboardService);
@@ -71,6 +74,7 @@ describe('BillController', () => {
     expect(parseAndCategorize).toHaveBeenCalledWith(
       fakeFile.buffer,
       'image/png',
+      'hh-1',
       'user-xyz',
     );
     expect(billCrudMock.createDraftFromParsed).toHaveBeenCalledWith(
