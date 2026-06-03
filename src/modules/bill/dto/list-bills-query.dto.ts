@@ -6,16 +6,11 @@ import {
   IsEnum,
   MinLength,
   MaxLength,
+  Matches,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Currency } from '../../../types/currency.enum';
-
-export enum AmountRange {
-  LT_50 = 'lt_50',
-  BETWEEN_50_100 = 'between_50_100',
-  GT_100 = 'gt_100',
-}
 
 export class ListBillsQueryDto {
   @ApiPropertyOptional({
@@ -67,11 +62,21 @@ export class ListBillsQueryDto {
   currency?: Currency;
 
   @ApiPropertyOptional({
-    enum: AmountRange,
+    type: [String],
+    example: ['gt_100', 'lt_500'],
     description:
-      'Filter by total amount bracket. lt_50 = amount < 50; between_50_100 = 50 ≤ amount ≤ 100; gt_100 = amount > 100.',
+      'Filter by amount bounds. Each value must be gt_N or lt_N where N is a positive number. ' +
+      'Send both to define a range: ?amount_range=gt_100&amount_range=lt_500 means 100 < amount < 500.',
   })
+  @Transform(({ value }: { value: unknown }) =>
+    Array.isArray(value) ? value : typeof value === 'string' ? [value] : value,
+  )
   @IsOptional()
-  @IsEnum(AmountRange)
-  amount_range?: AmountRange;
+  @IsArray()
+  @Matches(/^(gt|lt)_\d+(\.\d+)?$/, {
+    each: true,
+    message:
+      'Each amount_range value must be gt_N or lt_N (e.g. gt_100, lt_500)',
+  })
+  amount_range?: string[];
 }

@@ -1,6 +1,6 @@
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
-import { ListBillsQueryDto, AmountRange } from './list-bills-query.dto';
+import { ListBillsQueryDto } from './list-bills-query.dto';
 import { Currency } from '../../../types/currency.enum';
 
 function toDto(plain: Record<string, unknown>): ListBillsQueryDto {
@@ -32,13 +32,27 @@ describe('ListBillsQueryDto', () => {
     expect(errors.some((e) => e.property === 'date_from')).toBe(false);
   });
 
-  it('fails when amount_range is an unknown value', async () => {
-    const errors = await validate(toDto({ amount_range: 'lt_200' }));
+  it('fails when amount_range element does not match gt_N or lt_N', async () => {
+    const errors = await validate(toDto({ amount_range: ['between_50_100'] }));
     expect(errors.some((e) => e.property === 'amount_range')).toBe(true);
   });
 
-  it('passes with a valid amount_range value', async () => {
-    const errors = await validate(toDto({ amount_range: AmountRange.GT_100 }));
+  it('passes with a single valid amount_range value', async () => {
+    const errors = await validate(toDto({ amount_range: ['gt_100'] }));
+    expect(errors).toHaveLength(0);
+  });
+
+  it('passes with two amount_range values forming a range', async () => {
+    const errors = await validate(
+      toDto({ amount_range: ['gt_100', 'lt_500'] }),
+    );
+    expect(errors).toHaveLength(0);
+  });
+
+  it('normalises a single amount_range string to an array', async () => {
+    const dto = toDto({ amount_range: 'gt_100' });
+    expect(dto.amount_range).toEqual(['gt_100']);
+    const errors = await validate(dto);
     expect(errors).toHaveLength(0);
   });
 

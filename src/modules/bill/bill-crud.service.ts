@@ -12,7 +12,7 @@ import { SubCategory } from '../../entities/sub-category.entity';
 import { User } from '../../entities/user.entity';
 import { BillStatus } from '../../types/bill-status.enum';
 import { Currency } from '../../types/currency.enum';
-import { ListBillsQueryDto, AmountRange } from './dto/list-bills-query.dto';
+import { ListBillsQueryDto } from './dto/list-bills-query.dto';
 import { CreateBillDto } from './dto/create-bill.dto';
 import { UpdateBillDto } from './dto/update-bill.dto';
 import { ConfirmBillDto } from './dto/confirm-bill.dto';
@@ -132,12 +132,16 @@ export class BillCrudService {
       conditions.push(`b.currency = ?`);
       params.push(filters.currency);
     }
-    if (filters.amount_range === AmountRange.LT_50) {
-      conditions.push(`b.amount < 50`);
-    } else if (filters.amount_range === AmountRange.BETWEEN_50_100) {
-      conditions.push(`(b.amount >= 50 AND b.amount <= 100)`);
-    } else if (filters.amount_range === AmountRange.GT_100) {
-      conditions.push(`b.amount > 100`);
+    for (const bound of filters.amount_range ?? []) {
+      const match = /^(gt|lt)_(\d+(?:\.\d+)?)$/.exec(bound);
+      if (!match) continue;
+      const [, op, val] = match;
+      if (op === 'gt') {
+        conditions.push(`b.amount > ?`);
+      } else {
+        conditions.push(`b.amount < ?`);
+      }
+      params.push(Number(val));
     }
 
     const where = conditions.join(' AND ');

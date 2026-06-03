@@ -12,7 +12,7 @@ import { CreateBillDto } from './dto/create-bill.dto';
 import { ConfirmBillDto } from './dto/confirm-bill.dto';
 import { ParsedBillResponseDto } from './dto/parsed-bill-response.dto';
 import { Currency } from '../../types/currency.enum';
-import { ListBillsQueryDto, AmountRange } from './dto/list-bills-query.dto';
+import { ListBillsQueryDto } from './dto/list-bills-query.dto';
 
 function makeRow(
   overrides: Partial<{
@@ -249,43 +249,45 @@ describe('BillCrudService', () => {
       expect(params).toContain('EUR');
     });
 
-    it('appends lt_50 amount condition', async () => {
+    it('appends gt condition for amount_range=gt_100', async () => {
       const { service, mockExecute } = makeService();
       mockExecute.mockResolvedValue([]);
 
       await service.listBills(userId, {
-        amount_range: AmountRange.LT_50,
+        amount_range: ['gt_100'],
       } as ListBillsQueryDto);
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      const sql: string = mockExecute.mock.calls[0][0] as string;
-      expect(sql).toContain('b.amount < 50');
+      const [sql, params] = mockExecute.mock.calls[0] as [string, unknown[]];
+      expect(sql).toContain('b.amount > ?');
+      expect(params).toContain(100);
     });
 
-    it('appends between_50_100 amount condition', async () => {
+    it('appends lt condition for amount_range=lt_500', async () => {
       const { service, mockExecute } = makeService();
       mockExecute.mockResolvedValue([]);
 
       await service.listBills(userId, {
-        amount_range: AmountRange.BETWEEN_50_100,
+        amount_range: ['lt_500'],
       } as ListBillsQueryDto);
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      const sql: string = mockExecute.mock.calls[0][0] as string;
-      expect(sql).toContain('b.amount >= 50 AND b.amount <= 100');
+      const [sql, params] = mockExecute.mock.calls[0] as [string, unknown[]];
+      expect(sql).toContain('b.amount < ?');
+      expect(params).toContain(500);
     });
 
-    it('appends gt_100 amount condition', async () => {
+    it('appends both gt and lt conditions for a range', async () => {
       const { service, mockExecute } = makeService();
       mockExecute.mockResolvedValue([]);
 
       await service.listBills(userId, {
-        amount_range: AmountRange.GT_100,
+        amount_range: ['gt_100', 'lt_500'],
       } as ListBillsQueryDto);
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      const sql: string = mockExecute.mock.calls[0][0] as string;
-      expect(sql).toContain('b.amount > 100');
+      const [sql, params] = mockExecute.mock.calls[0] as [string, unknown[]];
+      expect(sql).toContain('b.amount > ?');
+      expect(sql).toContain('b.amount < ?');
+      expect(params).toContain(100);
+      expect(params).toContain(500);
     });
 
     it('combines two filters with AND semantics', async () => {
@@ -294,13 +296,14 @@ describe('BillCrudService', () => {
 
       await service.listBills(userId, {
         currency: Currency.EUR,
-        amount_range: AmountRange.GT_100,
+        amount_range: ['gt_100'],
       } as ListBillsQueryDto);
 
       const [sql, params] = mockExecute.mock.calls[0] as [string, unknown[]];
       expect(sql).toContain('b.currency = ?');
-      expect(sql).toContain('b.amount > 100');
+      expect(sql).toContain('b.amount > ?');
       expect(params).toContain('EUR');
+      expect(params).toContain(100);
     });
 
     it('maps rows with no market to undefined market on response', async () => {
