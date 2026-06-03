@@ -135,7 +135,7 @@ export class BillCrudService {
     if (filters.amount_range === AmountRange.LT_50) {
       conditions.push(`b.amount < 50`);
     } else if (filters.amount_range === AmountRange.BETWEEN_50_100) {
-      conditions.push(`b.amount >= 50 AND b.amount <= 100`);
+      conditions.push(`(b.amount >= 50 AND b.amount <= 100)`);
     } else if (filters.amount_range === AmountRange.GT_100) {
       conditions.push(`b.amount > 100`);
     }
@@ -170,7 +170,7 @@ export class BillCrudService {
       (r): BillResponseDto => ({
         id: r.id,
         bill_date: new Date(r.bill_date),
-        currency: r.currency as Currency | undefined,
+        currency: (r.currency ?? undefined) as Currency | undefined,
         total_amount: Number(r.amount),
         description: r.description ?? undefined,
         market: r.market_id
