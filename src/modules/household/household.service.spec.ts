@@ -10,7 +10,6 @@ import { HouseholdService } from './household.service';
 import { Household } from '../../entities/household.entity';
 import { HouseholdMember } from '../../entities/household-member.entity';
 import { HouseholdInvite } from '../../entities/household-invite.entity';
-import { User } from '../../entities/user.entity';
 
 process.env.FRONTEND_URL = 'https://app.example.com';
 
@@ -27,7 +26,6 @@ function makeService() {
   const inviteRepo = {
     findOne: jest.fn(),
   } as unknown as EntityRepository<HouseholdInvite>;
-  const userRepo = { findOne: jest.fn() } as unknown as EntityRepository<User>;
   const em = {
     persist: jest.fn().mockReturnThis(),
     flush: jest.fn().mockResolvedValue(undefined),
@@ -41,17 +39,10 @@ function makeService() {
       ),
   } as unknown as EntityManager;
   return {
-    service: new HouseholdService(
-      householdRepo,
-      memberRepo,
-      inviteRepo,
-      userRepo,
-      em,
-    ),
+    service: new HouseholdService(householdRepo, memberRepo, inviteRepo, em),
     householdRepo,
     memberRepo,
     inviteRepo,
-    userRepo,
     em,
   };
 }

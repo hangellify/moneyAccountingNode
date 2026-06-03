@@ -34,8 +34,6 @@ export class HouseholdService {
     private readonly memberRepo: EntityRepository<HouseholdMember>,
     @InjectRepository(HouseholdInvite)
     private readonly inviteRepo: EntityRepository<HouseholdInvite>,
-    @InjectRepository(User)
-    private readonly userRepo: EntityRepository<User>,
     private readonly em: EntityManager,
   ) {
     const url = process.env.FRONTEND_URL;
@@ -137,17 +135,12 @@ export class HouseholdService {
     const tokenHash = createHash('sha256').update(rawToken).digest('hex');
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-    const invitee = await this.userRepo.findOne({ email: dto.email });
-
     const invite = new HouseholdInvite();
     invite.household = this.em.getReference(Household, hid);
     invite.invited_by = this.em.getReference(User, inviterId);
     invite.invitee_email = dto.email;
     invite.token_hash = tokenHash;
     invite.expires_at = expiresAt;
-    if (invitee) {
-      invite.invitee_email = invitee.email;
-    }
 
     this.em.persist(invite);
     await this.em.flush();
@@ -164,12 +157,12 @@ export class HouseholdService {
     const invite = await this.inviteRepo.findOne({ token_hash: tokenHash });
 
     if (!invite) throw new GoneException({ reason: 'not_found' });
+    if (invite.expires_at < new Date())
+      throw new GoneException({ reason: 'expired' });
     if (invite.status === 'accepted')
       throw new GoneException({ reason: 'already_accepted' });
     if (invite.status === 'revoked')
       throw new GoneException({ reason: 'revoked' });
-    if (invite.expires_at < new Date())
-      throw new GoneException({ reason: 'expired' });
 
     const existing = await this.memberRepo.findOne({
       household: { id: invite.household.id },
@@ -226,6 +219,15 @@ export class HouseholdService {
       });
       return;
     }
+
+    const target = await this.memberRepo.findOne({
+      household: { id: hid },
+      user: { id: targetUserId },
+    });
+    if (!target)
+      throw new NotFoundException(
+        `User ${targetUserId} is not a member of this household`,
+      );
 
     await this.em.nativeDelete(HouseholdMember, {
       household: { id: hid },
