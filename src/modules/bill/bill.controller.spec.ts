@@ -65,6 +65,7 @@ describe('BillController', () => {
     } as Express.Multer.File;
     const res = await controller.parsePhoto(
       { id: 'user-xyz' } as never,
+      { householdId: 'hh-1', role: 'owner' } as never,
       fakeFile,
     );
     expect(parseAndCategorize).toHaveBeenCalledWith(
@@ -73,6 +74,7 @@ describe('BillController', () => {
       'user-xyz',
     );
     expect(billCrudMock.createDraftFromParsed).toHaveBeenCalledWith(
+      'hh-1',
       'user-xyz',
       dto,
     );
@@ -91,11 +93,12 @@ describe('BillController', () => {
       };
       const result = await controller.getDashboard(
         { id: 'user-xyz' } as never,
+        { householdId: 'hh-1', role: 'owner' } as never,
         query,
       );
 
       expect(billDashboardMock.getDashboard).toHaveBeenCalledWith(
-        'user-xyz',
+        'hh-1',
         query,
       );
       expect(result).toBe(response);

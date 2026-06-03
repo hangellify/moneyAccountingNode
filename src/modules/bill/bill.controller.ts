@@ -29,6 +29,9 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../auth/types/jwt-payload.interface';
+import { HouseholdMemberGuard } from '../household/guards/household-member.guard';
+import type { HouseholdContext } from '../household/guards/household-member.guard';
+import { CurrentHousehold } from '../household/decorators/current-household.decorator';
 import { BillPhotoService } from './bill-photo.service';
 import { BillCrudService } from './bill-crud.service';
 import { BillDashboardService } from './bill-dashboard.service';
@@ -60,8 +63,8 @@ import { AiGatewayExhaustedFilter } from './filters/ai-gateway-exhausted.filter'
 const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024;
 
 @ApiTags('bills')
-@Controller('bills')
-@UseGuards(JwtAuthGuard)
+@Controller('households/:hid/bills')
+@UseGuards(JwtAuthGuard, HouseholdMemberGuard)
 @ApiBearerAuth('JWT-auth')
 export class BillController {
   constructor(
@@ -89,6 +92,7 @@ export class BillController {
   @ApiParsePhotoResponses()
   async parsePhoto(
     @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -104,7 +108,7 @@ export class BillController {
       file.mimetype as 'image/png' | 'image/jpeg' | 'image/webp',
       user.id,
     );
-    const draftId = await this.billCrud.createDraftFromParsed(user.id, parsed);
+    const draftId = await this.billCrud.createDraftFromParsed(ctx.householdId, user.id, parsed);
     return { ...parsed, draft_id: draftId };
   }
 
@@ -114,31 +118,34 @@ export class BillController {
   @ApiCreateBillResponses()
   async createBill(
     @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Body() dto: CreateBillDto,
   ): Promise<BillDetailResponseDto> {
-    return this.billCrud.createBill(user.id, dto);
+    return this.billCrud.createBill(ctx.householdId, user.id, dto);
   }
 
   @Get()
   @ApiOperation({
     summary:
-      'List confirmed bills for the current user. All query params are optional — omit for unfiltered results.',
+      'List confirmed bills for the current household. All query params are optional — omit for unfiltered results.',
   })
   @ApiListBillsResponses()
   async listBills(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() _user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Query() query: ListBillsQueryDto,
   ): Promise<BillListResponseDto> {
-    return this.billCrud.listBills(user.id, query);
+    return this.billCrud.listBills(ctx.householdId, query);
   }
 
   @Get('drafts')
-  @ApiOperation({ summary: 'List all draft bills for the current user' })
+  @ApiOperation({ summary: 'List all draft bills for the current household' })
   @ApiListDraftsResponses()
   async listDrafts(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() _user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
   ): Promise<BillResponseDto[]> {
-    return this.billCrud.listDrafts(user.id);
+    return this.billCrud.listDrafts(ctx.householdId);
   }
 
   @Get('dashboard')
@@ -147,10 +154,11 @@ export class BillController {
   })
   @ApiDashboardResponses()
   async getDashboard(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() _user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Query() query: BillDashboardQueryDto,
   ): Promise<BillDashboardResponseDto> {
-    return this.billDashboard.getDashboard(user.id, query);
+    return this.billDashboard.getDashboard(ctx.householdId, query);
   }
 
   @Get(':id')
@@ -162,10 +170,11 @@ export class BillController {
   })
   @ApiGetBillResponses()
   async getBill(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() _user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Param('id') id: string,
   ): Promise<BillDetailResponseDto> {
-    return this.billCrud.getBill(id, user.id);
+    return this.billCrud.getBill(id, ctx.householdId);
   }
 
   @Post(':id/confirm')
@@ -181,10 +190,11 @@ export class BillController {
   @ApiConfirmBillResponses()
   async confirmBill(
     @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Param('id') id: string,
     @Body() dto: ConfirmBillDto,
   ): Promise<BillDetailResponseDto> {
-    return this.billCrud.confirmBill(id, user.id, dto);
+    return this.billCrud.confirmBill(id, ctx.householdId, user.id, dto);
   }
 
   @Put(':id')
@@ -197,11 +207,12 @@ export class BillController {
   })
   @ApiUpdateBillResponses()
   async updateBill(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() _user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Param('id') id: string,
     @Body() dto: UpdateBillDto,
   ): Promise<BillResponseDto> {
-    return this.billCrud.updateBill(id, user.id, dto);
+    return this.billCrud.updateBill(id, ctx.householdId, dto);
   }
 
   @Delete(':id')
@@ -214,9 +225,10 @@ export class BillController {
   })
   @ApiDeleteBillResponses()
   async deleteBill(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentUser() _user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Param('id') id: string,
   ): Promise<void> {
-    return this.billCrud.softDeleteBill(id, user.id);
+    return this.billCrud.softDeleteBill(id, ctx.householdId);
   }
 }

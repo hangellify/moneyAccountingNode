@@ -10,6 +10,7 @@ import { BillSubCategory } from '../../entities/bill-sub-category.entity';
 import { Market } from '../../entities/market.entity';
 import { SubCategory } from '../../entities/sub-category.entity';
 import { User } from '../../entities/user.entity';
+import { Household } from '../../entities/household.entity';
 import { BillStatus } from '../../types/bill-status.enum';
 import { Currency } from '../../types/currency.enum';
 import { ListBillsQueryDto } from './dto/list-bills-query.dto';
@@ -36,22 +37,19 @@ export class BillCrudService {
     private readonly marketRepository: EntityRepository<Market>,
     @InjectRepository(SubCategory)
     private readonly subCategoryRepository: EntityRepository<SubCategory>,
-    @InjectRepository(User)
-    private readonly userRepository: EntityRepository<User>,
     private readonly em: EntityManager,
   ) {}
 
   async createBill(
+    householdId: string,
     userId: string,
     dto: CreateBillDto,
   ): Promise<BillDetailResponseDto> {
-    const user = await this.userRepository.findOneOrFail({ id: userId });
-
     let market: Market | null = null;
     if (dto.market_id) {
       market = await this.marketRepository.findOne({
         id: dto.market_id,
-        user: { id: userId },
+        household: { id: householdId },
         deleted_at: null,
       });
       if (!market) {
@@ -62,7 +60,8 @@ export class BillCrudService {
     }
 
     const bill = new Bill();
-    bill.user = user;
+    bill.household = this.em.getReference(Household, householdId);
+    bill.created_by = this.em.getReference(User, userId);
     bill.bill_date = new Date(dto.bill_date);
     bill.amount = dto.total_amount;
     bill.description = dto.description;
@@ -75,7 +74,7 @@ export class BillCrudService {
         {
           id: item.sub_category_id,
           deleted_at: null,
-          category: { user: { id: userId }, deleted_at: null },
+          category: { household: { id: householdId }, deleted_at: null },
         },
         { populate: ['category'] },
       );
@@ -102,7 +101,7 @@ export class BillCrudService {
   }
 
   async listBills(
-    userId: string,
+    householdId: string,
     filters: ListBillsQueryDto,
   ): Promise<BillListResponseDto> {
     if (
@@ -114,11 +113,11 @@ export class BillCrudService {
     }
 
     const conditions: string[] = [
-      `b.user_id    = ?`,
+      `b.household_id = ?`,
       `b.status     = 'confirmed'`,
       `b.deleted_at IS NULL`,
     ];
-    const params: unknown[] = [userId];
+    const params: unknown[] = [householdId];
 
     if (filters.date_from) {
       conditions.push(`b.bill_date >= ?`);
@@ -215,9 +214,9 @@ export class BillCrudService {
     return { data, meta };
   }
 
-  async getBill(id: string, userId: string): Promise<BillDetailResponseDto> {
+  async getBill(id: string, householdId: string): Promise<BillDetailResponseDto> {
     const bill = await this.billRepository.findOne(
-      { id, user: { id: userId }, deleted_at: null },
+      { id, household: { id: householdId }, deleted_at: null },
       { populate: ['market', 'billSubCategories.sub_category.category'] },
     );
     if (!bill) throw new NotFoundException(`Bill with ID ${id} not found`);
@@ -226,11 +225,11 @@ export class BillCrudService {
 
   async updateBill(
     id: string,
-    userId: string,
+    householdId: string,
     dto: UpdateBillDto,
   ): Promise<BillResponseDto> {
     const bill = await this.billRepository.findOne(
-      { id, user: { id: userId }, deleted_at: null },
+      { id, household: { id: householdId }, deleted_at: null },
       { populate: ['market'] },
     );
     if (!bill) throw new NotFoundException(`Bill with ID ${id} not found`);
@@ -238,7 +237,7 @@ export class BillCrudService {
     if (dto.market_id !== undefined) {
       const market = await this.marketRepository.findOne({
         id: dto.market_id,
-        user: { id: userId },
+        household: { id: householdId },
         deleted_at: null,
       });
       if (!market) {
@@ -257,10 +256,10 @@ export class BillCrudService {
     return this.toListDto(bill);
   }
 
-  async softDeleteBill(id: string, userId: string): Promise<void> {
+  async softDeleteBill(id: string, householdId: string): Promise<void> {
     const bill = await this.billRepository.findOne({
       id,
-      user: { id: userId },
+      household: { id: householdId },
       deleted_at: null,
     });
     if (!bill) throw new NotFoundException(`Bill with ID ${id} not found`);
@@ -269,11 +268,13 @@ export class BillCrudService {
   }
 
   async createDraftFromParsed(
+    householdId: string,
     userId: string,
     dto: ParsedBillResponseDto,
   ): Promise<string> {
     const bill = new Bill();
-    bill.user = this.em.getReference(User, userId);
+    bill.household = this.em.getReference(Household, householdId);
+    bill.created_by = this.em.getReference(User, userId);
     bill.status = BillStatus.DRAFT;
     bill.market_name_raw = dto.market_name ?? undefined;
     bill.bill_date = dto.bill_date ? new Date(dto.bill_date) : new Date();
@@ -363,9 +364,9 @@ export class BillCrudService {
     return bill.id;
   }
 
-  async listDrafts(userId: string): Promise<BillResponseDto[]> {
+  async listDrafts(householdId: string): Promise<BillResponseDto[]> {
     const bills = await this.billRepository.find(
-      { user: { id: userId }, status: BillStatus.DRAFT, deleted_at: null },
+      { household: { id: householdId }, status: BillStatus.DRAFT, deleted_at: null },
       { populate: ['market'] },
     );
     return bills.map((b) => this.toListDto(b));
@@ -373,21 +374,24 @@ export class BillCrudService {
 
   async confirmBill(
     id: string,
+    householdId: string,
     userId: string,
     dto: ConfirmBillDto,
   ): Promise<BillDetailResponseDto> {
     const bill = await this.billRepository.findOne(
-      { id, user: { id: userId }, status: BillStatus.DRAFT, deleted_at: null },
+      { id, household: { id: householdId }, status: BillStatus.DRAFT, deleted_at: null },
       { populate: ['market'] },
     );
     if (!bill)
       throw new NotFoundException(`Draft bill with ID ${id} not found`);
 
+    bill.created_by = this.em.getReference(User, userId);
+
     // Resolve market
     if (dto.market_id) {
       const market = await this.marketRepository.findOne({
         id: dto.market_id,
-        user: { id: userId },
+        household: { id: householdId },
         deleted_at: null,
       });
       if (!market) {
@@ -397,7 +401,7 @@ export class BillCrudService {
       }
       bill.market = market;
     } else if (dto.new_market) {
-      bill.market = await this.findOrCreateMarket(userId, dto.new_market);
+      bill.market = await this.findOrCreateMarket(householdId, dto.new_market);
     } else {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       bill.market = null as any;
@@ -418,7 +422,7 @@ export class BillCrudService {
         {
           id: item.sub_category_id,
           deleted_at: null,
-          category: { user: { id: userId }, deleted_at: null },
+          category: { household: { id: householdId }, deleted_at: null },
         },
         { populate: ['category'] },
       );
@@ -447,13 +451,13 @@ export class BillCrudService {
   }
 
   private async findOrCreateMarket(
-    userId: string,
+    householdId: string,
     dto: { name: string; city?: string; country?: string; address?: string },
   ): Promise<Market> {
     const existing = await this.marketRepository.findOne({
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       name: { $ilike: dto.name } as any,
-      user: { id: userId },
+      household: { id: householdId },
       deleted_at: null,
     });
     if (existing) return existing;
@@ -463,7 +467,7 @@ export class BillCrudService {
     market.city = dto.city;
     market.country = dto.country;
     market.address = dto.address;
-    market.user = this.em.getReference(User, userId);
+    market.household = this.em.getReference(Household, householdId);
     this.em.persist(market);
     return market;
   }

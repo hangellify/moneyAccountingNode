@@ -15,7 +15,7 @@ export class BillDashboardService {
   constructor(private readonly em: EntityManager) {}
 
   async getDashboard(
-    userId: string,
+    householdId: string,
     dto: BillDashboardQueryDto,
   ): Promise<BillDashboardResponseDto> {
     const { start, end } = this.computeDateRange(dto);
@@ -23,9 +23,9 @@ export class BillDashboardService {
     const conn = this.em.getConnection();
 
     const [periodRows, billRows, categoryRows] = await Promise.all([
-      this.fetchPeriodTotals(conn, userId, start, end, granularity),
-      this.fetchBills(conn, userId, start, end),
-      this.fetchCategoryStats(conn, userId, start, end),
+      this.fetchPeriodTotals(conn, householdId, start, end, granularity),
+      this.fetchBills(conn, householdId, start, end),
+      this.fetchCategoryStats(conn, householdId, start, end),
     ]);
 
     return {
@@ -62,7 +62,7 @@ export class BillDashboardService {
 
   private async fetchPeriodTotals(
     conn: DbConn,
-    userId: string,
+    householdId: string,
     start: string,
     end: string,
     granularity: 'day' | 'month',
@@ -76,18 +76,18 @@ export class BillDashboardService {
       `SELECT TO_CHAR(DATE_TRUNC('${granularity}', bill_date), '${fmt}') AS period,
               SUM(amount)::text AS total
        FROM bills
-       WHERE user_id = ? AND status = 'confirmed'
+       WHERE household_id = ? AND status = 'confirmed'
          AND bill_date >= ? AND bill_date < ?
          AND deleted_at IS NULL
        GROUP BY DATE_TRUNC('${granularity}', bill_date)
        ORDER BY period`,
-      [userId, start, end],
+      [householdId, start, end],
     ) as Promise<Array<{ period: string; total: string }>>;
   }
 
   private async fetchBills(
     conn: DbConn,
-    userId: string,
+    householdId: string,
     start: string,
     end: string,
   ): Promise<
@@ -110,13 +110,13 @@ export class BillDashboardService {
        FROM bills b
        LEFT JOIN markets m ON m.id = b.market_id
        LEFT JOIN bill_sub_categories bsc ON bsc.bill_id = b.id
-       WHERE b.user_id = ? AND b.status = 'confirmed'
+       WHERE b.household_id = ? AND b.status = 'confirmed'
          AND b.bill_date >= ? AND b.bill_date < ?
          AND b.deleted_at IS NULL
        GROUP BY b.id, m.name, b.market_name_raw
        ORDER BY b.bill_date DESC
        LIMIT 50`,
-      [userId, start, end],
+      [householdId, start, end],
     ) as Promise<
       Array<{
         id: string;
@@ -131,7 +131,7 @@ export class BillDashboardService {
 
   private async fetchCategoryStats(
     conn: DbConn,
-    userId: string,
+    householdId: string,
     start: string,
     end: string,
   ): Promise<
@@ -144,13 +144,13 @@ export class BillDashboardService {
        JOIN bills b ON b.id = bsc.bill_id
        JOIN sub_categories sc ON sc.id = bsc.sub_category_id
        JOIN categories c ON c.id = sc.category_id
-       WHERE b.user_id = ? AND b.status = 'confirmed'
+       WHERE b.household_id = ? AND b.status = 'confirmed'
          AND b.bill_date >= ? AND b.bill_date < ?
          AND b.deleted_at IS NULL
          AND bsc.sub_category_id IS NOT NULL
        GROUP BY c.id, c.name
        ORDER BY SUM(bsc.amount) DESC`,
-      [userId, start, end],
+      [householdId, start, end],
     ) as Promise<
       Array<{
         category_id: string;

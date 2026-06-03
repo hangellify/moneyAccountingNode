@@ -6,6 +6,7 @@ import { Market } from '../../entities/market.entity';
 import { User } from '../../entities/user.entity';
 import { Category } from '../../entities/category.entity';
 import { SubCategory } from '../../entities/sub-category.entity';
+import { Household } from '../../entities/household.entity';
 import { BillParserTask } from './tasks/bill-parser.task';
 import { BillParseCategorizeTask } from './tasks/bill-parse-categorize.task';
 import { BillAiOrchestrator } from './bill-ai.orchestrator';
@@ -23,6 +24,7 @@ import { BillController } from './bill.controller';
       User,
       Category,
       SubCategory,
+      Household,
     ]),
   ],
   controllers: [BillController],

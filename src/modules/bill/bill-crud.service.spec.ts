@@ -7,7 +7,6 @@ import { BillSubCategory } from '../../entities/bill-sub-category.entity';
 import { BillStatus } from '../../types/bill-status.enum';
 import { Market } from '../../entities/market.entity';
 import { SubCategory } from '../../entities/sub-category.entity';
-import { User } from '../../entities/user.entity';
 import { CreateBillDto } from './dto/create-bill.dto';
 import { ConfirmBillDto } from './dto/confirm-bill.dto';
 import { ParsedBillResponseDto } from './dto/parsed-bill-response.dto';
@@ -52,9 +51,6 @@ function makeService() {
   const subCategoryRepo = {
     findOne: jest.fn(),
   } as unknown as EntityRepository<SubCategory>;
-  const userRepo = {
-    findOneOrFail: jest.fn(),
-  } as unknown as EntityRepository<User>;
   const mockExecute = jest.fn();
   const em = {
     persist: jest.fn().mockReturnThis(),
@@ -68,19 +64,18 @@ function makeService() {
       billRepo,
       marketRepo,
       subCategoryRepo,
-      userRepo,
       em,
     ),
     billRepo,
     marketRepo,
     subCategoryRepo,
-    userRepo,
     em,
     mockExecute,
   };
 }
 
 const userId = 'user-1';
+const householdId = 'household-1';
 const billId = 'bill-1';
 const marketId = 'market-1';
 const subCatId = 'subcat-1';
@@ -88,9 +83,8 @@ const subCatId = 'subcat-1';
 describe('BillCrudService', () => {
   describe('createBill', () => {
     it('creates a bill with items and returns the detail DTO', async () => {
-      const { service, userRepo, marketRepo, subCategoryRepo, em } =
+      const { service, marketRepo, subCategoryRepo, em } =
         makeService();
-      (userRepo.findOneOrFail as jest.Mock).mockResolvedValue({ id: userId });
       (marketRepo.findOne as jest.Mock).mockResolvedValue({
         id: marketId,
         name: 'Lidl',
@@ -114,14 +108,13 @@ describe('BillCrudService', () => {
         items: [{ sub_category_id: subCatId, product_count: 1, amount: 9.99 }],
       };
 
-      const result = await service.createBill(userId, dto);
+      const result = await service.createBill(householdId, userId, dto);
       expect(result.total_amount).toBe(9.99);
       expect(em.flush as jest.Mock).toHaveBeenCalled();
     });
 
     it('throws BadRequestException when market not found for user', async () => {
-      const { service, userRepo, marketRepo } = makeService();
-      (userRepo.findOneOrFail as jest.Mock).mockResolvedValue({ id: userId });
+      const { service, marketRepo } = makeService();
       (marketRepo.findOne as jest.Mock).mockResolvedValue(null);
 
       const dto: CreateBillDto = {
@@ -131,7 +124,7 @@ describe('BillCrudService', () => {
         items: [],
       };
 
-      await expect(service.createBill(userId, dto)).rejects.toBeInstanceOf(
+      await expect(service.createBill(householdId, userId, dto)).rejects.toBeInstanceOf(
         BadRequestException,
       );
     });
@@ -145,7 +138,7 @@ describe('BillCrudService', () => {
         .mockResolvedValueOnce([{ count: '1' }])
         .mockResolvedValueOnce([row]);
 
-      const result = await service.listBills(userId, {});
+      const result = await service.listBills(householdId, {});
 
       expect(result.data).toHaveLength(1);
       expect(result.data[0].id).toBe('bill-1');
@@ -153,7 +146,7 @@ describe('BillCrudService', () => {
       expect(result.data[0].market?.name).toBe('Lidl');
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       const countSql: string = mockExecute.mock.calls[0][0] as string;
-      expect(countSql).toContain('b.user_id    = ?');
+      expect(countSql).toContain('b.household_id = ?');
       expect(countSql).toContain("b.status     = 'confirmed'");
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       const dataSql: string = mockExecute.mock.calls[1][0] as string;
@@ -168,7 +161,7 @@ describe('BillCrudService', () => {
         .mockResolvedValueOnce([{ count: '2' }])
         .mockResolvedValueOnce([newer, older]);
 
-      const result = await service.listBills(userId, {});
+      const result = await service.listBills(householdId, {});
 
       expect(result.data[0].id).toBe('bill-new');
       expect(result.data[1].id).toBe('bill-old');
@@ -180,7 +173,7 @@ describe('BillCrudService', () => {
         .mockResolvedValueOnce([{ count: '0' }])
         .mockResolvedValueOnce([]);
 
-      await service.listBills(userId, {
+      await service.listBills(householdId, {
         date_from: '2026-03-01',
       } as ListBillsQueryDto);
 
@@ -195,7 +188,7 @@ describe('BillCrudService', () => {
         .mockResolvedValueOnce([{ count: '0' }])
         .mockResolvedValueOnce([]);
 
-      await service.listBills(userId, {
+      await service.listBills(householdId, {
         date_to: '2026-03-31',
       } as ListBillsQueryDto);
 
@@ -210,7 +203,7 @@ describe('BillCrudService', () => {
         .mockResolvedValueOnce([{ count: '0' }])
         .mockResolvedValueOnce([]);
 
-      await service.listBills(userId, {
+      await service.listBills(householdId, {
         date_from: '2026-03-01',
         date_to: '2026-03-31',
       } as ListBillsQueryDto);
@@ -228,7 +221,7 @@ describe('BillCrudService', () => {
         .mockResolvedValueOnce([{ count: '0' }])
         .mockResolvedValueOnce([]);
 
-      await service.listBills(userId, {
+      await service.listBills(householdId, {
         market_names: ['Lidl'],
       } as ListBillsQueryDto);
 
@@ -243,7 +236,7 @@ describe('BillCrudService', () => {
         .mockResolvedValueOnce([{ count: '0' }])
         .mockResolvedValueOnce([]);
 
-      await service.listBills(userId, {
+      await service.listBills(householdId, {
         market_names: ['Lidl', 'Kaufland'],
       } as ListBillsQueryDto);
 
@@ -258,7 +251,7 @@ describe('BillCrudService', () => {
         .mockResolvedValueOnce([{ count: '0' }])
         .mockResolvedValueOnce([]);
 
-      await service.listBills(userId, {
+      await service.listBills(householdId, {
         currency: Currency.EUR,
       } as ListBillsQueryDto);
 
@@ -273,7 +266,7 @@ describe('BillCrudService', () => {
         .mockResolvedValueOnce([{ count: '0' }])
         .mockResolvedValueOnce([]);
 
-      await service.listBills(userId, {
+      await service.listBills(householdId, {
         amount_range: ['gt_100'],
       } as ListBillsQueryDto);
 
@@ -288,7 +281,7 @@ describe('BillCrudService', () => {
         .mockResolvedValueOnce([{ count: '0' }])
         .mockResolvedValueOnce([]);
 
-      await service.listBills(userId, {
+      await service.listBills(householdId, {
         amount_range: ['lt_500'],
       } as ListBillsQueryDto);
 
@@ -303,7 +296,7 @@ describe('BillCrudService', () => {
         .mockResolvedValueOnce([{ count: '0' }])
         .mockResolvedValueOnce([]);
 
-      await service.listBills(userId, {
+      await service.listBills(householdId, {
         amount_range: ['gt_100', 'lt_500'],
       } as ListBillsQueryDto);
 
@@ -320,7 +313,7 @@ describe('BillCrudService', () => {
         .mockResolvedValueOnce([{ count: '0' }])
         .mockResolvedValueOnce([]);
 
-      await service.listBills(userId, {
+      await service.listBills(householdId, {
         currency: Currency.EUR,
         amount_range: ['gt_100'],
       } as ListBillsQueryDto);
@@ -340,7 +333,7 @@ describe('BillCrudService', () => {
           makeRow({ market_id: null, market_name: null, market_city: null }),
         ]);
 
-      const result = await service.listBills(userId, {});
+      const result = await service.listBills(householdId, {});
 
       expect(result.data[0].market).toBeUndefined();
     });
@@ -349,7 +342,7 @@ describe('BillCrudService', () => {
       const { service } = makeService();
 
       await expect(
-        service.listBills(userId, {
+        service.listBills(householdId, {
           date_from: '2026-12-31',
           date_to: '2026-01-01',
         } as ListBillsQueryDto),
@@ -364,7 +357,7 @@ describe('BillCrudService', () => {
         .mockResolvedValueOnce([{ count: '5' }])
         .mockResolvedValueOnce([makeRow()]);
 
-      const result = await service.listBills(userId, {});
+      const result = await service.listBills(householdId, {});
 
       expect(result).toHaveProperty('data');
       expect(result).toHaveProperty('meta');
@@ -378,7 +371,7 @@ describe('BillCrudService', () => {
         .mockResolvedValueOnce([{ count: '0' }])
         .mockResolvedValueOnce([]);
 
-      await service.listBills(userId, {});
+      await service.listBills(householdId, {});
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       const dataSql: string = mockExecute.mock.calls[1][0] as string;
@@ -396,7 +389,7 @@ describe('BillCrudService', () => {
         .mockResolvedValueOnce([{ count: '100' }])
         .mockResolvedValueOnce([]);
 
-      await service.listBills(userId, {
+      await service.listBills(householdId, {
         page: 3,
         limit: 10,
       } as ListBillsQueryDto);
@@ -413,7 +406,7 @@ describe('BillCrudService', () => {
         .mockResolvedValueOnce([{ count: '25' }])
         .mockResolvedValueOnce([]);
 
-      const result = await service.listBills(userId, {
+      const result = await service.listBills(householdId, {
         limit: 10,
       } as ListBillsQueryDto);
 
@@ -426,7 +419,7 @@ describe('BillCrudService', () => {
         .mockResolvedValueOnce([{ count: '50' }])
         .mockResolvedValueOnce([]);
 
-      const result = await service.listBills(userId, {
+      const result = await service.listBills(householdId, {
         page: 2,
         limit: 15,
       } as ListBillsQueryDto);
@@ -441,7 +434,7 @@ describe('BillCrudService', () => {
         .mockResolvedValueOnce([{ count: '0' }])
         .mockResolvedValueOnce([]);
 
-      await service.listBills(userId, {
+      await service.listBills(householdId, {
         currency: Currency.EUR,
       } as ListBillsQueryDto);
 
@@ -459,7 +452,7 @@ describe('BillCrudService', () => {
       const { service, billRepo } = makeService();
       (billRepo.findOne as jest.Mock).mockResolvedValue(null);
 
-      await expect(service.getBill(billId, userId)).rejects.toBeInstanceOf(
+      await expect(service.getBill(billId, householdId)).rejects.toBeInstanceOf(
         NotFoundException,
       );
     });
@@ -471,7 +464,7 @@ describe('BillCrudService', () => {
       const bill = { id: billId, deleted_at: undefined } as unknown as Bill;
       (billRepo.findOne as jest.Mock).mockResolvedValue(bill);
 
-      await service.softDeleteBill(billId, userId);
+      await service.softDeleteBill(billId, householdId);
 
       expect(bill.deleted_at).toBeInstanceOf(Date);
       expect(em.flush as jest.Mock).toHaveBeenCalled();
@@ -503,7 +496,7 @@ describe('BillCrudService', () => {
         items: [],
       };
 
-      const draftId = await service.createDraftFromParsed(userId, parsed);
+      const draftId = await service.createDraftFromParsed(householdId, userId, parsed);
 
       expect(typeof draftId).toBe('string');
       expect(em.flush as jest.Mock).toHaveBeenCalled();
@@ -515,12 +508,12 @@ describe('BillCrudService', () => {
       const { service, billRepo } = makeService();
       (billRepo.find as jest.Mock).mockResolvedValue([]);
 
-      const result = await service.listDrafts(userId);
+      const result = await service.listDrafts(householdId);
 
       expect(result).toEqual([]);
       expect(billRepo.find as jest.Mock).toHaveBeenCalledWith(
         expect.objectContaining({
-          user: { id: userId },
+          household: { id: householdId },
           status: BillStatus.DRAFT,
           deleted_at: null,
         }),
@@ -555,7 +548,7 @@ describe('BillCrudService', () => {
         items: [{ sub_category_id: subCatId, product_count: 1, amount: 12 }],
       };
 
-      const result = await service.confirmBill(billId, userId, dto);
+      const result = await service.confirmBill(billId, householdId, userId, dto);
 
       expect(bill.status).toBe(BillStatus.CONFIRMED);
       expect(result.total_amount).toBe(12);
@@ -567,7 +560,7 @@ describe('BillCrudService', () => {
       (billRepo.findOne as jest.Mock).mockResolvedValue(null);
 
       await expect(
-        service.confirmBill(billId, userId, { items: [] }),
+        service.confirmBill(billId, householdId, userId, { items: [] }),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
@@ -597,7 +590,7 @@ describe('BillCrudService', () => {
         ],
       };
 
-      await service.createDraftFromParsed(userId, parsed);
+      await service.createDraftFromParsed(householdId, userId, parsed);
 
       const calls = (em.persist as jest.Mock).mock.calls as [unknown][];
       // bill + 1 BillSubCategory for the uncategorized item
@@ -638,7 +631,7 @@ describe('BillCrudService', () => {
         ],
       };
 
-      await service.createDraftFromParsed(userId, parsed);
+      await service.createDraftFromParsed(householdId, userId, parsed);
 
       const calls = (em.persist as jest.Mock).mock.calls as [unknown][];
       expect(calls).toHaveLength(2);
@@ -694,7 +687,7 @@ describe('BillCrudService', () => {
         ],
       };
 
-      await service.createDraftFromParsed(userId, parsed);
+      await service.createDraftFromParsed(householdId, userId, parsed);
 
       const calls = (em.persist as jest.Mock).mock.calls as [unknown][];
       expect(calls).toHaveLength(2); // bill + 1 merged BillSubCategory
@@ -745,7 +738,7 @@ describe('BillCrudService', () => {
         ],
       };
 
-      await service.createDraftFromParsed(userId, parsed);
+      await service.createDraftFromParsed(householdId, userId, parsed);
 
       const calls = (em.persist as jest.Mock).mock.calls as [unknown][];
       // bill + 1 categorized BSC + 1 uncategorized BSC = 3 persist calls
