@@ -15,6 +15,7 @@ import { OpenAiProvider } from './modules/ai-gateway/providers/openai.provider';
 import { DeepSeekProvider } from './modules/ai-gateway/providers/deepseek.provider';
 import { BillModule } from './modules/bill/bill.module';
 import { MarketModule } from './modules/market/market.module';
+import { HouseholdModule } from './modules/household/household.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { MarketModule } from './modules/market/market.module';
     }),
     BillModule,
     MarketModule,
+    HouseholdModule,
   ],
   controllers: [AppController],
   providers: [AppService],
