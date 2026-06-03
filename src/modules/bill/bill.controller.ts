@@ -52,6 +52,7 @@ import {
   ApiConfirmBillResponses,
   ApiDashboardResponses,
 } from './dto/api-responses.decorator';
+import { ListBillsQueryDto } from './dto/list-bills-query.dto';
 import { ConfirmBillDto } from './dto/confirm-bill.dto';
 import { AiGatewayExhaustedFilter } from './filters/ai-gateway-exhausted.filter';
 
@@ -122,8 +123,9 @@ export class BillController {
   @ApiListBillsResponses()
   async listBills(
     @CurrentUser() user: AuthenticatedUser,
+    @Query() filters: ListBillsQueryDto,
   ): Promise<BillResponseDto[]> {
-    return this.billCrud.listBills(user.id);
+    return this.billCrud.listBills(user.id, filters);
   }
 
   @Get('drafts')

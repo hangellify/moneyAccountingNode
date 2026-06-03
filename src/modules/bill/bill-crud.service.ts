@@ -12,6 +12,7 @@ import { SubCategory } from '../../entities/sub-category.entity';
 import { User } from '../../entities/user.entity';
 import { BillStatus } from '../../types/bill-status.enum';
 import { Currency } from '../../types/currency.enum';
+import { ListBillsQueryDto, AmountRange } from './dto/list-bills-query.dto';
 import { CreateBillDto } from './dto/create-bill.dto';
 import { UpdateBillDto } from './dto/update-bill.dto';
 import { ConfirmBillDto } from './dto/confirm-bill.dto';
@@ -96,12 +97,92 @@ export class BillCrudService {
     return this.toDetailDto(bill, bscEntities);
   }
 
-  async listBills(userId: string): Promise<BillResponseDto[]> {
-    const bills = await this.billRepository.find(
-      { user: { id: userId }, status: BillStatus.CONFIRMED, deleted_at: null },
-      { populate: ['market'] },
+  async listBills(
+    userId: string,
+    filters: ListBillsQueryDto,
+  ): Promise<BillResponseDto[]> {
+    if (
+      filters.date_from &&
+      filters.date_to &&
+      new Date(filters.date_from) > new Date(filters.date_to)
+    ) {
+      throw new BadRequestException('date_from must not be later than date_to');
+    }
+
+    const conditions: string[] = [
+      `b.user_id    = ?`,
+      `b.status     = 'confirmed'`,
+      `b.deleted_at IS NULL`,
+    ];
+    const params: unknown[] = [userId];
+
+    if (filters.date_from) {
+      conditions.push(`b.bill_date >= ?`);
+      params.push(filters.date_from);
+    }
+    if (filters.date_to) {
+      conditions.push(`b.bill_date <= ?`);
+      params.push(filters.date_to);
+    }
+    if (filters.market_names?.length) {
+      conditions.push(`m.name = ANY(?)`);
+      params.push(filters.market_names);
+    }
+    if (filters.currency) {
+      conditions.push(`b.currency = ?`);
+      params.push(filters.currency);
+    }
+    if (filters.amount_range === AmountRange.LT_50) {
+      conditions.push(`b.amount < 50`);
+    } else if (filters.amount_range === AmountRange.BETWEEN_50_100) {
+      conditions.push(`b.amount >= 50 AND b.amount <= 100`);
+    } else if (filters.amount_range === AmountRange.GT_100) {
+      conditions.push(`b.amount > 100`);
+    }
+
+    const where = conditions.join(' AND ');
+
+    // LEFT JOIN is always present so market columns are available whether or not
+    // market_names filter is active. Bills with market_id IS NULL produce null
+    // market columns and are included unless market_names is set.
+    const rows = (await this.em.getConnection().execute(
+      `SELECT b.id, b.bill_date::text, b.currency, b.amount::text, b.description,
+              b.created_at::text,
+              m.id AS market_id, m.name AS market_name, m.city AS market_city
+       FROM   bills b
+       LEFT   JOIN markets m ON m.id = b.market_id
+       WHERE  ${where}
+       ORDER  BY b.bill_date DESC`,
+      params,
+    )) as Array<{
+      id: string;
+      bill_date: string;
+      currency: string | null;
+      amount: string;
+      description: string | null;
+      market_id: string | null;
+      market_name: string | null;
+      market_city: string | null;
+      created_at: string;
+    }>;
+
+    return rows.map(
+      (r): BillResponseDto => ({
+        id: r.id,
+        bill_date: new Date(r.bill_date),
+        currency: r.currency as Currency | undefined,
+        total_amount: Number(r.amount),
+        description: r.description ?? undefined,
+        market: r.market_id
+          ? {
+              id: r.market_id,
+              name: r.market_name!,
+              city: r.market_city ?? undefined,
+            }
+          : undefined,
+        created_at: new Date(r.created_at),
+      }),
     );
-    return bills.map((b) => this.toListDto(b));
   }
 
   async getBill(id: string, userId: string): Promise<BillDetailResponseDto> {
