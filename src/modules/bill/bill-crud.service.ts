@@ -10,8 +10,10 @@ import { BillSubCategory } from '../../entities/bill-sub-category.entity';
 import { Market } from '../../entities/market.entity';
 import { SubCategory } from '../../entities/sub-category.entity';
 import { User } from '../../entities/user.entity';
+import { Household } from '../../entities/household.entity';
 import { BillStatus } from '../../types/bill-status.enum';
 import { Currency } from '../../types/currency.enum';
+import { ListBillsQueryDto } from './dto/list-bills-query.dto';
 import { CreateBillDto } from './dto/create-bill.dto';
 import { UpdateBillDto } from './dto/update-bill.dto';
 import { ConfirmBillDto } from './dto/confirm-bill.dto';
@@ -21,6 +23,10 @@ import {
   BillDetailResponseDto,
   BillItemResponseDto,
 } from './dto/bill-detail-response.dto';
+import {
+  BillListResponseDto,
+  PaginationMetaDto,
+} from './dto/bill-list-response.dto';
 
 @Injectable()
 export class BillCrudService {
@@ -31,22 +37,19 @@ export class BillCrudService {
     private readonly marketRepository: EntityRepository<Market>,
     @InjectRepository(SubCategory)
     private readonly subCategoryRepository: EntityRepository<SubCategory>,
-    @InjectRepository(User)
-    private readonly userRepository: EntityRepository<User>,
     private readonly em: EntityManager,
   ) {}
 
   async createBill(
+    householdId: string,
     userId: string,
     dto: CreateBillDto,
   ): Promise<BillDetailResponseDto> {
-    const user = await this.userRepository.findOneOrFail({ id: userId });
-
     let market: Market | null = null;
     if (dto.market_id) {
       market = await this.marketRepository.findOne({
         id: dto.market_id,
-        user: { id: userId },
+        household: { id: householdId },
         deleted_at: null,
       });
       if (!market) {
@@ -57,7 +60,8 @@ export class BillCrudService {
     }
 
     const bill = new Bill();
-    bill.user = user;
+    bill.household = this.em.getReference(Household, householdId);
+    bill.created_by = this.em.getReference(User, userId);
     bill.bill_date = new Date(dto.bill_date);
     bill.amount = dto.total_amount;
     bill.description = dto.description;
@@ -70,7 +74,7 @@ export class BillCrudService {
         {
           id: item.sub_category_id,
           deleted_at: null,
-          category: { user: { id: userId }, deleted_at: null },
+          category: { household: { id: householdId }, deleted_at: null },
         },
         { populate: ['category'] },
       );
@@ -82,6 +86,7 @@ export class BillCrudService {
       const bsc = new BillSubCategory();
       bsc.bill = bill;
       bsc.sub_category = subCat;
+      bsc.raw_name = subCat.name;
       bsc.product_count = item.product_count;
       bsc.amount = item.amount;
       if (item.product_weight !== undefined)
@@ -95,17 +100,126 @@ export class BillCrudService {
     return this.toDetailDto(bill, bscEntities);
   }
 
-  async listBills(userId: string): Promise<BillResponseDto[]> {
-    const bills = await this.billRepository.find(
-      { user: { id: userId }, status: BillStatus.CONFIRMED, deleted_at: null },
-      { populate: ['market'] },
+  async listBills(
+    householdId: string,
+    filters: ListBillsQueryDto,
+  ): Promise<BillListResponseDto> {
+    if (
+      filters.date_from &&
+      filters.date_to &&
+      new Date(filters.date_from) > new Date(filters.date_to)
+    ) {
+      throw new BadRequestException('date_from must not be later than date_to');
+    }
+
+    const conditions: string[] = [
+      `b.household_id = ?`,
+      `b.status     = 'confirmed'`,
+      `b.deleted_at IS NULL`,
+    ];
+    const params: unknown[] = [householdId];
+
+    if (filters.date_from) {
+      conditions.push(`b.bill_date >= ?`);
+      params.push(filters.date_from);
+    }
+    if (filters.date_to) {
+      conditions.push(`b.bill_date <= ?`);
+      params.push(filters.date_to);
+    }
+    if (filters.market_names?.length) {
+      conditions.push(`m.name = ANY(?)`);
+      params.push(filters.market_names);
+    }
+    if (filters.currency) {
+      conditions.push(`b.currency = ?`);
+      params.push(filters.currency);
+    }
+    for (const bound of filters.amount_range ?? []) {
+      const match = /^(gt|lt)_(\d+(?:\.\d+)?)$/.exec(bound);
+      if (!match) continue;
+      const [, op, val] = match;
+      if (op === 'gt') {
+        conditions.push(`b.amount > ?`);
+      } else {
+        conditions.push(`b.amount < ?`);
+      }
+      params.push(Number(val));
+    }
+
+    const where = conditions.join(' AND ');
+    const page = filters.page ?? 1;
+    const limit = filters.limit ?? 20;
+    const offset = (page - 1) * limit;
+
+    const [countRows, dataRows] = await Promise.all([
+      this.em.getConnection().execute(
+        `SELECT COUNT(*) AS count
+         FROM   bills b
+         LEFT   JOIN markets m ON m.id = b.market_id
+         WHERE  ${where}`,
+        params,
+      ) as Promise<Array<{ count: string }>>,
+      this.em.getConnection().execute(
+        `SELECT b.id, b.bill_date::text, b.currency, b.amount::text, b.description,
+                b.created_at::text,
+                m.id AS market_id, m.name AS market_name, m.city AS market_city
+         FROM   bills b
+         LEFT   JOIN markets m ON m.id = b.market_id
+         WHERE  ${where}
+         ORDER  BY b.bill_date DESC
+         LIMIT  ? OFFSET ?`,
+        [...params, limit, offset],
+      ) as Promise<
+        Array<{
+          id: string;
+          bill_date: string;
+          currency: string | null;
+          amount: string;
+          description: string | null;
+          market_id: string | null;
+          market_name: string | null;
+          market_city: string | null;
+          created_at: string;
+        }>
+      >,
+    ]);
+
+    const total = Number(countRows[0].count);
+    const meta: PaginationMetaDto = {
+      total,
+      page,
+      limit,
+      total_pages: Math.ceil(total / limit),
+    };
+
+    const data = dataRows.map(
+      (r): BillResponseDto => ({
+        id: r.id,
+        bill_date: new Date(r.bill_date),
+        currency: (r.currency ?? undefined) as Currency | undefined,
+        total_amount: Number(r.amount),
+        description: r.description ?? undefined,
+        market: r.market_id
+          ? {
+              id: r.market_id,
+              name: r.market_name!,
+              city: r.market_city ?? undefined,
+            }
+          : undefined,
+        created_at: new Date(r.created_at),
+      }),
     );
-    return bills.map((b) => this.toListDto(b));
+
+    return { data, meta };
   }
 
-  async getBill(id: string, userId: string): Promise<BillDetailResponseDto> {
+  async getBill(
+    id: string,
+    householdId: string,
+  ): Promise<BillDetailResponseDto> {
     const bill = await this.billRepository.findOne(
-      { id, user: { id: userId }, deleted_at: null },
+      { id, household: { id: householdId }, deleted_at: null },
       { populate: ['market', 'billSubCategories.sub_category.category'] },
     );
     if (!bill) throw new NotFoundException(`Bill with ID ${id} not found`);
@@ -114,11 +228,11 @@ export class BillCrudService {
 
   async updateBill(
     id: string,
-    userId: string,
+    householdId: string,
     dto: UpdateBillDto,
   ): Promise<BillResponseDto> {
     const bill = await this.billRepository.findOne(
-      { id, user: { id: userId }, deleted_at: null },
+      { id, household: { id: householdId }, deleted_at: null },
       { populate: ['market'] },
     );
     if (!bill) throw new NotFoundException(`Bill with ID ${id} not found`);
@@ -126,7 +240,7 @@ export class BillCrudService {
     if (dto.market_id !== undefined) {
       const market = await this.marketRepository.findOne({
         id: dto.market_id,
-        user: { id: userId },
+        household: { id: householdId },
         deleted_at: null,
       });
       if (!market) {
@@ -145,10 +259,10 @@ export class BillCrudService {
     return this.toListDto(bill);
   }
 
-  async softDeleteBill(id: string, userId: string): Promise<void> {
+  async softDeleteBill(id: string, householdId: string): Promise<void> {
     const bill = await this.billRepository.findOne({
       id,
-      user: { id: userId },
+      household: { id: householdId },
       deleted_at: null,
     });
     if (!bill) throw new NotFoundException(`Bill with ID ${id} not found`);
@@ -157,11 +271,13 @@ export class BillCrudService {
   }
 
   async createDraftFromParsed(
+    householdId: string,
     userId: string,
     dto: ParsedBillResponseDto,
   ): Promise<string> {
     const bill = new Bill();
-    bill.user = this.em.getReference(User, userId);
+    bill.household = this.em.getReference(Household, householdId);
+    bill.created_by = this.em.getReference(User, userId);
     bill.status = BillStatus.DRAFT;
     bill.market_name_raw = dto.market_name ?? undefined;
     bill.bill_date = dto.bill_date ? new Date(dto.bill_date) : new Date();
@@ -169,37 +285,81 @@ export class BillCrudService {
     bill.currency = dto.currency
       ? (dto.currency as unknown as Currency)
       : undefined;
+    this.em.persist(bill);
 
-    // Merge items by sub_category id (AI may return same category twice)
-    const merged = new Map<
-      string,
-      { amount: number; product_count: number; weight_kg?: number }
-    >();
+    type Entry = {
+      raw_name: string;
+      amount: number;
+      product_count: number;
+      weight_kg?: number;
+      unit?: string;
+      price_per_unit?: number;
+      category_confidence?: number;
+      category_reasoning?: string;
+      sub_category_id?: string;
+    };
+
+    const categorized = new Map<string, Entry>();
+    const uncategorized: Entry[] = [];
+
     for (const item of dto.items) {
-      if (!item.sub_category) continue;
-      const id = item.sub_category.id;
-      const existing = merged.get(id);
-      if (existing) {
-        existing.amount += item.final_price;
-        existing.product_count += item.quantity ?? 1;
+      if (item.sub_category) {
+        const id = item.sub_category.id;
+        const existing = categorized.get(id);
+        if (existing) {
+          existing.amount += item.final_price;
+          existing.product_count += item.quantity ?? 1;
+          existing.weight_kg ??= item.weight_kg ?? undefined;
+          existing.unit ??= item.unit ?? undefined;
+          existing.price_per_unit ??= item.price_per_kg ?? undefined;
+          // category_confidence and category_reasoning: keep first item's values per spec
+        } else {
+          categorized.set(id, {
+            raw_name: item.name,
+            amount: item.final_price,
+            product_count: item.quantity ?? 1,
+            weight_kg: item.weight_kg ?? undefined,
+            unit: item.unit ?? undefined,
+            price_per_unit: item.price_per_kg ?? undefined, // DTO field is price_per_kg; entity is price_per_unit (unit varies: kg, l, piece)
+            category_confidence: item.category_confidence,
+            category_reasoning: item.category_reasoning ?? undefined,
+            sub_category_id: id,
+          });
+        }
       } else {
-        merged.set(id, {
+        uncategorized.push({
+          raw_name: item.name,
           amount: item.final_price,
           product_count: item.quantity ?? 1,
           weight_kg: item.weight_kg ?? undefined,
+          unit: item.unit ?? undefined,
+          price_per_unit: item.price_per_kg ?? undefined,
+          category_confidence: item.category_confidence,
+          category_reasoning: item.category_reasoning ?? undefined,
         });
       }
     }
 
-    this.em.persist(bill);
-
-    for (const [subCatId, data] of merged) {
+    for (const entry of [...categorized.values(), ...uncategorized]) {
       const bsc = new BillSubCategory();
       bsc.bill = bill;
-      bsc.sub_category = this.em.getReference(SubCategory, subCatId);
-      bsc.product_count = data.product_count;
-      bsc.amount = data.amount;
-      if (data.weight_kg !== undefined) bsc.product_weight = data.weight_kg;
+      bsc.raw_name = entry.raw_name;
+      bsc.product_count = entry.product_count;
+      bsc.amount = entry.amount;
+      if (entry.weight_kg !== undefined) bsc.product_weight = entry.weight_kg;
+      if (entry.unit !== undefined) bsc.unit = entry.unit;
+      if (entry.price_per_unit !== undefined)
+        bsc.price_per_unit = entry.price_per_unit;
+      if (entry.category_confidence !== undefined)
+        bsc.category_confidence = entry.category_confidence;
+      if (entry.category_reasoning !== undefined)
+        bsc.category_reasoning = entry.category_reasoning;
+      if (entry.sub_category_id !== undefined) {
+        bsc.sub_category = this.em.getReference(
+          SubCategory,
+          entry.sub_category_id,
+        );
+      }
       this.em.persist(bsc);
     }
 
@@ -207,9 +367,13 @@ export class BillCrudService {
     return bill.id;
   }
 
-  async listDrafts(userId: string): Promise<BillResponseDto[]> {
+  async listDrafts(householdId: string): Promise<BillResponseDto[]> {
     const bills = await this.billRepository.find(
-      { user: { id: userId }, status: BillStatus.DRAFT, deleted_at: null },
+      {
+        household: { id: householdId },
+        status: BillStatus.DRAFT,
+        deleted_at: null,
+      },
       { populate: ['market'] },
     );
     return bills.map((b) => this.toListDto(b));
@@ -217,21 +381,29 @@ export class BillCrudService {
 
   async confirmBill(
     id: string,
+    householdId: string,
     userId: string,
     dto: ConfirmBillDto,
   ): Promise<BillDetailResponseDto> {
     const bill = await this.billRepository.findOne(
-      { id, user: { id: userId }, status: BillStatus.DRAFT, deleted_at: null },
+      {
+        id,
+        household: { id: householdId },
+        status: BillStatus.DRAFT,
+        deleted_at: null,
+      },
       { populate: ['market'] },
     );
     if (!bill)
       throw new NotFoundException(`Draft bill with ID ${id} not found`);
 
+    bill.created_by = this.em.getReference(User, userId);
+
     // Resolve market
     if (dto.market_id) {
       const market = await this.marketRepository.findOne({
         id: dto.market_id,
-        user: { id: userId },
+        household: { id: householdId },
         deleted_at: null,
       });
       if (!market) {
@@ -241,7 +413,7 @@ export class BillCrudService {
       }
       bill.market = market;
     } else if (dto.new_market) {
-      bill.market = await this.findOrCreateMarket(userId, dto.new_market);
+      bill.market = await this.findOrCreateMarket(householdId, dto.new_market);
     } else {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       bill.market = null as any;
@@ -262,7 +434,7 @@ export class BillCrudService {
         {
           id: item.sub_category_id,
           deleted_at: null,
-          category: { user: { id: userId }, deleted_at: null },
+          category: { household: { id: householdId }, deleted_at: null },
         },
         { populate: ['category'] },
       );
@@ -274,6 +446,7 @@ export class BillCrudService {
       const bsc = new BillSubCategory();
       bsc.bill = bill;
       bsc.sub_category = subCat;
+      bsc.raw_name = subCat.name;
       bsc.product_count = item.product_count;
       bsc.amount = item.amount;
       if (item.product_weight !== undefined)
@@ -290,13 +463,13 @@ export class BillCrudService {
   }
 
   private async findOrCreateMarket(
-    userId: string,
+    householdId: string,
     dto: { name: string; city?: string; country?: string; address?: string },
   ): Promise<Market> {
     const existing = await this.marketRepository.findOne({
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       name: { $ilike: dto.name } as any,
-      user: { id: userId },
+      household: { id: householdId },
       deleted_at: null,
     });
     if (existing) return existing;
@@ -306,7 +479,7 @@ export class BillCrudService {
     market.city = dto.city;
     market.country = dto.country;
     market.address = dto.address;
-    market.user = this.em.getReference(User, userId);
+    market.household = this.em.getReference(Household, householdId);
     this.em.persist(market);
     return market;
   }
@@ -336,11 +509,13 @@ export class BillCrudService {
       ...this.toListDto(bill),
       items: items.map(
         (bsc): BillItemResponseDto => ({
-          sub_category: {
-            id: bsc.sub_category.id,
-            name: bsc.sub_category.name,
-            category_name: bsc.sub_category.category?.name ?? '',
-          },
+          sub_category: bsc.sub_category
+            ? {
+                id: bsc.sub_category.id,
+                name: bsc.sub_category.name,
+                category_name: bsc.sub_category.category?.name ?? '',
+              }
+            : null,
           product_count: bsc.product_count,
           amount: bsc.amount,
           product_weight: bsc.product_weight,

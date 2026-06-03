@@ -6,7 +6,7 @@ import {
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository, EntityManager } from '@mikro-orm/core';
 import { Budget } from '../../entities/budget.entity';
-import { User } from '../../entities/user.entity';
+import { Household } from '../../entities/household.entity';
 import { CreateBudgetDto } from './dto/create-budget.dto';
 import { UpdateBudgetDto } from './dto/update-budget.dto';
 import { BudgetResponseDto } from './dto/budget-response.dto';
@@ -16,22 +16,20 @@ export class BudgetService {
   constructor(
     @InjectRepository(Budget)
     private readonly budgetRepository: EntityRepository<Budget>,
-    @InjectRepository(User)
-    private readonly userRepository: EntityRepository<User>,
     private readonly em: EntityManager,
   ) {}
 
   /**
-   * Create a new budget for a user
-   * Name must be unique per user (excluding soft-deleted budgets)
+   * Create a new budget for a household
+   * Name must be unique per household (excluding soft-deleted budgets)
    */
   async createBudget(
-    userId: string,
+    householdId: string,
     createBudgetDto: CreateBudgetDto,
   ): Promise<BudgetResponseDto> {
-    // Check if budget with same name already exists for this user (excluding soft-deleted)
+    // Check if budget with same name already exists for this household (excluding soft-deleted)
     const existingBudget = await this.budgetRepository.findOne({
-      user: { id: userId },
+      household: { id: householdId },
       name: createBudgetDto.name,
       deleted_at: null,
     });
@@ -42,12 +40,10 @@ export class BudgetService {
       );
     }
 
-    const user = await this.userRepository.findOneOrFail({ id: userId });
-
     const budget = new Budget();
     budget.name = createBudgetDto.name;
     budget.description = createBudgetDto.description;
-    budget.user = user;
+    budget.household = this.em.getReference(Household, householdId);
 
     await this.em.persist(budget).flush();
 
@@ -61,13 +57,13 @@ export class BudgetService {
 
   /**
    * Get a budget by ID (excluding soft-deleted budgets)
-   * Only returns budget if it belongs to the user
+   * Only returns budget if it belongs to the household
    */
-  async getBudget(id: string, userId: string): Promise<BudgetResponseDto> {
+  async getBudget(id: string, householdId: string): Promise<BudgetResponseDto> {
     const budget = await this.budgetRepository.findOne(
       {
         id,
-        user: { id: userId },
+        household: { id: householdId },
         deleted_at: null, // Only get non-deleted budgets
       },
       {
@@ -89,16 +85,16 @@ export class BudgetService {
 
   /**
    * Update a budget by ID (only non-deleted budgets can be updated)
-   * Only updates budget if it belongs to the user
+   * Only updates budget if it belongs to the household
    */
   async updateBudget(
     id: string,
-    userId: string,
+    householdId: string,
     updateBudgetDto: UpdateBudgetDto,
   ): Promise<BudgetResponseDto> {
     const budget = await this.budgetRepository.findOne({
       id,
-      user: { id: userId },
+      household: { id: householdId },
       deleted_at: null, // Only update non-deleted budgets
     });
 
@@ -106,13 +102,13 @@ export class BudgetService {
       throw new NotFoundException(`Budget with ID ${id} not found`);
     }
 
-    // If name is being updated, check uniqueness per user
+    // If name is being updated, check uniqueness per household
     if (
       updateBudgetDto.name !== undefined &&
       updateBudgetDto.name !== budget.name
     ) {
       const existingBudget = await this.budgetRepository.findOne({
-        user: { id: userId },
+        household: { id: householdId },
         name: updateBudgetDto.name,
         deleted_at: null,
       });
@@ -146,12 +142,12 @@ export class BudgetService {
 
   /**
    * Soft delete a budget by setting deleted_at timestamp
-   * Only deletes budget if it belongs to the user
+   * Only deletes budget if it belongs to the household
    */
-  async softDeleteBudget(id: string, userId: string): Promise<void> {
+  async softDeleteBudget(id: string, householdId: string): Promise<void> {
     const budget = await this.budgetRepository.findOne({
       id,
-      user: { id: userId },
+      household: { id: householdId },
       deleted_at: null, // Only soft delete non-deleted budgets
     });
 
@@ -169,11 +165,11 @@ export class BudgetService {
   }
 
   /**
-   * List all non-deleted budgets for a user
+   * List all non-deleted budgets for a household
    */
-  async listBudgets(userId: string): Promise<BudgetResponseDto[]> {
+  async listBudgets(householdId: string): Promise<BudgetResponseDto[]> {
     const budgets = await this.budgetRepository.find({
-      user: { id: userId },
+      household: { id: householdId },
       deleted_at: null,
     });
     return budgets.map((b) => ({

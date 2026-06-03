@@ -23,8 +23,9 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 import { CategoryResponseDto } from './dto/category-response.dto';
 import { CategoryBaseResponseDto } from './dto/category-base-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import type { AuthenticatedUser } from '../auth/types/jwt-payload.interface';
+import { HouseholdMemberGuard } from '../household/guards/household-member.guard';
+import type { HouseholdContext } from '../household/guards/household-member.guard';
+import { CurrentHousehold } from '../household/decorators/current-household.decorator';
 import {
   ApiCreateCategoryResponses,
   ApiBulkCreateCategoryResponses,
@@ -35,8 +36,8 @@ import {
 } from './decorators/api-responses.decorator';
 
 @ApiTags('categories')
-@Controller('categories')
-@UseGuards(JwtAuthGuard)
+@Controller('households/:hid/categories')
+@UseGuards(JwtAuthGuard, HouseholdMemberGuard)
 @ApiBearerAuth('JWT-auth')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
@@ -46,11 +47,11 @@ export class CategoryController {
   @ApiOperation({ summary: 'Bulk create categories for a planning horizon' })
   @ApiBulkCreateCategoryResponses()
   async bulkCreateCategories(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Body() bulkCreateCategoryDto: BulkCreateCategoryDto,
   ): Promise<CategoryResponseDto[]> {
     return this.categoryService.bulkCreateCategories(
-      user.id,
+      ctx.householdId,
       bulkCreateCategoryDto,
     );
   }
@@ -60,19 +61,22 @@ export class CategoryController {
   @ApiOperation({ summary: 'Create a new category' })
   @ApiCreateCategoryResponses()
   async createCategory(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Body() createCategoryDto: CreateCategoryDto,
   ): Promise<CategoryResponseDto> {
-    return this.categoryService.createCategory(user.id, createCategoryDto);
+    return this.categoryService.createCategory(
+      ctx.householdId,
+      createCategoryDto,
+    );
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all user categories' })
+  @ApiOperation({ summary: 'Get all household categories' })
   @ApiGetAllCategoriesResponses()
   async getAllUserCategories(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
   ): Promise<CategoryBaseResponseDto[]> {
-    return this.categoryService.getAllUserCategories(user.id);
+    return this.categoryService.getAllUserCategories(ctx.householdId);
   }
 
   @Get(':id')
@@ -84,10 +88,10 @@ export class CategoryController {
   })
   @ApiGetCategoryResponses()
   async getCategory(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Param('id') id: string,
   ): Promise<CategoryResponseDto> {
-    return this.categoryService.getCategory(id, user.id);
+    return this.categoryService.getCategory(id, ctx.householdId);
   }
 
   @Put(':id')
@@ -100,11 +104,15 @@ export class CategoryController {
   })
   @ApiUpdateCategoryResponses()
   async updateCategory(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Param('id') id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
   ): Promise<CategoryResponseDto> {
-    return this.categoryService.updateCategory(id, user.id, updateCategoryDto);
+    return this.categoryService.updateCategory(
+      id,
+      ctx.householdId,
+      updateCategoryDto,
+    );
   }
 
   @Delete(':id')
@@ -117,9 +125,9 @@ export class CategoryController {
   })
   @ApiDeleteCategoryResponses()
   async deleteCategory(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Param('id') id: string,
   ): Promise<void> {
-    return this.categoryService.deleteCategory(id, user.id);
+    return this.categoryService.deleteCategory(id, ctx.householdId);
   }
 }

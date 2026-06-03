@@ -22,8 +22,9 @@ import { UpdatePlaningHorizonDto } from './dto/update-planing-horizon.dto';
 import { PlaningHorizonResponseDto } from './dto/planing-horizon-response.dto';
 import { PlaningHorizonBaseResponseDto } from './dto/planing-horizon-base-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import type { AuthenticatedUser } from '../auth/types/jwt-payload.interface';
+import { HouseholdMemberGuard } from '../household/guards/household-member.guard';
+import { CurrentHousehold } from '../household/decorators/current-household.decorator';
+import type { HouseholdContext } from '../household/guards/household-member.guard';
 import {
   ApiCreatePlaningHorizonResponses,
   ApiGetPlaningHorizonResponses,
@@ -33,8 +34,8 @@ import {
 } from './decorators/api-responses.decorator';
 
 @ApiTags('planing-horizons')
-@Controller('planing-horizons')
-@UseGuards(JwtAuthGuard)
+@Controller('households/:hid/planing-horizons')
+@UseGuards(JwtAuthGuard, HouseholdMemberGuard)
 @ApiBearerAuth('JWT-auth')
 export class PlaningHorizonController {
   constructor(private readonly planingHorizonService: PlaningHorizonService) {}
@@ -44,22 +45,24 @@ export class PlaningHorizonController {
   @ApiOperation({ summary: 'Create a new planning horizon' })
   @ApiCreatePlaningHorizonResponses()
   async createPlaningHorizon(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Body() createPlaningHorizonDto: CreatePlaningHorizonDto,
   ): Promise<PlaningHorizonBaseResponseDto> {
     return this.planingHorizonService.createPlaningHorizon(
-      user.id,
+      ctx.householdId,
       createPlaningHorizonDto,
     );
   }
 
   @Get()
-  @ApiOperation({ summary: 'List all planning horizons for the current user' })
+  @ApiOperation({
+    summary: 'List all planning horizons for the current household',
+  })
   @ApiListPlaningHorizonsResponses()
   async listPlaningHorizons(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
   ): Promise<PlaningHorizonBaseResponseDto[]> {
-    return this.planingHorizonService.listPlaningHorizons(user.id);
+    return this.planingHorizonService.listPlaningHorizons(ctx.householdId);
   }
 
   @Get(':id')
@@ -71,10 +74,10 @@ export class PlaningHorizonController {
   })
   @ApiGetPlaningHorizonResponses()
   async getPlaningHorizon(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Param('id') id: string,
   ): Promise<PlaningHorizonResponseDto> {
-    return this.planingHorizonService.getPlaningHorizon(id, user.id);
+    return this.planingHorizonService.getPlaningHorizon(id, ctx.householdId);
   }
 
   @Put(':id')
@@ -87,13 +90,13 @@ export class PlaningHorizonController {
   })
   @ApiUpdatePlaningHorizonResponses()
   async updatePlaningHorizon(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Param('id') id: string,
     @Body() updatePlaningHorizonDto: UpdatePlaningHorizonDto,
   ): Promise<PlaningHorizonBaseResponseDto> {
     return this.planingHorizonService.updatePlaningHorizon(
       id,
-      user.id,
+      ctx.householdId,
       updatePlaningHorizonDto,
     );
   }
@@ -108,9 +111,12 @@ export class PlaningHorizonController {
   })
   @ApiDeletePlaningHorizonResponses()
   async deletePlaningHorizon(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Param('id') id: string,
   ): Promise<void> {
-    return this.planingHorizonService.softDeletePlaningHorizon(id, user.id);
+    return this.planingHorizonService.softDeletePlaningHorizon(
+      id,
+      ctx.householdId,
+    );
   }
 }

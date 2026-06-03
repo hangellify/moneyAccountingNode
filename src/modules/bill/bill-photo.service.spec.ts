@@ -5,6 +5,7 @@ import type { SubCategory } from '../../entities/sub-category.entity';
 
 describe('BillPhotoService', () => {
   const USER_ID = 'user-1';
+  const HOUSEHOLD_ID = 'household-1';
 
   function makeSubs() {
     return [
@@ -67,6 +68,7 @@ describe('BillPhotoService', () => {
     const res = await svc.parseAndCategorize(
       Buffer.from('x'),
       'image/png',
+      HOUSEHOLD_ID,
       USER_ID,
     );
     expect(res.items).toHaveLength(2);
@@ -111,6 +113,7 @@ describe('BillPhotoService', () => {
     const res = await svc.parseAndCategorize(
       Buffer.from('x'),
       'image/png',
+      HOUSEHOLD_ID,
       USER_ID,
     );
     expect(res.items[0].sub_category).toBeNull();
@@ -144,6 +147,7 @@ describe('BillPhotoService', () => {
     const res = await svc.parseAndCategorize(
       Buffer.from('x'),
       'image/png',
+      HOUSEHOLD_ID,
       USER_ID,
     );
     expect(res.items[0].sub_category).toBeNull();
@@ -182,6 +186,7 @@ describe('BillPhotoService', () => {
     const res = await svc.parseAndCategorize(
       Buffer.from('x'),
       'image/png',
+      HOUSEHOLD_ID,
       USER_ID,
     );
 
@@ -213,7 +218,12 @@ describe('BillPhotoService', () => {
     });
     const svc = new BillPhotoService(orchestrator, makeRepo(subs));
 
-    await svc.parseAndCategorize(Buffer.from('x'), 'image/png', USER_ID);
+    await svc.parseAndCategorize(
+      Buffer.from('x'),
+      'image/png',
+      HOUSEHOLD_ID,
+      USER_ID,
+    );
 
     expect(
       (orchestrator as unknown as { parseAndCategorize: jest.Mock })

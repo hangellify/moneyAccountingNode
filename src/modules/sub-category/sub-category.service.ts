@@ -7,7 +7,6 @@ import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository, EntityManager } from '@mikro-orm/core';
 import { SubCategory } from '../../entities/sub-category.entity';
 import { Category } from '../../entities/category.entity';
-import { PlaningHorizon } from '../../entities/planing-horizon.entity';
 import { CreateSubCategoryDto } from './dto/create-sub-category.dto';
 import { BulkCreateSubCategoryDto } from './dto/bulk-create-sub-category.dto';
 import { UpdateSubCategoryDto } from './dto/update-sub-category.dto';
@@ -20,47 +19,23 @@ export class SubCategoryService {
     private readonly subCategoryRepository: EntityRepository<SubCategory>,
     @InjectRepository(Category)
     private readonly categoryRepository: EntityRepository<Category>,
-    @InjectRepository(PlaningHorizon)
-    private readonly planingHorizonRepository: EntityRepository<PlaningHorizon>,
     private readonly em: EntityManager,
   ) {}
 
   /**
-   * Verify that a category belongs to the user through planning horizon -> budget
+   * Verify that a category belongs to the household
    */
-  private async verifyCategoryBelongsToUser(
+  private async verifyCategoryBelongsToHousehold(
     categoryId: string,
-    userId: string,
+    householdId: string,
   ): Promise<Category> {
-    const category = await this.categoryRepository.findOne(
-      {
-        id: categoryId,
-        deleted_at: null,
-      },
-      {
-        populate: ['planingHorizons'],
-      },
-    );
-
-    if (!category) {
-      throw new NotFoundException(`Category with ID ${categoryId} not found`);
-    }
-
-    // Check if category is linked to at least one planning horizon that belongs to the user
-    if (!category.planingHorizons.isInitialized()) {
-      await category.planingHorizons.loadItems();
-    }
-    const planingHorizonIds = category.planingHorizons
-      .getItems()
-      .map((ph) => ph.id);
-    const userPlaningHorizons = await this.planingHorizonRepository.find({
-      id: { $in: planingHorizonIds },
-      budget: { user: { id: userId }, deleted_at: null },
-      is_archived: false,
+    const category = await this.categoryRepository.findOne({
+      id: categoryId,
+      household: { id: householdId },
       deleted_at: null,
     });
 
-    if (userPlaningHorizons.length === 0) {
+    if (!category) {
       throw new NotFoundException(`Category with ID ${categoryId} not found`);
     }
 
@@ -69,16 +44,16 @@ export class SubCategoryService {
 
   /**
    * Create a new sub-category and link it to a category
-   * Category must belong to the user through planning horizon -> budget
+   * Category must belong to the household
    */
   async createSubCategory(
-    userId: string,
+    householdId: string,
     createSubCategoryDto: CreateSubCategoryDto,
   ): Promise<SubCategoryResponseDto> {
-    // Verify that the category exists and belongs to the user
-    const category = await this.verifyCategoryBelongsToUser(
+    // Verify that the category exists and belongs to the household
+    const category = await this.verifyCategoryBelongsToHousehold(
       createSubCategoryDto.category_id,
-      userId,
+      householdId,
     );
 
     const subCategory = new SubCategory();
@@ -93,6 +68,7 @@ export class SubCategoryService {
       name: subCategory.name,
       description: subCategory.description,
       category_id: subCategory.category.id,
+      category_name: subCategory.category.name,
       created_at: subCategory.created_at,
       updated_at: subCategory.updated_at,
     };
@@ -103,13 +79,13 @@ export class SubCategoryService {
    * All sub-categories will be related to one category
    */
   async bulkCreateSubCategories(
-    userId: string,
+    householdId: string,
     bulkCreateSubCategoryDto: BulkCreateSubCategoryDto,
   ): Promise<SubCategoryResponseDto[]> {
-    // Verify that the category exists and belongs to the user
-    const category = await this.verifyCategoryBelongsToUser(
+    // Verify that the category exists and belongs to the household
+    const category = await this.verifyCategoryBelongsToHousehold(
       bulkCreateSubCategoryDto.category_id,
-      userId,
+      householdId,
     );
 
     const subCategories: SubCategory[] = [];
@@ -129,6 +105,7 @@ export class SubCategoryService {
       name: subCategory.name,
       description: subCategory.description,
       category_id: subCategory.category.id,
+      category_name: subCategory.category.name,
       created_at: subCategory.created_at,
       updated_at: subCategory.updated_at,
     }));
@@ -136,15 +113,16 @@ export class SubCategoryService {
 
   /**
    * Get a sub-category by ID
-   * Only returns sub-category if it belongs to the user through category -> planning horizon -> budget
+   * Only returns sub-category if it belongs to the household through category
    */
   async getSubCategory(
     id: string,
-    userId: string,
+    householdId: string,
   ): Promise<SubCategoryResponseDto> {
     const subCategory = await this.subCategoryRepository.findOne(
       {
         id,
+        category: { household: { id: householdId } },
         deleted_at: null,
       },
       {
@@ -156,54 +134,27 @@ export class SubCategoryService {
       throw new NotFoundException(`Sub-category with ID ${id} not found`);
     }
 
-    // Verify that the category belongs to the user
-    await this.verifyCategoryBelongsToUser(subCategory.category.id, userId);
-
     return {
       id: subCategory.id,
       name: subCategory.name,
       description: subCategory.description,
       category_id: subCategory.category.id,
+      category_name: subCategory.category.name,
       created_at: subCategory.created_at,
       updated_at: subCategory.updated_at,
     };
   }
 
   /**
-   * Get all sub-categories for a user
-   * Returns sub-categories that belong to categories that belong to planning horizons that belong to budgets that belong to the user
+   * Get all sub-categories for a household
+   * Returns sub-categories that belong to categories that belong to the household
    */
   async getAllUserSubCategories(
-    userId: string,
+    householdId: string,
   ): Promise<SubCategoryResponseDto[]> {
-    // Get all planning horizons for the user
-    const userPlaningHorizons = await this.planingHorizonRepository.find(
-      {
-        budget: { user: { id: userId }, deleted_at: null },
-        is_archived: false,
-        deleted_at: null,
-      },
-      {
-        populate: ['categories'],
-      },
-    );
-
-    // Collect all unique categories from these planning horizons
-    const uniqueCategoryIds = new Set<string>();
-    for (const planingHorizon of userPlaningHorizons) {
-      if (planingHorizon.categories.isInitialized()) {
-        for (const category of planingHorizon.categories) {
-          if (!category.deleted_at) {
-            uniqueCategoryIds.add(category.id);
-          }
-        }
-      }
-    }
-
-    // Get all sub-categories for these categories
     const subCategories = await this.subCategoryRepository.find(
       {
-        category: { id: { $in: Array.from(uniqueCategoryIds) } },
+        category: { household: { id: householdId }, deleted_at: null },
         deleted_at: null,
       },
       {
@@ -216,6 +167,7 @@ export class SubCategoryService {
       name: subCategory.name,
       description: subCategory.description,
       category_id: subCategory.category.id,
+      category_name: subCategory.category.name,
       created_at: subCategory.created_at,
       updated_at: subCategory.updated_at,
     }));
@@ -223,16 +175,17 @@ export class SubCategoryService {
 
   /**
    * Update a sub-category by ID
-   * Only updates sub-category if it belongs to the user through category -> planning horizon -> budget
+   * Only updates sub-category if it belongs to the household through category
    */
   async updateSubCategory(
     id: string,
-    userId: string,
+    householdId: string,
     updateSubCategoryDto: UpdateSubCategoryDto,
   ): Promise<SubCategoryResponseDto> {
     const subCategory = await this.subCategoryRepository.findOne(
       {
         id,
+        category: { household: { id: householdId } },
         deleted_at: null,
       },
       {
@@ -243,9 +196,6 @@ export class SubCategoryService {
     if (!subCategory) {
       throw new NotFoundException(`Sub-category with ID ${id} not found`);
     }
-
-    // Verify that the category belongs to the user
-    await this.verifyCategoryBelongsToUser(subCategory.category.id, userId);
 
     // Update only provided fields
     if (updateSubCategoryDto.name !== undefined) {
@@ -263,6 +213,7 @@ export class SubCategoryService {
       name: subCategory.name,
       description: subCategory.description,
       category_id: subCategory.category.id,
+      category_name: subCategory.category.name,
       created_at: subCategory.created_at,
       updated_at: subCategory.updated_at,
     };
@@ -270,12 +221,13 @@ export class SubCategoryService {
 
   /**
    * Soft delete a sub-category by setting deleted_at timestamp
-   * Only deletes sub-category if it belongs to the user through category -> planning horizon -> budget
+   * Only deletes sub-category if it belongs to the household through category
    */
-  async softDeleteSubCategory(id: string, userId: string): Promise<void> {
+  async softDeleteSubCategory(id: string, householdId: string): Promise<void> {
     const subCategory = await this.subCategoryRepository.findOne(
       {
         id,
+        category: { household: { id: householdId } },
         deleted_at: null,
       },
       {
@@ -286,9 +238,6 @@ export class SubCategoryService {
     if (!subCategory) {
       throw new NotFoundException(`Sub-category with ID ${id} not found`);
     }
-
-    // Verify that the category belongs to the user
-    await this.verifyCategoryBelongsToUser(subCategory.category.id, userId);
 
     // Check if sub-category is already soft deleted
     if (subCategory.deleted_at) {

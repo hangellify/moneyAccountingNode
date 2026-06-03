@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository, EntityManager } from '@mikro-orm/core';
 import { Market } from '../../entities/market.entity';
-import { User } from '../../entities/user.entity';
+import { Household } from '../../entities/household.entity';
 import { CreateMarketDto } from './dto/create-market.dto';
 import { UpdateMarketDto } from './dto/update-market.dto';
 import { MarketResponseDto } from './dto/market-response.dto';
@@ -12,29 +12,26 @@ export class MarketService {
   constructor(
     @InjectRepository(Market)
     private readonly marketRepository: EntityRepository<Market>,
-    @InjectRepository(User)
-    private readonly userRepository: EntityRepository<User>,
     private readonly em: EntityManager,
   ) {}
 
   async createMarket(
-    userId: string,
+    householdId: string,
     dto: CreateMarketDto,
   ): Promise<MarketResponseDto> {
-    const user = await this.userRepository.findOneOrFail({ id: userId });
     const market = new Market();
     market.name = dto.name;
     market.city = dto.city;
     market.country = dto.country;
     market.address = dto.address;
-    market.user = user;
+    market.household = this.em.getReference(Household, householdId);
     await this.em.persist(market).flush();
     return this.toDto(market);
   }
 
-  async listMarkets(userId: string): Promise<MarketResponseDto[]> {
+  async listMarkets(householdId: string): Promise<MarketResponseDto[]> {
     const markets = await this.marketRepository.find({
-      user: { id: userId },
+      household: { id: householdId },
       deleted_at: null,
     });
 
@@ -63,10 +60,10 @@ export class MarketService {
       );
   }
 
-  async getMarket(id: string, userId: string): Promise<MarketResponseDto> {
+  async getMarket(id: string, householdId: string): Promise<MarketResponseDto> {
     const market = await this.marketRepository.findOne({
       id,
-      user: { id: userId },
+      household: { id: householdId },
       deleted_at: null,
     });
     if (!market) throw new NotFoundException(`Market with ID ${id} not found`);
@@ -75,12 +72,12 @@ export class MarketService {
 
   async updateMarket(
     id: string,
-    userId: string,
+    householdId: string,
     dto: UpdateMarketDto,
   ): Promise<MarketResponseDto> {
     const market = await this.marketRepository.findOne({
       id,
-      user: { id: userId },
+      household: { id: householdId },
       deleted_at: null,
     });
     if (!market) throw new NotFoundException(`Market with ID ${id} not found`);
@@ -92,10 +89,10 @@ export class MarketService {
     return this.toDto(market);
   }
 
-  async softDeleteMarket(id: string, userId: string): Promise<void> {
+  async softDeleteMarket(id: string, householdId: string): Promise<void> {
     const market = await this.marketRepository.findOne({
       id,
-      user: { id: userId },
+      household: { id: householdId },
       deleted_at: null,
     });
     if (!market) throw new NotFoundException(`Market with ID ${id} not found`);

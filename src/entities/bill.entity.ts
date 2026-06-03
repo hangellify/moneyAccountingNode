@@ -11,6 +11,7 @@ import {
 } from '@mikro-orm/core';
 import { BaseEntity } from './base.entity';
 import { BillSubCategory } from './bill-sub-category.entity';
+import { Household } from './household.entity';
 import { User } from './user.entity';
 import { Market } from './market.entity';
 import { Currency } from '../types/currency.enum';
@@ -48,8 +49,15 @@ export class Bill extends BaseEntity {
   @Property({ type: 'text', nullable: true })
   market_name_raw?: string;
 
-  @ManyToOne(() => User, { nullable: false })
-  user!: User;
+  @ManyToOne(() => Household, { nullable: false })
+  household!: Household;
+
+  @ManyToOne(() => User, {
+    nullable: true,
+    deleteRule: 'set null',
+    fieldName: 'created_by_user_id',
+  })
+  created_by?: User;
 
   @ManyToOne(() => Market, { nullable: true })
   market?: Market;

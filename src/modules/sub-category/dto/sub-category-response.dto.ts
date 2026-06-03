@@ -26,6 +26,12 @@ export class SubCategoryResponseDto {
   category_id!: string;
 
   @ApiProperty({
+    description: 'Category name this sub-category belongs to',
+    example: 'Food',
+  })
+  category_name!: string;
+
+  @ApiProperty({
     description: 'Sub-category creation date',
     example: '2025-01-01T00:00:00.000Z',
     type: Date,

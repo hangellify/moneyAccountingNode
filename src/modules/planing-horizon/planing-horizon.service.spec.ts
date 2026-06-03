@@ -24,7 +24,7 @@ function makeService() {
 }
 
 describe('PlaningHorizonService.listPlaningHorizons', () => {
-  it('returns non-archived, non-deleted horizons for the user', async () => {
+  it('returns non-archived, non-deleted horizons for the household', async () => {
     const { service, phRepo } = makeService();
     const horizons = [
       {
@@ -41,7 +41,7 @@ describe('PlaningHorizonService.listPlaningHorizons', () => {
     ] as unknown as PlaningHorizon[];
     (phRepo.find as jest.Mock).mockResolvedValue(horizons);
 
-    const result = await service.listPlaningHorizons('user-1');
+    const result = await service.listPlaningHorizons('household-1');
 
     expect(result).toHaveLength(1);
     expect(phRepo.find as jest.Mock).toHaveBeenCalledWith(
@@ -49,7 +49,7 @@ describe('PlaningHorizonService.listPlaningHorizons', () => {
         is_archived: false,
         deleted_at: null,
         budget: expect.objectContaining({
-          user: { id: 'user-1' },
+          household: { id: 'household-1' },
           deleted_at: null,
         }),
       }),

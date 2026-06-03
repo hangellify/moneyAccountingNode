@@ -21,8 +21,9 @@ import { CreateBudgetDto } from './dto/create-budget.dto';
 import { UpdateBudgetDto } from './dto/update-budget.dto';
 import { BudgetResponseDto } from './dto/budget-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import type { AuthenticatedUser } from '../auth/types/jwt-payload.interface';
+import { HouseholdMemberGuard } from '../household/guards/household-member.guard';
+import { CurrentHousehold } from '../household/decorators/current-household.decorator';
+import type { HouseholdContext } from '../household/guards/household-member.guard';
 import {
   ApiCreateBudgetResponses,
   ApiGetBudgetResponses,
@@ -32,8 +33,8 @@ import {
 } from './decorators/api-responses.decorator';
 
 @ApiTags('budgets')
-@Controller('budgets')
-@UseGuards(JwtAuthGuard)
+@Controller('households/:hid/budgets')
+@UseGuards(JwtAuthGuard, HouseholdMemberGuard)
 @ApiBearerAuth('JWT-auth')
 export class BudgetController {
   constructor(private readonly budgetService: BudgetService) {}
@@ -43,19 +44,19 @@ export class BudgetController {
   @ApiOperation({ summary: 'Create a new budget' })
   @ApiCreateBudgetResponses()
   async createBudget(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Body() createBudgetDto: CreateBudgetDto,
   ): Promise<BudgetResponseDto> {
-    return this.budgetService.createBudget(user.id, createBudgetDto);
+    return this.budgetService.createBudget(ctx.householdId, createBudgetDto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'List all budgets for the current user' })
+  @ApiOperation({ summary: 'List all budgets for the current household' })
   @ApiListBudgetsResponses()
   async listBudgets(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
   ): Promise<BudgetResponseDto[]> {
-    return this.budgetService.listBudgets(user.id);
+    return this.budgetService.listBudgets(ctx.householdId);
   }
 
   @Get(':id')
@@ -67,10 +68,10 @@ export class BudgetController {
   })
   @ApiGetBudgetResponses()
   async getBudget(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Param('id') id: string,
   ): Promise<BudgetResponseDto> {
-    return this.budgetService.getBudget(id, user.id);
+    return this.budgetService.getBudget(id, ctx.householdId);
   }
 
   @Put(':id')
@@ -83,11 +84,15 @@ export class BudgetController {
   })
   @ApiUpdateBudgetResponses()
   async updateBudget(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Param('id') id: string,
     @Body() updateBudgetDto: UpdateBudgetDto,
   ): Promise<BudgetResponseDto> {
-    return this.budgetService.updateBudget(id, user.id, updateBudgetDto);
+    return this.budgetService.updateBudget(
+      id,
+      ctx.householdId,
+      updateBudgetDto,
+    );
   }
 
   @Delete(':id')
@@ -100,9 +105,9 @@ export class BudgetController {
   })
   @ApiDeleteBudgetResponses()
   async deleteBudget(
-    @CurrentUser() user: AuthenticatedUser,
+    @CurrentHousehold() ctx: HouseholdContext,
     @Param('id') id: string,
   ): Promise<void> {
-    return this.budgetService.softDeleteBudget(id, user.id);
+    return this.budgetService.softDeleteBudget(id, ctx.householdId);
   }
 }

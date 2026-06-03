@@ -12,6 +12,8 @@ import { User } from '../../entities/user.entity';
 import { RefreshToken } from '../../entities/refresh-token.entity';
 import { Session } from '../../entities/session.entity';
 import { Log, LogLevel, LogSource } from '../../entities/log.entity';
+import { Household } from '../../entities/household.entity';
+import { HouseholdMember } from '../../entities/household-member.entity';
 import { Currency } from '../../types/currency.enum';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -129,10 +131,24 @@ export class AuthService {
     user.username = registerDto.username;
     user.currency = Currency.EUR;
 
-    await this.em.persist(user).flush();
+    const household = new Household();
+    household.name = 'Personal';
+    household.created_by = user;
+
+    const membership = new HouseholdMember();
+    membership.household = household;
+    membership.user = user;
+    membership.role = 'owner';
+
+    await this.em.transactional((txEm) => {
+      txEm.persist(user);
+      txEm.persist(household);
+      txEm.persist(membership);
+      return Promise.resolve();
+    });
 
     try {
-      await this.categoryDefaults.seedForUser(user.id);
+      await this.categoryDefaults.seedForHousehold(household.id);
     } catch (err) {
       this.logger.error(
         `Failed to seed default categories for user ${user.id}: ${err instanceof Error ? err.message : String(err)}`,

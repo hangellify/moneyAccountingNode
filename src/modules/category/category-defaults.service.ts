@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/core';
 import { Category } from '../../entities/category.entity';
 import { SubCategory } from '../../entities/sub-category.entity';
-import { User } from '../../entities/user.entity';
+import { Household } from '../../entities/household.entity';
 import { DEFAULT_CATEGORY_TREE } from './defaults';
 
 export interface SeedCounts {
@@ -16,11 +16,11 @@ export class CategoryDefaultsService {
 
   constructor(private readonly em: EntityManager) {}
 
-  async seedForUser(userId: string): Promise<SeedCounts> {
+  async seedForHousehold(householdId: string): Promise<SeedCounts> {
     const em = this.em.fork();
     const existingCats = await em.find(
       Category,
-      { user: { id: userId }, deleted_at: null },
+      { household: { id: householdId }, deleted_at: null },
       { populate: ['subCategories'] },
     );
     const byName = new Map<string, Category>(
@@ -35,7 +35,7 @@ export class CategoryDefaultsService {
       if (!existing) {
         const category = em.create(Category, {
           name: node.name,
-          user: em.getReference(User, userId),
+          household: em.getReference(Household, householdId),
           created_at: new Date(),
           updated_at: new Date(),
         });
@@ -74,7 +74,7 @@ export class CategoryDefaultsService {
 
     await em.flush();
     this.log.log(
-      `Seeded defaults for user ${userId}: +${categoriesCreated} categories, +${subCategoriesCreated} subcategories`,
+      `Seeded defaults for household ${householdId}: +${categoriesCreated} categories, +${subCategoriesCreated} subcategories`,
     );
     return { categoriesCreated, subCategoriesCreated };
   }

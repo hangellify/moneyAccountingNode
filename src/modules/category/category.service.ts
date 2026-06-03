@@ -7,7 +7,7 @@ import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityRepository, EntityManager } from '@mikro-orm/core';
 import { Category } from '../../entities/category.entity';
 import { PlaningHorizon } from '../../entities/planing-horizon.entity';
-import { User } from '../../entities/user.entity';
+import { Household } from '../../entities/household.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { BulkCreateCategoryDto } from './dto/bulk-create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -26,30 +26,30 @@ export class CategoryService {
 
   /**
    * Create a new category and link it to a planning horizon
-   * Planning horizon must belong to the user through budget
+   * Planning horizon must belong to the household through budget
    */
   async createCategory(
-    userId: string,
+    householdId: string,
     createCategoryDto: CreateCategoryDto,
   ): Promise<CategoryResponseDto> {
-    // Verify that the planning horizon exists and belongs to the user
+    // Verify that the planning horizon exists and belongs to the household
     const planingHorizon = await this.planingHorizonRepository.findOne({
       id: createCategoryDto.planing_horizon_id,
-      budget: { user: { id: userId }, deleted_at: null },
+      budget: { household: { id: householdId }, deleted_at: null },
       is_archived: false,
       deleted_at: null,
     });
 
     if (!planingHorizon) {
       throw new NotFoundException(
-        `Planning horizon with ID ${createCategoryDto.planing_horizon_id} not found or does not belong to this user`,
+        `Planning horizon with ID ${createCategoryDto.planing_horizon_id} not found or does not belong to this household`,
       );
     }
 
     const category = new Category();
     category.name = createCategoryDto.name;
     category.description = createCategoryDto.description;
-    category.user = this.em.getReference(User, userId);
+    category.household = this.em.getReference(Household, householdId);
 
     // Link category to planning horizon
     category.planingHorizons.add(planingHorizon);
@@ -70,20 +70,20 @@ export class CategoryService {
    * This is the only way to create categories (as per requirements)
    */
   async bulkCreateCategories(
-    userId: string,
+    householdId: string,
     bulkCreateCategoryDto: BulkCreateCategoryDto,
   ): Promise<CategoryResponseDto[]> {
-    // Verify that the planning horizon exists and belongs to the user
+    // Verify that the planning horizon exists and belongs to the household
     const planingHorizon = await this.planingHorizonRepository.findOne({
       id: bulkCreateCategoryDto.planing_horizon_id,
-      budget: { user: { id: userId }, deleted_at: null },
+      budget: { household: { id: householdId }, deleted_at: null },
       is_archived: false,
       deleted_at: null,
     });
 
     if (!planingHorizon) {
       throw new NotFoundException(
-        `Planning horizon with ID ${bulkCreateCategoryDto.planing_horizon_id} not found or does not belong to this user`,
+        `Planning horizon with ID ${bulkCreateCategoryDto.planing_horizon_id} not found or does not belong to this household`,
       );
     }
 
@@ -93,7 +93,7 @@ export class CategoryService {
       const category = new Category();
       category.name = categoryItem.name;
       category.description = categoryItem.description;
-      category.user = this.em.getReference(User, userId);
+      category.household = this.em.getReference(Household, householdId);
       category.planingHorizons.add(planingHorizon);
       categories.push(category);
     }
@@ -111,12 +111,15 @@ export class CategoryService {
 
   /**
    * Get a category by ID
-   * Only returns category if it belongs to the user
+   * Only returns category if it belongs to the household
    * Includes sub-categories in the response
    */
-  async getCategory(id: string, userId: string): Promise<CategoryResponseDto> {
+  async getCategory(
+    id: string,
+    householdId: string,
+  ): Promise<CategoryResponseDto> {
     const category = await this.categoryRepository.findOne(
-      { id, user: { id: userId }, deleted_at: null },
+      { id, household: { id: householdId }, deleted_at: null },
       { populate: ['subCategories'] },
     );
     if (!category) {
@@ -131,6 +134,7 @@ export class CategoryService {
         name: sc.name,
         description: sc.description,
         category_id: category.id,
+        category_name: category.name,
         created_at: sc.created_at,
         updated_at: sc.updated_at,
       }));
@@ -146,15 +150,15 @@ export class CategoryService {
   }
 
   /**
-   * Get all categories for a user
-   * Returns categories that directly belong to the user
+   * Get all categories for a household
+   * Returns categories that directly belong to the household
    * Does not include sub-categories in the response
    */
   async getAllUserCategories(
-    userId: string,
+    householdId: string,
   ): Promise<CategoryBaseResponseDto[]> {
     const categories = await this.categoryRepository.find(
-      { user: { id: userId }, deleted_at: null },
+      { household: { id: householdId }, deleted_at: null },
       { orderBy: { name: 'asc' } },
     );
     return categories.map((c) => ({
@@ -168,16 +172,16 @@ export class CategoryService {
 
   /**
    * Update a category by ID
-   * Only updates category if it belongs to the user
+   * Only updates category if it belongs to the household
    */
   async updateCategory(
     id: string,
-    userId: string,
+    householdId: string,
     updateCategoryDto: UpdateCategoryDto,
   ): Promise<CategoryResponseDto> {
     const category = await this.categoryRepository.findOne({
       id,
-      user: { id: userId },
+      household: { id: householdId },
       deleted_at: null,
     });
     if (!category) {
@@ -202,12 +206,12 @@ export class CategoryService {
 
   /**
    * Soft delete a category by setting deleted_at timestamp
-   * Only deletes category if it belongs to the user
+   * Only deletes category if it belongs to the household
    */
-  async deleteCategory(id: string, userId: string): Promise<void> {
+  async deleteCategory(id: string, householdId: string): Promise<void> {
     const category = await this.categoryRepository.findOne({
       id,
-      user: { id: userId },
+      household: { id: householdId },
       deleted_at: null,
     });
     if (!category) {

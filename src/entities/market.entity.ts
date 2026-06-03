@@ -6,7 +6,7 @@ import {
   ManyToOne,
 } from '@mikro-orm/core';
 import { BaseEntity } from './base.entity';
-import { User } from './user.entity';
+import { Household } from './household.entity';
 
 @Entity({ tableName: 'markets' })
 export class Market extends BaseEntity {
@@ -22,8 +22,8 @@ export class Market extends BaseEntity {
   @Property({ type: 'varchar', length: 2, nullable: true })
   country?: string;
 
-  @ManyToOne(() => User, { nullable: false })
-  user!: User;
+  @ManyToOne(() => Household, { nullable: false })
+  household!: Household;
 
   @Property({ type: 'timestamptz', nullable: false, defaultRaw: 'NOW()' })
   created_at!: Date;

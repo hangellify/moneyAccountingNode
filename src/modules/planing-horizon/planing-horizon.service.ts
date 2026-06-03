@@ -24,31 +24,30 @@ export class PlaningHorizonService {
   ) {}
 
   /**
-   * Create a new planning horizon for a user
-   * Name must be unique per user (excluding archived planning horizons)
-   * Budget must belong to the user
+   * Create a new planning horizon for a household
+   * Name must be unique per household (excluding archived planning horizons)
+   * Budget must belong to the household
    */
   async createPlaningHorizon(
-    userId: string,
+    householdId: string,
     createPlaningHorizonDto: CreatePlaningHorizonDto,
   ): Promise<PlaningHorizonBaseResponseDto> {
-    // Verify that the budget exists and belongs to the user
+    // Verify that the budget exists and belongs to the household
     const budget = await this.budgetRepository.findOne({
       id: createPlaningHorizonDto.budget_id,
-      user: { id: userId },
+      household: { id: householdId },
       deleted_at: null,
     });
 
     if (!budget) {
       throw new NotFoundException(
-        `Budget with ID ${createPlaningHorizonDto.budget_id} not found or does not belong to this user`,
+        `Budget with ID ${createPlaningHorizonDto.budget_id} not found or does not belong to this household`,
       );
     }
 
-    // Check if planning horizon with same name already exists for this user (excluding archived)
-    // We need to check through the budget relationship
+    // Check if planning horizon with same name already exists for this household (excluding archived)
     const existingPlaningHorizon = await this.planingHorizonRepository.findOne({
-      budget: { user: { id: userId }, deleted_at: null },
+      budget: { household: { id: householdId }, deleted_at: null },
       name: createPlaningHorizonDto.name,
       is_archived: false,
       deleted_at: null,
@@ -56,7 +55,7 @@ export class PlaningHorizonService {
 
     if (existingPlaningHorizon) {
       throw new BadRequestException(
-        `Planning horizon with name "${createPlaningHorizonDto.name}" already exists for this user`,
+        `Planning horizon with name "${createPlaningHorizonDto.name}" already exists for this household`,
       );
     }
 
@@ -87,17 +86,17 @@ export class PlaningHorizonService {
 
   /**
    * Get a planning horizon by ID (excluding archived and soft-deleted)
-   * Only returns planning horizon if it belongs to the user through budget
+   * Only returns planning horizon if it belongs to the household through budget
    * Includes categories linked to this planning horizon
    */
   async getPlaningHorizon(
     id: string,
-    userId: string,
+    householdId: string,
   ): Promise<PlaningHorizonResponseDto> {
     const planingHorizon = await this.planingHorizonRepository.findOne(
       {
         id,
-        budget: { user: { id: userId }, deleted_at: null },
+        budget: { household: { id: householdId }, deleted_at: null },
         is_archived: false,
         deleted_at: null,
       },
@@ -156,17 +155,17 @@ export class PlaningHorizonService {
 
   /**
    * Update a planning horizon by ID (only non-archived planning horizons can be updated)
-   * Only updates planning horizon if it belongs to the user through budget
+   * Only updates planning horizon if it belongs to the household through budget
    */
   async updatePlaningHorizon(
     id: string,
-    userId: string,
+    householdId: string,
     updatePlaningHorizonDto: UpdatePlaningHorizonDto,
   ): Promise<PlaningHorizonBaseResponseDto> {
     const planingHorizon = await this.planingHorizonRepository.findOne(
       {
         id,
-        budget: { user: { id: userId }, deleted_at: null },
+        budget: { household: { id: householdId }, deleted_at: null },
         is_archived: false,
         deleted_at: null,
       },
@@ -177,14 +176,14 @@ export class PlaningHorizonService {
       throw new NotFoundException(`Planning horizon with ID ${id} not found`);
     }
 
-    // If name is being updated, check uniqueness per user
+    // If name is being updated, check uniqueness per household
     if (
       updatePlaningHorizonDto.name !== undefined &&
       updatePlaningHorizonDto.name !== planingHorizon.name
     ) {
       const existingPlaningHorizon =
         await this.planingHorizonRepository.findOne({
-          budget: { user: { id: userId }, deleted_at: null },
+          budget: { household: { id: householdId }, deleted_at: null },
           name: updatePlaningHorizonDto.name,
           is_archived: false,
           deleted_at: null,
@@ -193,7 +192,7 @@ export class PlaningHorizonService {
       // If a planning horizon with the same name exists and it's not the current one
       if (existingPlaningHorizon && existingPlaningHorizon.id !== id) {
         throw new BadRequestException(
-          `Planning horizon with name "${updatePlaningHorizonDto.name}" already exists for this user`,
+          `Planning horizon with name "${updatePlaningHorizonDto.name}" already exists for this household`,
         );
       }
     }
@@ -237,12 +236,15 @@ export class PlaningHorizonService {
 
   /**
    * Soft delete a planning horizon by setting is_archived to true
-   * Only archives planning horizon if it belongs to the user through budget
+   * Only archives planning horizon if it belongs to the household through budget
    */
-  async softDeletePlaningHorizon(id: string, userId: string): Promise<void> {
+  async softDeletePlaningHorizon(
+    id: string,
+    householdId: string,
+  ): Promise<void> {
     const planingHorizon = await this.planingHorizonRepository.findOne({
       id,
-      budget: { user: { id: userId }, deleted_at: null },
+      budget: { household: { id: householdId }, deleted_at: null },
       is_archived: false,
       deleted_at: null,
     });
@@ -263,17 +265,17 @@ export class PlaningHorizonService {
   }
 
   /**
-   * List all planning horizons for a user
-   * Returns only non-archived, non-deleted planning horizons that belong to the user through their budget
+   * List all planning horizons for a household
+   * Returns only non-archived, non-deleted planning horizons that belong to the household through their budget
    */
   async listPlaningHorizons(
-    userId: string,
+    householdId: string,
   ): Promise<PlaningHorizonBaseResponseDto[]> {
     const horizons = await this.planingHorizonRepository.find(
       {
         is_archived: false,
         deleted_at: null,
-        budget: { user: { id: userId }, deleted_at: null },
+        budget: { household: { id: householdId }, deleted_at: null },
       },
       { populate: ['budget'] },
     );

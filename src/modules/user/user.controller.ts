@@ -4,41 +4,36 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
-  ApiOkResponse,
   ApiOperation,
+  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { CategoryDefaultsService } from '../category/category-defaults.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import type { AuthenticatedUser } from '../auth/types/jwt-payload.interface';
-import { SeedDefaultsResponseDto } from './dto/seed-defaults-response.dto';
 
 @ApiTags('users')
 @Controller('users')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('JWT-auth')
 export class UserController {
-  constructor(private readonly categoryDefaults: CategoryDefaultsService) {}
+  constructor(
+    private readonly categoryDefaultsService: CategoryDefaultsService,
+  ) {}
 
   @Post('me/seed-default-categories')
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary:
-      'Seed (or restore) the default category tree for the current user. Idempotent.',
+      'Seed (or restore) the default category tree for a household. Idempotent.',
   })
-  @ApiOkResponse({ type: SeedDefaultsResponseDto })
+  @ApiQuery({ name: 'household_id', required: true, type: String })
   async seedDefaultCategories(
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<SeedDefaultsResponseDto> {
-    const { categoriesCreated, subCategoriesCreated } =
-      await this.categoryDefaults.seedForUser(user.id);
-    return {
-      categories_created: categoriesCreated,
-      sub_categories_created: subCategoriesCreated,
-    };
+    @Query('household_id') householdId: string,
+  ): Promise<void> {
+    await this.categoryDefaultsService.seedForHousehold(householdId);
   }
 }

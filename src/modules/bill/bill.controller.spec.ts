@@ -3,11 +3,15 @@ import { APP_FILTER } from '@nestjs/core';
 import { BillController } from './bill.controller';
 import { BillPhotoService } from './bill-photo.service';
 import { BillCrudService } from './bill-crud.service';
+import { BillDashboardService } from './bill-dashboard.service';
+import { BillDashboardQueryDto } from './dto/bill-dashboard.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { HouseholdMemberGuard } from '../household/guards/household-member.guard';
 import { AiGatewayExhaustedFilter } from './filters/ai-gateway-exhausted.filter';
 
 describe('BillController', () => {
   let controller: BillController;
+  let billDashboardMock: { getDashboard: jest.Mock };
   const parseAndCategorize = jest.fn();
   const billCrudMock = {
     createBill: jest.fn(),
@@ -23,18 +27,27 @@ describe('BillController', () => {
   beforeEach(async () => {
     parseAndCategorize.mockReset();
     Object.values(billCrudMock).forEach((fn) => fn.mockReset());
+    billDashboardMock?.getDashboard?.mockReset?.();
     const mod = await Test.createTestingModule({
       controllers: [BillController],
       providers: [
         { provide: BillPhotoService, useValue: { parseAndCategorize } },
         { provide: BillCrudService, useValue: billCrudMock },
+        {
+          provide: BillDashboardService,
+          useValue: { getDashboard: jest.fn() },
+        },
         { provide: APP_FILTER, useClass: AiGatewayExhaustedFilter },
       ],
     })
       .overrideGuard(JwtAuthGuard)
       .useValue({ canActivate: () => true })
+      .overrideGuard(HouseholdMemberGuard)
+      .useValue({ canActivate: () => true })
       .compile();
     controller = mod.get(BillController);
+    billDashboardMock = mod.get(BillDashboardService);
+    billDashboardMock.getDashboard = jest.fn();
   });
 
   it('forwards multer file buffer + mime + user id to BillPhotoService and returns its response', async () => {
@@ -55,17 +68,44 @@ describe('BillController', () => {
     } as Express.Multer.File;
     const res = await controller.parsePhoto(
       { id: 'user-xyz' } as never,
+      { householdId: 'hh-1', role: 'owner' } as never,
       fakeFile,
     );
     expect(parseAndCategorize).toHaveBeenCalledWith(
       fakeFile.buffer,
       'image/png',
+      'hh-1',
       'user-xyz',
     );
     expect(billCrudMock.createDraftFromParsed).toHaveBeenCalledWith(
+      'hh-1',
       'user-xyz',
       dto,
     );
     expect(res).toEqual({ ...dto, draft_id: draftId });
+  });
+
+  describe('getDashboard', () => {
+    it('delegates to BillDashboardService and returns its response', async () => {
+      const response = { period_totals: [], bills: [], category_stats: [] };
+      billDashboardMock.getDashboard.mockResolvedValue(response);
+
+      const query: BillDashboardQueryDto = {
+        type: 'month',
+        year: 2026,
+        month: 4,
+      };
+      const result = await controller.getDashboard(
+        { id: 'user-xyz' } as never,
+        { householdId: 'hh-1', role: 'owner' } as never,
+        query,
+      );
+
+      expect(billDashboardMock.getDashboard).toHaveBeenCalledWith(
+        'hh-1',
+        query,
+      );
+      expect(result).toBe(response);
+    });
   });
 });
