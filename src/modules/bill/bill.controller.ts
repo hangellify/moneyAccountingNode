@@ -119,13 +119,16 @@ export class BillController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'List all bills for the current user' })
+  @ApiOperation({
+    summary:
+      'List confirmed bills for the current user. All query params are optional — omit for unfiltered results.',
+  })
   @ApiListBillsResponses()
   async listBills(
     @CurrentUser() user: AuthenticatedUser,
-    @Query() filters: ListBillsQueryDto,
+    @Query() query: ListBillsQueryDto,
   ): Promise<BillResponseDto[]> {
-    return this.billCrud.listBills(user.id, filters);
+    return this.billCrud.listBills(user.id, query);
   }
 
   @Get('drafts')
