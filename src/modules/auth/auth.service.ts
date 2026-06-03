@@ -148,7 +148,7 @@ export class AuthService {
     });
 
     try {
-      await this.categoryDefaults.seedForUser(user.id);
+      await this.categoryDefaults.seedForHousehold(household.id);
     } catch (err) {
       this.logger.error(
         `Failed to seed default categories for user ${user.id}: ${err instanceof Error ? err.message : String(err)}`,
