@@ -8,6 +8,7 @@ import {
   Req,
   Get,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import {
   ApiTags,
   ApiOperation,
@@ -41,6 +42,7 @@ export class AuthController {
     return req.ip ?? req.socket?.remoteAddress ?? 'unknown';
   }
 
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Register a new user' })
@@ -63,6 +65,7 @@ export class AuthController {
     return this.authService.register(registerDto, ipAddress, userAgent);
   }
 
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @UseGuards(LocalAuthGuard)
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -83,6 +86,7 @@ export class AuthController {
     return this.authService.login(loginDto, ipAddress, userAgent);
   }
 
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Refresh access token' })
