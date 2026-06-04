@@ -28,7 +28,7 @@ export class AnthropicProvider implements LlmProvider {
     const system =
       req.messages
         .filter((m) => m.role === 'system')
-        .map((m) => (m as { role: 'system'; text: string }).text)
+        .map((m) => m.text)
         .join('\n') || undefined;
 
     const messages = req.messages

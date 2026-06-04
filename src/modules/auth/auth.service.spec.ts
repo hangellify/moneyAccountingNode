@@ -59,7 +59,7 @@ function makeService(opts?: Partial<Deps>): {
     transactional: jest
       .fn()
       .mockImplementation((fn: (txEm: EntityManager) => Promise<unknown>) =>
-        fn(em as unknown as EntityManager),
+        fn(em),
       ),
   } as unknown as EntityManager;
 
@@ -88,7 +88,7 @@ describe('AuthService.register seeder hook', () => {
         email: 'new-user@test',
         password: 'supersecret-password',
         first_name: 'Test',
-      } as never,
+      },
       '1.2.3.4',
       'jest',
     );
@@ -105,7 +105,7 @@ describe('AuthService.register seeder hook', () => {
         email: 'new-user-2@test',
         password: 'supersecret-password',
         first_name: 'Test2',
-      } as never,
+      },
       '1.2.3.4',
       'jest',
     );

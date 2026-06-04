@@ -75,7 +75,7 @@ describe('ListBillsQueryDto', () => {
   });
 
   it('fails when currency is an unknown value', async () => {
-    const errors = await validate(toDto({ currency: 'XYZ' as Currency }));
+    const errors = await validate(toDto({ currency: 'XYZ' }));
     expect(errors.some((e) => e.property === 'currency')).toBe(true);
   });
 });
