@@ -97,7 +97,8 @@ function okResponse(json: unknown, text?: string): () => Promise<LlmResponse> {
 function errResponse(err: unknown): () => Promise<LlmResponse> {
   return () =>
     new Promise<LlmResponse>((_resolve, reject) => {
-      reject(err as Error);
+      // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+      reject(err);
     });
 }
 

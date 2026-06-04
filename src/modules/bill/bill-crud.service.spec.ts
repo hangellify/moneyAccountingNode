@@ -11,7 +11,6 @@ import { CreateBillDto } from './dto/create-bill.dto';
 import { ConfirmBillDto } from './dto/confirm-bill.dto';
 import { ParsedBillResponseDto } from './dto/parsed-bill-response.dto';
 import { Currency } from '../../types/currency.enum';
-import { ListBillsQueryDto } from './dto/list-bills-query.dto';
 
 function makeRow(
   overrides: Partial<{
@@ -169,7 +168,7 @@ describe('BillCrudService', () => {
 
       await service.listBills(householdId, {
         date_from: '2026-03-01',
-      } as ListBillsQueryDto);
+      });
 
       const [sql, params] = mockExecute.mock.calls[0] as [string, unknown[]];
       expect(sql).toContain('b.bill_date >= ?');
@@ -184,7 +183,7 @@ describe('BillCrudService', () => {
 
       await service.listBills(householdId, {
         date_to: '2026-03-31',
-      } as ListBillsQueryDto);
+      });
 
       const [sql, params] = mockExecute.mock.calls[0] as [string, unknown[]];
       expect(sql).toContain('b.bill_date <= ?');
@@ -200,7 +199,7 @@ describe('BillCrudService', () => {
       await service.listBills(householdId, {
         date_from: '2026-03-01',
         date_to: '2026-03-31',
-      } as ListBillsQueryDto);
+      });
 
       const [sql, params] = mockExecute.mock.calls[0] as [string, unknown[]];
       expect(sql).toContain('b.bill_date >= ?');
@@ -217,7 +216,7 @@ describe('BillCrudService', () => {
 
       await service.listBills(householdId, {
         market_names: ['Lidl'],
-      } as ListBillsQueryDto);
+      });
 
       const [sql, params] = mockExecute.mock.calls[0] as [string, unknown[]];
       expect(sql).toContain('m.name = ANY(?)');
@@ -232,7 +231,7 @@ describe('BillCrudService', () => {
 
       await service.listBills(householdId, {
         market_names: ['Lidl', 'Kaufland'],
-      } as ListBillsQueryDto);
+      });
 
       const [sql, params] = mockExecute.mock.calls[0] as [string, unknown[]];
       expect(sql).toContain('m.name = ANY(?)');
@@ -247,7 +246,7 @@ describe('BillCrudService', () => {
 
       await service.listBills(householdId, {
         currency: Currency.EUR,
-      } as ListBillsQueryDto);
+      });
 
       const [sql, params] = mockExecute.mock.calls[0] as [string, unknown[]];
       expect(sql).toContain('b.currency = ?');
@@ -262,7 +261,7 @@ describe('BillCrudService', () => {
 
       await service.listBills(householdId, {
         amount_range: ['gt_100'],
-      } as ListBillsQueryDto);
+      });
 
       const [sql, params] = mockExecute.mock.calls[0] as [string, unknown[]];
       expect(sql).toContain('b.amount > ?');
@@ -277,7 +276,7 @@ describe('BillCrudService', () => {
 
       await service.listBills(householdId, {
         amount_range: ['lt_500'],
-      } as ListBillsQueryDto);
+      });
 
       const [sql, params] = mockExecute.mock.calls[0] as [string, unknown[]];
       expect(sql).toContain('b.amount < ?');
@@ -292,7 +291,7 @@ describe('BillCrudService', () => {
 
       await service.listBills(householdId, {
         amount_range: ['gt_100', 'lt_500'],
-      } as ListBillsQueryDto);
+      });
 
       const [sql, params] = mockExecute.mock.calls[0] as [string, unknown[]];
       expect(sql).toContain('b.amount > ?');
@@ -310,7 +309,7 @@ describe('BillCrudService', () => {
       await service.listBills(householdId, {
         currency: Currency.EUR,
         amount_range: ['gt_100'],
-      } as ListBillsQueryDto);
+      });
 
       const [sql, params] = mockExecute.mock.calls[0] as [string, unknown[]];
       expect(sql).toContain('b.currency = ?');
@@ -339,7 +338,7 @@ describe('BillCrudService', () => {
         service.listBills(householdId, {
           date_from: '2026-12-31',
           date_to: '2026-01-01',
-        } as ListBillsQueryDto),
+        }),
       ).rejects.toThrow('date_from must not be later than date_to');
     });
 
@@ -386,7 +385,7 @@ describe('BillCrudService', () => {
       await service.listBills(householdId, {
         page: 3,
         limit: 10,
-      } as ListBillsQueryDto);
+      });
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       const dataParams = mockExecute.mock.calls[1][1] as unknown[];
@@ -402,7 +401,7 @@ describe('BillCrudService', () => {
 
       const result = await service.listBills(householdId, {
         limit: 10,
-      } as ListBillsQueryDto);
+      });
 
       expect(result.meta.total_pages).toBe(3); // ceil(25/10)
     });
@@ -416,7 +415,7 @@ describe('BillCrudService', () => {
       const result = await service.listBills(householdId, {
         page: 2,
         limit: 15,
-      } as ListBillsQueryDto);
+      });
 
       expect(result.meta.page).toBe(2);
       expect(result.meta.limit).toBe(15);
@@ -430,7 +429,7 @@ describe('BillCrudService', () => {
 
       await service.listBills(householdId, {
         currency: Currency.EUR,
-      } as ListBillsQueryDto);
+      });
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       const countSql: string = mockExecute.mock.calls[0][0] as string;
